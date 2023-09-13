@@ -1,0 +1,3 @@
+python train.py --task=ShadowHandOver --algo=happo --model_dir=logs/shadow_hand_over/happo/models_seed-1 --test
+
+

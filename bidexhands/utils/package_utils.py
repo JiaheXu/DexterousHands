@@ -27,6 +27,11 @@ def make(task_name, algo):
     print("Algorithm: ", args.algo)
     agent_index = get_AgentIndex(cfg)
 
+    if args.algo in ["mocap"]:  
+        args.task_type = "Manual"
+        task, env = parse_task(args, cfg, cfg_train, sim_params, agent_index)
+
+
     if args.algo in ["mappo", "happo", "hatrpo","maddpg","ippo"]: 
         # maddpg exists a bug now 
         args.task_type = "MultiAgent"

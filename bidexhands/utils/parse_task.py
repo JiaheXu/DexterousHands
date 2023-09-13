@@ -5,6 +5,8 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
+from bidexhands.tasks.manual import Manual
+
 from bidexhands.tasks.shadow_hand_over import ShadowHandOver
 from bidexhands.tasks.shadow_hand_catch_underarm import ShadowHandCatchUnderarm
 from bidexhands.tasks.shadow_hand_two_catch_underarm import ShadowHandTwoCatchUnderarm
@@ -56,7 +58,25 @@ def parse_task(args, cfg, cfg_train, sim_params, agent_index):
     cfg_task = cfg["env"]
     cfg_task["seed"] = cfg["seed"]
 
-    if args.task_type == "C++":
+    if args.task_type == "Manual":
+        print("In manual mode, mainly for testing mocap!!!")
+        print("In manual mode, mainly for testing mocap!!!")
+        print("In manual mode, mainly for testing mocap!!!")                
+        try:
+            task = eval(args.task)(
+                cfg=cfg,
+                sim_params=sim_params,
+                physics_engine=args.physics_engine,
+                device_type=args.device,
+                device_id=device_id,
+                headless=args.headless,
+                is_multi_agent=False)
+        except NameError as e:
+            print(e)
+            warn_task_name()
+        env = VecTaskPython(task, rl_device)
+    
+    elif args.task_type == "C++":
         if args.device == "cpu":
             print("C++ CPU")
             task = rlgpu.create_task_cpu(args.task, json.dumps(cfg_task))
