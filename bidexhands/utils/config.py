@@ -61,6 +61,7 @@ def set_seed(seed, torch_deterministic=False):
 
 def retrieve_cfg(args, use_rlg_config=False):
 
+    print("task: ", args.task)
     if args.task in ["Manual",
                     "ShadowHandOver", "ShadowHandCatchUnderarm", "ShadowHandTwoCatchUnderarm", "ShadowHandCatchAbreast", "ShadowHandReOrientation",
                     "ShadowHandCatchOver2Underarm", "ShadowHandBottleCap", "ShadowHandDoorCloseInward", "ShadowHandDoorCloseOutward",
