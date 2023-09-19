@@ -122,7 +122,7 @@ class isaac():
             quit()
 
         # load asset
-        self.asset_root = "../../assets"
+        self.asset_root = "./assets"
         self.asset_file = asset_descriptors[0].file_name
 
         self.asset_options = gymapi.AssetOptions()
@@ -190,17 +190,17 @@ class isaac():
             self.dof_positions[i] = defaults[i]
 
         # Print DOF properties
-        # for i in range(self.num_dofs):
-        #     print("DOF %d" % i)
-        #     print("  Name:     '%s'" % self.dof_names[i])
-        #     print("  Type:     %s" % self.gym.get_dof_type_string(self.dof_types[i]))
-        #     print("  Stiffness:  %r" % self.stiffnesses[i])
-        #     print("  Damping:  %r" % self.dampings[i])
-        #     print("  Armature:  %r" % self.armatures[i])
-        #     print("  Limited?  %r" % self.has_limits[i])
-        #     if self.has_limits[i]:
-        #         print("    Lower   %f" % self.lower_limits[i])
-        #         print("    Upper   %f" % self.upper_limits[i])
+        for i in range(self.num_dofs):
+            print("DOF %d" % i)
+            print("  Name:     '%s'" % self.dof_names[i])
+            print("  Type:     %s" % self.gym.get_dof_type_string(self.dof_types[i]))
+            print("  Stiffness:  %r" % self.stiffnesses[i])
+            print("  Damping:  %r" % self.dampings[i])
+            print("  Armature:  %r" % self.armatures[i])
+            print("  Limited?  %r" % self.has_limits[i])
+            if self.has_limits[i]:
+                print("    Lower   %f" % self.lower_limits[i])
+                print("    Upper   %f" % self.upper_limits[i])
 
         # # set up the env grid
         self.num_envs = 1
@@ -278,13 +278,25 @@ class isaac():
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         
         action =  list(qpos_msg.data)
-        action[22] = -1.0 * action[22]
+        
         action[2] = -1.0 * action[2]
+        
+        action[3], action[4] = action[4] , action[3]
+        
+        action[7], action[8] = action[8] , action[7]
+
+        action[11], action[12] = action[12] , action[11]
+        
+        action[17], action[18] = action[18] , action[17]
+        
         action[6] = -1.0 * action[6]
 
+        action[22] = -1.0 * action[22]
         action[23] = -1.0 * action[23]
         # action[23] = -10.0 * action[23]
-        print("joint 24: ", action[23])
+
+        # print("joint 4: ", action[4])
+        # print("joint 24: ", action[23])
         # print(type(action))
         
         # action =  self.data[self.count % len(self.data)]

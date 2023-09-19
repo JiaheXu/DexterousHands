@@ -81,7 +81,7 @@ if viewer is None:
     quit()
 
 # load asset
-asset_root = "../../assets"
+asset_root = "./assets"
 asset_file = asset_descriptors[0].file_name
 
 asset_options = gymapi.AssetOptions()

@@ -5,3 +5,5 @@ matplotlib==3.5.1
 tb-nightly
 tqdm
 ipdb
+rospkg
+opencv-python
