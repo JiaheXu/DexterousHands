@@ -210,8 +210,11 @@ class isaac():
         self.env_upper = gymapi.Vec3(self.spacing, self.spacing, self.spacing)
 
         # position the camera
-        self.cam_pos = gymapi.Vec3(0.0, 0.1, 1)
-        self.cam_target = gymapi.Vec3(0, 0, 0)
+        # self.cam_pos = gymapi.Vec3(0.0, 0.1, 1)
+        # self.cam_target = gymapi.Vec3(0, 0, 0)
+        self.cam_pos = gymapi.Vec3(-0.8, -0.1, 0.2)
+        self.cam_target = gymapi.Vec3(-0.3, 0, 0)
+        
         self.gym.viewer_camera_look_at(self.viewer, None, self.cam_pos, self.cam_target)
 
         # cache useful handles
@@ -278,21 +281,28 @@ class isaac():
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         
         action =  list(qpos_msg.data)
+
+        action = np.array(action)
+        action[0:2] = 0.0
         
         action[2] = -1.0 * action[2]
         
-        action[3], action[4] = action[4] , action[3]
+        action[3], action[5] = action[5] , action[3]
         
-        action[7], action[8] = action[8] , action[7]
+        action[7], action[9] = action[9] , action[7]
 
-        action[11], action[12] = action[12] , action[11]
-        
+        action[11], action[13] = action[13] , action[11]
+        action[16], action[17] = action[17] , action[16]
         action[17], action[18] = action[18] , action[17]
+        #action[16], action[18] = action[18] , action[16]
         
         action[6] = -1.0 * action[6]
 
         action[22] = -1.0 * action[22]
         action[23] = -1.0 * action[23]
+        
+        action = action.tolist()
+        
         # action[23] = -10.0 * action[23]
 
         # print("joint 4: ", action[4])
