@@ -212,7 +212,8 @@ class isaac():
         # position the camera
         # self.cam_pos = gymapi.Vec3(0.0, 0.1, 1)
         # self.cam_target = gymapi.Vec3(0, 0, 0)
-        self.cam_pos = gymapi.Vec3(-0.8, -0.1, 0.2)
+        # self.cam_pos = gymapi.Vec3(-0.8, -0.1, 0.2)
+        self.cam_pos = gymapi.Vec3(-0.8, -0.1, 0.5)
         self.cam_target = gymapi.Vec3(-0.3, 0, 0)
         
         self.gym.viewer_camera_look_at(self.viewer, None, self.cam_pos, self.cam_target)
