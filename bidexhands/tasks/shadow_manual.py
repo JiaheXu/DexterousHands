@@ -186,19 +186,20 @@ class ShadowHandScissors(BaseTask):
             cam_pos = gymapi.Vec3(10.0, 5.0, 1.0)
             cam_target = gymapi.Vec3(6.0, 5.0, 0.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
-########################################################################################################### corespond to line 147
 
         # get gym GPU state tensors
         actor_root_state_tensor = self.gym.acquire_actor_root_state_tensor(self.sim)
         dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
         rigid_body_tensor = self.gym.acquire_rigid_body_state_tensor(self.sim)
 
+        #if self.obs_type == "full_state" or self.asymmetric_obs:
         sensor_tensor = self.gym.acquire_force_sensor_tensor(self.sim)
         self.vec_sensor_tensor = gymtorch.wrap_tensor(sensor_tensor).view(self.num_envs, self.num_fingertips * 6)
 
         dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
-        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
-        self.dof_force_tensor = self.dof_force_tensor[:, :48]
+        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs + self.num_object_dofs ) #
+        print( " dof_force_tensor: ", self.num_shadow_hand_dofs + self.num_object_dofs)
+        self.dof_force_tensor = self.dof_force_tensor[:, :24] # Todo
 
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_dof_state_tensor(self.sim)
@@ -214,6 +215,7 @@ class ShadowHandScissors(BaseTask):
         self.shadow_hand_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, :self.num_shadow_hand_dofs]
         self.shadow_hand_dof_pos = self.shadow_hand_dof_state[..., 0]
         self.shadow_hand_dof_vel = self.shadow_hand_dof_state[..., 1]
+########################################################################################################### corespond to line 170
 
         self.shadow_hand_another_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2]
         self.shadow_hand_another_dof_pos = self.shadow_hand_another_dof_state[..., 0]
