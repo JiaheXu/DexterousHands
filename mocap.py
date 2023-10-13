@@ -285,9 +285,6 @@ class isaac():
 
         action = np.array(action)
         action[0:2] = 0.0
-        
-        action[2] = -1.0 * action[2]
-        
         # action[3], action[5] = action[5] , action[3]        
         # action[7], action[9] = action[9] , action[7]
 
@@ -297,22 +294,13 @@ class isaac():
 
         #action[17], action[18] = action[18] , action[17]
         #action[16], action[18] = action[18] , action[16]
-        
+        action[2] = -1.0 * action[2]
         action[6] = -1.0 * action[6]
 
         action[22] = -1.0 * action[22]
         action[23] = -1.0 * action[23]
         
         action = action.tolist()
-        
-        # action[23] = -10.0 * action[23]
-
-        # print("joint 4: ", action[4])
-        # print("joint 24: ", action[23])
-        # print(type(action))
-        
-        # action =  self.data[self.count % len(self.data)]
-        # action = tuple(action)
         print("count: ", self.count)
         self.count += 1   
 
@@ -335,7 +323,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_node")
+    rospy.init_node("isaac_node2")
     isaac_node = isaac()
     isaac_node.run()
 

@@ -985,6 +985,7 @@ class Mocap(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
         else:
+            print(" here !!! ")
             self.cur_targets[:, self.actuated_dof_indices] = self.actions[:, 6:26]
             # self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 6:26], self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             # self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:, self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
@@ -992,6 +993,9 @@ class Mocap(BaseTask):
 
             #self.apply_forces[:, 1, :] = actions[:, 0:3] * self.dt * self.transition_scale * 100000
             #self.apply_torque[:, 1, :] = self.actions[:, 3:6] * self.dt * self.orientation_scale * 1000
+            self.apply_forces[:, 1, :] = actions[:, 0:3] * self.dt * self.transition_scale * 0.0
+            self.apply_torque[:, 1, :] = self.actions[:, 3:6] * self.dt * self.orientation_scale * 0.0
+
 
             #self.gym.apply_rigid_body_force_tensors(self.sim, gymtorch.unwrap_tensor(self.apply_forces), gymtorch.unwrap_tensor(self.apply_torque), gymapi.ENV_SPACE)
 
