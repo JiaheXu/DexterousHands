@@ -6,6 +6,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 from bidexhands.tasks.manual import Manual
+from bidexhands.tasks.mocap import Mocap
 
 from bidexhands.tasks.shadow_hand_over import ShadowHandOver
 from bidexhands.tasks.shadow_hand_catch_underarm import ShadowHandCatchUnderarm
