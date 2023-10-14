@@ -42,6 +42,9 @@ class isaac():
 
         #print(action)
         action[ 6:26 ] =  torch.from_numpy( np_pos[idx])
+        
+        action[ 0 ] = 1.0 
+        action[ 3 ] = 1.0 
         #self.count += 1
         #action[0] = ( self.count//30 ) % 5 * 0.2
         # action = self.env.action_space.sample() * 0.0

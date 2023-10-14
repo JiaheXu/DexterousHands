@@ -16,13 +16,6 @@ import math
 import numpy as np
 from isaacgym import gymapi, gymutil
 
-import rospy
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-import numpy as np
-bridge = CvBridge()
-import time
-from std_msgs.msg import Float32MultiArray
 
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
@@ -37,16 +30,13 @@ class AssetDesc:
 
 
 asset_descriptors = [
-    # AssetDesc("urdf/spherical_joint.urdf", False),
+    AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
-    # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),    
-    # AssetDesc("urdf/shadow_hand_description/shadowhand.urdf", False),  # okay to use
-    # AssetDesc("urdf/shadow_hand_description/shadow_hand_right.urdf", False) #Nope
-    AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
 ]
 
+# parse arguments
 args = gymutil.parse_arguments(
-    description="Shadwhand: Show example of controlling a shadow hand robot.",  
+    description="Spherical Joint: Show example of controlling a spherical joint robot.",
 )
 
 # initialize gym
@@ -84,7 +74,7 @@ if viewer is None:
     quit()
 
 # load asset
-asset_root = "./assets"
+asset_root = "../../assets"
 asset_file = asset_descriptors[0].file_name
 
 asset_options = gymapi.AssetOptions()
@@ -168,9 +158,8 @@ env_lower = gymapi.Vec3(-spacing, 0.0, -spacing)
 env_upper = gymapi.Vec3(spacing, spacing, spacing)
 
 # position the camera
-# cam_pos = gymapi.Vec3(-0.8, -0.1, 0.2)
-cam_pos = gymapi.Vec3(-0.8, -0.1, 0.5)
-cam_target = gymapi.Vec3(-0.3, 0, 0)
+cam_pos = gymapi.Vec3(1.0, 1.0, 1)
+cam_target = gymapi.Vec3(0, 0, 0)
 gym.viewer_camera_look_at(viewer, None, cam_pos, cam_target)
 
 # cache useful handles
@@ -192,24 +181,9 @@ for i in range(num_envs):
     actor_handles.append(actor_handle)
 
     props = gym.get_actor_dof_properties(env, actor_handle)
-    props["driveMode"] = (
-        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
-    )
-    props["stiffness"] = (
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0
-    )
-    props["damping"] = (
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
-    )
+    props["driveMode"] = (gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS)
+    props["stiffness"] = (50.0, 50.0, 50.0, 50.0, 50.0, 50.0)
+    props["damping"] = (10.0, 10.0, 10.0, 100.0, 100.0, 100.0)
 
     gym.set_actor_dof_properties(env, actor_handle, props)
 
@@ -267,18 +241,18 @@ while not gym.query_viewer_has_closed(viewer):
     gym.fetch_results(sim, True)
 
     # Set new goal orientation
-    if cnt % 1000000000 == 0:
-        #goal_quat = random_quaternion()
+    if cnt % 1000 == 0:
+        goal_quat = random_quaternion()
 
-        #print("New goal orientation:", goal_quat)
+        print("New goal orientation:", goal_quat)
 
         gym.clear_lines(viewer)
 
-        #goal_viz_T = gymapi.Transform(r=gymapi.Quat(*goal_quat))
-        #gymutil.draw_lines(axes_geom, gym, viewer, env, goal_viz_T)
+        goal_viz_T = gymapi.Transform(r=gymapi.Quat(*goal_quat))
+        gymutil.draw_lines(axes_geom, gym, viewer, env, goal_viz_T)
 
         dof_positions[:] = 0.0
-        #dof_positions[3:] = quat2expcoord(goal_quat)
+        dof_positions[3:] = quat2expcoord(goal_quat)
 
         for i in range(num_envs):
             gym.set_actor_dof_position_targets(envs[i], actor_handles[i], dof_positions)
