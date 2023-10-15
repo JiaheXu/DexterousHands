@@ -39,7 +39,8 @@ class AssetDesc:
 asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),    
+    # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False), 
 ]
 
 
@@ -237,33 +238,27 @@ class isaac():
             self.actor_handles.append(actor_handle)
 
             props = self.gym.get_actor_dof_properties(env, actor_handle)
-            props["driveMode"] = (gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
-                          )
-            props["stiffness"] =  ( 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0 
-                          )                          
-            # props["stiffness"] =  ( 50.0, 50.0, 50.0, 50.0, 50.0, 50.0,
-            #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0,
-            #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0,
-            #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0 
-            #               )
-            props["damping"] = (0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
-                        )
-            # props["damping"] = (100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
-            #             100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
-            #             100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
-            #             100.0, 100.0, 100.0, 100.0, 100.0, 100.0
-            #             )
+            props["driveMode"] = (
+                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
+            )
+            props["stiffness"] = (
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+            )
+            props["damping"] = (
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+            )
             self.gym.set_actor_dof_properties(env, actor_handle, props)
 
             # set default DOF positions
@@ -284,35 +279,19 @@ class isaac():
         action =  list(qpos_msg.data)
 
         action = np.array(action)
-        action[0:2] = 0.0
-        
-        action[2] = -1.0 * action[2]
+        action[0:5] = 0.0
         
         # action[3], action[5] = action[5] , action[3]        
         # action[7], action[9] = action[9] , action[7]
 
-        # FIRST LEAVE LAST FINGERS ALONE
-        # action[11], action[13] = action[13] , action[11]
-        # action[16], action[17] = action[17] , action[16]
 
-        #action[17], action[18] = action[18] , action[17]
-        #action[16], action[18] = action[18] , action[16]
-        
-        action[6] = -1.0 * action[6]
+        action[8] = -1.0 * action[2]
+        action[12] = -1.0 * action[6]
 
-        action[22] = -1.0 * action[22]
-        action[23] = -1.0 * action[23]
+        action[28] = -1.0 * action[22]
+        action[29] = -1.0 * action[23]
         
         action = action.tolist()
-        
-        # action[23] = -10.0 * action[23]
-
-        # print("joint 4: ", action[4])
-        # print("joint 24: ", action[23])
-        # print(type(action))
-        
-        # action =  self.data[self.count % len(self.data)]
-        # action = tuple(action)
         print("count: ", self.count)
         self.count += 1   
 
@@ -335,7 +314,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_node")
+    rospy.init_node("isaac_node2")
     isaac_node = isaac()
     isaac_node.run()
 

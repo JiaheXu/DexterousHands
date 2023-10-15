@@ -4,6 +4,15 @@
         <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
         <body childclass="robot0:asset_class" name="robot0:forearm" pos="0 0.01 0" euler="0 0 0">
             <inertial pos="0.001 -0.002 0.29" quat="0.982 -0.016 0 -0.188" mass="4" diaginertia="0.01 0.01 0.0075"></inertial>
+
+            <joint name="robot0:TX" type="slide" pos="0 0 0" axis="1 0 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1129"></joint>
+            <joint name="robot0:TY" type="slide" pos="0 0 0" axis="0 1 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1128"></joint>
+            <joint name="robot0:TZ" type="slide" pos="0 0 0" axis="0 0 1" range="-2.0 2.0" damping="0.5" armature="0.005" user="1127"></joint>
+
+            <joint name="robot0:ROLL" type="hinge" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1126"></joint>
+            <joint name="robot0:PITCH" type="hinge" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1125"></joint>
+            <joint name="robot0:YAW" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1124"></joint>
+
             <geom class="robot0:D_Vizual" pos="0 0.01 0.04" name="robot0:V_forearm" mesh="robot0:forearm" euler="0 0 1.57"></geom>
             <geom class="robot0:DC_Hand" name="robot0:C_forearm" type="mesh" mesh="robot0:forearm_cvx" pos="0 0.01 0.04" euler="0 0 1.57" rgba="0.4 0.5 0.6 0.7"></geom>
             <body name="robot0:wrist" pos="0 0 0.256">
@@ -17,6 +26,7 @@
                     <geom class="robot0:D_Vizual" name="robot0:V_palm" mesh="robot0:palm"></geom>
                     <geom class="robot0:DC_Hand" name="robot0:C_palm0" type="box" pos="0.011 0 0.038" size="0.032 0.0111 0.049" rgba="0.4 0.5 0.6 0.1"></geom>
                     <geom class="robot0:DC_Hand" name="robot0:C_palm1" type="box" pos="-0.032 0 0.014" size="0.011 0.0111 0.025" rgba="0.4 0.5 0.6 0.1"></geom>
+                    
                     <body name="robot0:ffknuckle" pos="0.033 0 0.095">
                         <inertial pos="0 0 0" quat="0.52 0.854 0.006 -0.003" mass="0.008" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:FFJ3" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.349 0.349" user="1103"></joint>
@@ -42,6 +52,7 @@
                             </body>
                         </body>
                     </body>
+
                     <body name="robot0:mfknuckle" pos="0.011 0 0.099">
                         <inertial pos="0 0 0" quat="0.52 0.854 0.006 -0.003" mass="0.008" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:MFJ3" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.349 0.349" user="1107"></joint>

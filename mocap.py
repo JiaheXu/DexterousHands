@@ -39,8 +39,10 @@ class AssetDesc:
 asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),    
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
+    # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
 ]
+
 
 
 
@@ -88,7 +90,7 @@ class isaac():
         self.gym = gymapi.acquire_gym()
         # configure sim
         self.sim_params = gymapi.SimParams()
-        self.sim_params.dt = dt = 1.0 / 30.0
+        self.sim_params.dt = 1.0 / 30.0
         self.sim_params.gravity = gymapi.Vec3(0, 0, 0)
         self.sim_params.up_axis = gymapi.UP_AXIS_Z
         # parse arguments
@@ -237,14 +239,18 @@ class isaac():
             self.actor_handles.append(actor_handle)
 
             props = self.gym.get_actor_dof_properties(env, actor_handle)
-            props["driveMode"] = (gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+            props["driveMode"] = (
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
                           )
-            props["stiffness"] =  ( 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            props["stiffness"] =  ( 
+                            1.0, 1.0, 1.0, 
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0 
@@ -254,7 +260,9 @@ class isaac():
             #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0,
             #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0 
             #               )
-            props["damping"] = (0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+            props["damping"] = (
+                        0.1, 0.1, 0.1,
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1
@@ -323,7 +331,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_node2")
+    rospy.init_node("isaac_mocap")
     isaac_node = isaac()
     isaac_node.run()
 
