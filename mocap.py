@@ -240,7 +240,6 @@ class isaac():
 
             props = self.gym.get_actor_dof_properties(env, actor_handle)
             props["driveMode"] = (
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
@@ -249,7 +248,6 @@ class isaac():
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
                           )
             props["stiffness"] =  ( 
-                            1.0, 1.0, 1.0, 
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
@@ -261,7 +259,6 @@ class isaac():
             #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0 
             #               )
             props["damping"] = (
-                        0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
@@ -292,26 +289,23 @@ class isaac():
         action =  list(qpos_msg.data)
 
         action = np.array(action)
+        print("shape: ", action.shape)
         action[0:2] = 0.0
-        # action[3], action[5] = action[5] , action[3]        
-        # action[7], action[9] = action[9] , action[7]
+        if action.shape[0] == 24:
+            action[2] = -1.0 * action[2]
+            action[6] = -1.0 * action[6]
+            action[22] = -1.0 * action[22]
+            action[23] = -1.0 * action[23]
+        else:
+            action[8] = -1.0 * action[8]
+            action[12] = -1.0 * action[12]
+            action[28] = -1.0 * action[28]
+            action[29] = -1.0 * action[29]
+            action = action[6:]
 
-        # FIRST LEAVE LAST FINGERS ALONE
-        # action[11], action[13] = action[13] , action[11]
-        # action[16], action[17] = action[17] , action[16]
-
-        #action[17], action[18] = action[18] , action[17]
-        #action[16], action[18] = action[18] , action[16]
-        action[2] = -1.0 * action[2]
-        action[6] = -1.0 * action[6]
-
-        action[22] = -1.0 * action[22]
-        action[23] = -1.0 * action[23]
-        
         action = action.tolist()
         print("count: ", self.count)
         self.count += 1   
-
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
         self.dof_positions[:] = 0.0
