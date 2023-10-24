@@ -253,12 +253,20 @@ class isaac():
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
             )
             props["damping"] = (
-                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1
             )
+                        
+            # props["damping"] = (
+            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+            # )
             self.gym.set_actor_dof_properties(env, actor_handle, props)
 
             # set default DOF positions
@@ -279,17 +287,12 @@ class isaac():
         action =  list(qpos_msg.data)
 
         action = np.array(action)
-        action[0:5] = 0.0
-        
-        # action[3], action[5] = action[5] , action[3]        
-        # action[7], action[9] = action[9] , action[7]
+        #action[0:5] = 0.0
 
-
-        action[8] = -1.0 * action[2]
-        action[12] = -1.0 * action[6]
-
-        action[28] = -1.0 * action[22]
-        action[29] = -1.0 * action[23]
+        action[8] = -1.0 * action[8]
+        action[12] = -1.0 * action[12]
+        action[28] = -1.0 * action[28]
+        action[29] = -1.0 * action[29]
         
         action = action.tolist()
         print("count: ", self.count)
