@@ -1,17 +1,31 @@
 <!-- See LICENSE.md for legal notices. LICENSE.md must be kept together with this file. -->
 <mujoco>
     <body name="robot0:hand mount" pos="1 1.25 0.15" euler="1.5708 0 3.14159">
-        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>        
         <body childclass="robot0:asset_class" name="robot0:forearm" pos="0 0.01 0" euler="0 0 0">
             <inertial pos="0.001 -0.002 0.29" quat="0.982 -0.016 0 -0.188" mass="4" diaginertia="0.01 0.01 0.0075"></inertial>
+        
+        <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-2.0 2.0" damping="20" limited="true"
+            margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-2.0 2.0" damping="20" limited="true" 
+            margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-2.0 2.0" damping="20" limited="true"
+            margin="0.01" armature="0.001" frictionloss="0.001"/>
 
-            <joint name="robot0:TX" type="slide" pos="0 0 0" axis="1 0 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1129"></joint>
+        <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.57 1.57" damping="20" limited="true" margin="0.01"
+             armature="0.001" frictionloss="0.001"/>
+        <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-1.57 1.57" damping="20" limited="true" margin="0.01"
+             armature="0.001" frictionloss="0.001"/>
+        <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.57 1.57" damping="20" limited="true" margin="0.01"
+             armature="0.001" frictionloss="0.001"/>  
+
+            <!-- <joint name="robot0:TX" type="slide" pos="0 0 0" axis="1 0 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1129"></joint>
             <joint name="robot0:TY" type="slide" pos="0 0 0" axis="0 1 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1128"></joint>
             <joint name="robot0:TZ" type="slide" pos="0 0 0" axis="0 0 1" range="-2.0 2.0" damping="0.5" armature="0.005" user="1127"></joint>
 
             <joint name="robot0:ROLL" type="hinge" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1126"></joint>
             <joint name="robot0:PITCH" type="hinge" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1125"></joint>
-            <joint name="robot0:YAW" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1124"></joint>
+            <joint name="robot0:YAW" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1124"></joint> -->
 
             <geom class="robot0:D_Vizual" pos="0 0.01 0.04" name="robot0:V_forearm" mesh="robot0:forearm" euler="0 0 1.57"></geom>
             <geom class="robot0:DC_Hand" name="robot0:C_forearm" type="mesh" mesh="robot0:forearm_cvx" pos="0 0.01 0.04" euler="0 0 1.57" rgba="0.4 0.5 0.6 0.7"></geom>

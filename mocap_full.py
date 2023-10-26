@@ -40,7 +40,8 @@ asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_full.xml", False), 
+    #AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_full.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False)
 ]
 
 
@@ -226,18 +227,18 @@ class isaac():
         print("Creating %d environments" % self.num_envs)
         for i in range(self.num_envs):
             # create env
-            env = self.gym.create_env(self.sim, self.env_lower, self.env_upper, self.num_per_row)
-            self.envs.append(env)
+            self.env = self.gym.create_env(self.sim, self.env_lower, self.env_upper, self.num_per_row)
+            self.envs.append(self.env)
 
             # add actor
             pose = gymapi.Transform()
             pose.p = gymapi.Vec3(0.0, 0.0, 0.0)
             # pose.r = gymapi.Quat(-0.707107, 0.0, 0.0, 0.707107)
 
-            actor_handle = self.gym.create_actor(env, self.asset, pose, "actor", i, 1)
+            actor_handle = self.gym.create_actor(self.env, self.asset, pose, "actor", i, 1)
             self.actor_handles.append(actor_handle)
 
-            props = self.gym.get_actor_dof_properties(env, actor_handle)
+            props = self.gym.get_actor_dof_properties(self.env, actor_handle)
             props["driveMode"] = (
                 gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                 gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
@@ -252,8 +253,13 @@ class isaac():
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
             )
+            
+            Tval = 0.1
+            Rval = 0.5
+
             props["damping"] = (
-                20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
+                #20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
+                Tval, Tval, Tval, Rval, Rval, Rval,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
@@ -267,16 +273,16 @@ class isaac():
             #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
             #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1
             # )
-            self.gym.set_actor_dof_properties(env, actor_handle, props)
+            self.gym.set_actor_dof_properties(self.env, actor_handle, props)
 
             # set default DOF positions
-            self.gym.set_actor_dof_states(env, actor_handle, self.dof_states, gymapi.STATE_ALL)
+            self.gym.set_actor_dof_states(self.env, actor_handle, self.dof_states, gymapi.STATE_ALL)
         
         # Helper visualization for goal orientation
         # pickle_data = np.load("/home/mmpug/shadow_hand2.pkl", allow_pickle=True)
         # self.meta_data, self.data = pickle_data["meta_data"], pickle_data["data"]
         # print("data: ", self.data)
-        axes_geom = gymutil.AxesGeometry(0.5)
+        self.axes_geom = gymutil.AxesGeometry(0.5)
         self.count = 0
         self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
@@ -287,7 +293,9 @@ class isaac():
         action =  list(qpos_msg.data)
 
         action = np.array(action)
-        #action[0:5] = 0.0
+        #action[0:6] = 0.0
+        #action[6] = 0.0
+        #action[7] = 0.0
 
         action[8] = -1.0 * action[8]
         action[12] = -1.0 * action[12]
@@ -300,12 +308,20 @@ class isaac():
 
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
-        self.dof_positions[:] = 0.0
         for i in range(self.num_envs):
             self.gym.set_actor_dof_position_targets(self.envs[i], self.actor_handles[i], action)
+            
+            goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
+            #print("New goal orientation:", goal_quat)
+
+            self.gym.clear_lines(self.viewer)
+            goal_viz_T = gymapi.Transform(r=gymapi.Quat(*goal_quat))
+            gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.env, goal_viz_T)
+
             # update the viewer
             self.gym.step_graphics(self.sim)
             self.gym.draw_viewer(self.viewer, self.sim, True)
+
             # Wait for dt to elapse in real time.
             # This synchronizes the physics simulation with the rendering rate.
             self.gym.sync_frame_time(self.sim)

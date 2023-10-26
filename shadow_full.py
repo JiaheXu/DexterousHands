@@ -39,7 +39,7 @@ class AssetDesc:
 asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_full.xml", False),    
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),    
     # AssetDesc("urdf/shadow_hand_description/shadowhand.urdf", False),  # okay to use
     # AssetDesc("urdf/shadow_hand_description/shadow_hand_right.urdf", False) #Nope
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
