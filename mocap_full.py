@@ -299,6 +299,9 @@ class isaac():
 
         action[8] = -1.0 * action[8]
         action[12] = -1.0 * action[12]
+        action[16] = -1.0 * action[16]
+        action[21] = -1.0 * action[21]
+
         action[28] = -1.0 * action[28]
         action[29] = -1.0 * action[29]
         

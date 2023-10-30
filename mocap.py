@@ -296,22 +296,24 @@ class isaac():
         action =  list(qpos_msg.data)
 
         action = np.array(action)
-        print("shape: ", action.shape)
-        action[0:2] = 0.0
+        #print("action: ", action)
+        
         if action.shape[0] == 24:
             action[2] = -1.0 * action[2]
             action[6] = -1.0 * action[6]
             action[22] = -1.0 * action[22]
             action[23] = -1.0 * action[23]
         else:
-            action[8] = -1.0 * action[8]
-            action[12] = -1.0 * action[12]
-            action[28] = -1.0 * action[28]
-            action[29] = -1.0 * action[29]
-            action = action[6:]
-
+            action[6] = -1.0 * action[6]
+            action[10] = -1.0 * action[10]
+            
+            action[26] = -1.0 * action[26]
+            action[27] = -1.0 * action[27]
+            action = action[4:]
+        action[0:2] = 0.0
+        #print("action: ", action)
         action = action.tolist()
-        print("count: ", self.count)
+        #print("count: ", self.count)
         self.count += 1   
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
