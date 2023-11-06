@@ -39,10 +39,11 @@ class AssetDesc:
 asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),    
+    # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),    
     # AssetDesc("urdf/shadow_hand_description/shadowhand.urdf", False),  # okay to use
     # AssetDesc("urdf/shadow_hand_description/shadow_hand_right.urdf", False) #Nope
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False),
 ]
 
 args = gymutil.parse_arguments(
@@ -169,8 +170,8 @@ env_upper = gymapi.Vec3(spacing, spacing, spacing)
 
 # position the camera
 # cam_pos = gymapi.Vec3(-0.8, -0.1, 0.2)
-cam_pos = gymapi.Vec3(-0.8, -0.1, 0.5)
-cam_target = gymapi.Vec3(-0.3, 0, 0)
+cam_pos = gymapi.Vec3(0.440, 0.256 , 0.629)
+cam_target = gymapi.Vec3(0.0, 0.0, 0.0)
 gym.viewer_camera_look_at(viewer, None, cam_pos, cam_target)
 
 # cache useful handles
@@ -206,13 +207,16 @@ for i in range(num_envs):
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0
     )
+    Tval = 0.1
+    Rval = 0.5
+
     props["damping"] = (
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
-    )
+                Tval, Tval, Tval, Rval, Rval, Rval,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+    )            
 
     gym.set_actor_dof_properties(env, actor_handle, props)
 
@@ -271,14 +275,14 @@ while not gym.query_viewer_has_closed(viewer):
 
     # Set new goal orientation
     if cnt % 1000000000 == 0:
-        #goal_quat = random_quaternion()
+        goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         #print("New goal orientation:", goal_quat)
 
         gym.clear_lines(viewer)
 
-        #goal_viz_T = gymapi.Transform(r=gymapi.Quat(*goal_quat))
-        #gymutil.draw_lines(axes_geom, gym, viewer, env, goal_viz_T)
+        goal_viz_T = gymapi.Transform(r=gymapi.Quat(*goal_quat))
+        gymutil.draw_lines(axes_geom, gym, viewer, env, goal_viz_T)
 
         dof_positions[:] = 0.0
         #dof_positions[3:] = quat2expcoord(goal_quat)

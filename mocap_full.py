@@ -39,10 +39,12 @@ class AssetDesc:
 asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
+    # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
-    #AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_full.xml", False), 
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False)
+    # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False), 
 ]
+
 
 
 
@@ -90,7 +92,7 @@ class isaac():
         self.gym = gymapi.acquire_gym()
         # configure sim
         self.sim_params = gymapi.SimParams()
-        self.sim_params.dt = dt = 1.0 / 30.0
+        self.sim_params.dt = 1.0 / 30.0
         self.sim_params.gravity = gymapi.Vec3(0, 0, 0)
         self.sim_params.up_axis = gymapi.UP_AXIS_Z
         # parse arguments
@@ -212,11 +214,8 @@ class isaac():
         self.env_upper = gymapi.Vec3(self.spacing, self.spacing, self.spacing)
 
         # position the camera
-        # self.cam_pos = gymapi.Vec3(0.0, 0.1, 1)
-        # self.cam_target = gymapi.Vec3(0, 0, 0)
-        # self.cam_pos = gymapi.Vec3(-0.8, -0.1, 0.2)
-        self.cam_pos = gymapi.Vec3(-0.8, -0.1, 0.5)
-        self.cam_target = gymapi.Vec3(-0.3, 0, 0)
+        self.cam_pos = gymapi.Vec3(0.440, 0.256 , 0.629)
+        self.cam_target = gymapi.Vec3(0.0, 0.0, 0.0)
         
         self.gym.viewer_camera_look_at(self.viewer, None, self.cam_pos, self.cam_target)
 
@@ -227,62 +226,57 @@ class isaac():
         print("Creating %d environments" % self.num_envs)
         for i in range(self.num_envs):
             # create env
-            self.env = self.gym.create_env(self.sim, self.env_lower, self.env_upper, self.num_per_row)
-            self.envs.append(self.env)
+            env = self.gym.create_env(self.sim, self.env_lower, self.env_upper, self.num_per_row)
+            self.envs.append(env)
 
             # add actor
             pose = gymapi.Transform()
             pose.p = gymapi.Vec3(0.0, 0.0, 0.0)
             # pose.r = gymapi.Quat(-0.707107, 0.0, 0.0, 0.707107)
 
-            actor_handle = self.gym.create_actor(self.env, self.asset, pose, "actor", i, 1)
+            actor_handle = self.gym.create_actor(env, self.asset, pose, "actor", i, 1)
             self.actor_handles.append(actor_handle)
 
-            props = self.gym.get_actor_dof_properties(self.env, actor_handle)
+            props = self.gym.get_actor_dof_properties(env, actor_handle)
             props["driveMode"] = (
-                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
-            )
-            props["stiffness"] = (
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0
-            )
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          )
+            props["stiffness"] =  ( 
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+
+                          )                          
             
-            Tval = 0.1
+            Tval = 1.0
             Rval = 0.5
 
             props["damping"] = (
-                #20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
-                Tval, Tval, Tval, Rval, Rval, Rval,
-                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+                        Tval, Tval, Tval, Rval, Rval, Rval,
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
             )
-                        
-            # props["damping"] = (
-            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-            #     0.1, 0.1, 0.1, 0.1, 0.1, 0.1
-            # )
-            self.gym.set_actor_dof_properties(self.env, actor_handle, props)
+            
+            self.gym.set_actor_dof_properties(env, actor_handle, props)
 
             # set default DOF positions
-            self.gym.set_actor_dof_states(self.env, actor_handle, self.dof_states, gymapi.STATE_ALL)
+            self.gym.set_actor_dof_states(env, actor_handle, self.dof_states, gymapi.STATE_ALL)
         
         # Helper visualization for goal orientation
         # pickle_data = np.load("/home/mmpug/shadow_hand2.pkl", allow_pickle=True)
         # self.meta_data, self.data = pickle_data["meta_data"], pickle_data["data"]
         # print("data: ", self.data)
         self.axes_geom = gymutil.AxesGeometry(0.5)
+        self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
+
         self.count = 0
         self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
@@ -290,41 +284,56 @@ class isaac():
         # action =  torch.from_numpy( np.array(qpos_msg.data))
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         print("got a pos msg")
-        action =  list(qpos_msg.data)
+        action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
         action = np.array(action)
-        #action[0:6] = 0.0
-        #action[6] = 0.0
-        #action[7] = 0.0
+        pose = action[0:6].copy()
+        #print("pose: ", pose)
+        action[6] = -1.0 * action[6]
+        action[10] = -1.0 * action[10]
+        action[26] = -1.0 * action[26]
+        action[27] = -1.0 * action[27]
 
-        action[8] = -1.0 * action[8]
-        action[12] = -1.0 * action[12]
-        action[16] = -1.0 * action[16]
-        action[21] = -1.0 * action[21]
+        action = action[4:] # 24 dim
+        action[0:2] = 0.0
+        #pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
+        
+        pose = pose.reshape(-1,1)
+        action = action.reshape(-1,1)
+        pose_test = pose.copy()
 
-        action[28] = -1.0 * action[28]
-        action[29] = -1.0 * action[29]
+        #pose_test = pose_test - pose_test
+        #pose_test[0] = - 0.2
+        #pose_test[1] = - 0.003
+        #pose_test[2] = 0.17
+
+        #pose_test[3:6] = 0.0
+
+        # swith pitch yaw
+        #pose_test[4] = (self.count % 100 ) * 0.01
+        #pose_test[4] = -1 * pose[5]
+        #pose_test[5] = -1 * pose[4]
+        
+        action = np.concatenate( [pose_test, action] , axis = 0)
         
         action = action.tolist()
-        print("count: ", self.count)
+        #print("count: ", self.count)
         self.count += 1   
-
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
+        #print("pose: ", action[0:6])
         for i in range(self.num_envs):
+
             self.gym.set_actor_dof_position_targets(self.envs[i], self.actor_handles[i], action)
-            
-            goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
-            #print("New goal orientation:", goal_quat)
+            # update the viewer
 
             self.gym.clear_lines(self.viewer)
-            goal_viz_T = gymapi.Transform(r=gymapi.Quat(*goal_quat))
-            gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.env, goal_viz_T)
+            goal_viz_T = gymapi.Transform(r=gymapi.Quat(*self.goal_quat))
+            gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.envs[i], goal_viz_T)
 
-            # update the viewer
+
             self.gym.step_graphics(self.sim)
             self.gym.draw_viewer(self.viewer, self.sim, True)
-
             # Wait for dt to elapse in real time.
             # This synchronizes the physics simulation with the rendering rate.
             self.gym.sync_frame_time(self.sim)
@@ -336,7 +345,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_node2")
+    rospy.init_node("isaac_mocap")
     isaac_node = isaac()
     isaac_node.run()
 

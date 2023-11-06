@@ -39,8 +39,10 @@ class AssetDesc:
 asset_descriptors = [
     # AssetDesc("urdf/spherical_joint.urdf", False),
     # AssetDesc("mjcf/spherical_joint.xml", False),
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
+    # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
+    # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False), 
 ]
 
 
@@ -240,18 +242,19 @@ class isaac():
 
             props = self.gym.get_actor_dof_properties(env, actor_handle)
             props["driveMode"] = (
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           )
             props["stiffness"] =  ( 
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0 
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+
                           )                          
             # props["stiffness"] =  ( 50.0, 50.0, 50.0, 50.0, 50.0, 50.0,
             #                 50.0, 50.0, 50.0, 50.0, 50.0, 50.0,
@@ -260,6 +263,7 @@ class isaac():
             #               )
             val = 0.05
             props["damping"] = (
+                        val, val, val, val, val, val,
                         val, val, val, val, val, val,
                         val, val, val, val, val, val,
                         val, val, val, val, val, val,
@@ -293,25 +297,23 @@ class isaac():
         # action =  torch.from_numpy( np.array(qpos_msg.data))
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         print("got a pos msg")
-        action =  list(qpos_msg.data)
+        action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
         action = np.array(action)
-        #print("action: ", action)
+
         
-        if action.shape[0] == 24:
-            action[2] = -1.0 * action[2]
-            action[6] = -1.0 * action[6]
-            action[22] = -1.0 * action[22]
-            action[23] = -1.0 * action[23]
-        else:
-            action[6] = -1.0 * action[6]
-            action[10] = -1.0 * action[10]
-            
-            action[26] = -1.0 * action[26]
-            action[27] = -1.0 * action[27]
-            action = action[4:]
+        action[6] = -1.0 * action[6]
+        action[10] = -1.0 * action[10]
+        action[26] = -1.0 * action[26]
+        action[27] = -1.0 * action[27]
+
+        action = action[4:] # 24 dim
         action[0:2] = 0.0
-        #print("action: ", action)
+        pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
+        pose = pose.reshape(-1,1)
+        action = action.reshape(-1,1)
+        action = np.concatenate( [pose, action] , axis = 0)
+        
         action = action.tolist()
         #print("count: ", self.count)
         self.count += 1   
