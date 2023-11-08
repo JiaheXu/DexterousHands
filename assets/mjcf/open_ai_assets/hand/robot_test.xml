@@ -17,6 +17,7 @@
     <!-- <body name="robot0:wrist" pos="0 0 0.256" quat="-0.707 0.0 0.0 0.707"> -->
     <!-- <body name="robot0:wrist" pos="0 0 0.256" quat="-0.5 -0.5 -0.5 0.5"> -->
     <body name="robot0:wrist" pos="0 0 0" euler="0.0 0.0 1.5707">
+    <!-- <body name="robot0:wrist" pos="0 0 0" euler="0.0 0.0 0.0"> -->
         <inertial pos="0.003 0 0.016" quat="0.504 0.496 0.495 0.504" mass="0.3" diaginertia="0.001 0.001 0.001"></inertial>
         <joint name="robot0:WRJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.489 0.14" damping="0.5" armature="0.005" user="1123"></joint>
         <geom class="robot0:D_Vizual" name="robot0:V_wrist" mesh="robot0:wrist"></geom>
