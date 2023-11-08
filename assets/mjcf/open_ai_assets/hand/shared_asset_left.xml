@@ -14,7 +14,7 @@
     <mesh name="robot1:forearm" file="forearm_electric.stl"></mesh>
     <mesh name="robot1:forearm_cvx" file="forearm_electric_cvx.stl"></mesh>
     <mesh name="robot1:wrist" scale="0.001 0.001 0.001" file="wrist_left.stl"></mesh>
-    <mesh name="robot1:palm" scale="0.001 0.001 0.001" file="palm_left2.stl"></mesh>
+    <mesh name="robot1:palm" scale="0.001 0.001 0.001" file="palm_left.stl"></mesh>
     <mesh name="robot1:knuckle" scale="0.001 0.001 0.001" file="knuckle.stl"></mesh>
     <mesh name="robot1:F3" scale="0.001 0.001 0.001" file="F3.stl"></mesh>
     <mesh name="robot1:F2" scale="0.001 0.001 0.001" file="F2.stl"></mesh>
