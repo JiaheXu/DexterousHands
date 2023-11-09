@@ -630,7 +630,8 @@
     <visual>
       <origin rpy="0 0.9599 0" xyz="0 0 0"/>
       <geometry name="lfmetacarpal_visual">
-        <mesh filename="meshes/visual/lf_metacarpal/lf_metacarpal_E3M5.dae" scale="0.001 0.001 0.001"/>
+        <mesh filename="meshes/visual/lf_metacarpal/lf_metacarpal_E3M5_left.dae" scale="0.001 0.001 0.001"/>
+        <!-- <mesh filename="meshes/visual/lf_metacarpal/lf_meta.dae" scale="0.001 0.001 0.001"/> -->
       </geometry>
       <material name="Grey"/>
     </visual>
@@ -646,23 +647,24 @@
     <parent link="palm"/>
     <child link="lfmetacarpal"/>
     <origin rpy="0 -0.9599 0" xyz="0.033 0 0.02071"/>
-    <axis xyz="1 0 0"/>
+    <axis xyz="0 0 -1"/>
     <limit effort="2" lower="0" upper="0.785" velocity="2.0"/>
     <dynamics damping="0.1"/>
   </joint>
+  
   <link name="lfknuckle">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0.008"/>
       <inertia ixx="0.00000026" ixy="0.0" ixz="0.0" iyy="0.00000026" iyz="0.0" izz="0.00000032"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="0 0 0" xyz="0 0 0.0005"/>
       <geometry name="lfknuckle_visual">
         <mesh filename="meshes/visual/f_knuckle/f_knuckle_E3M5.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="LightGrey"/>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 1.5708 0" xyz="0 0 0"/>
       <geometry name="lfknuckle_collision_geom">
@@ -670,6 +672,7 @@
       </geometry>
     </collision>
   </link>
+  
   <joint name="LFJ4" type="revolute">
     <parent link="lfmetacarpal"/>
     <child link="lfknuckle"/>
@@ -685,13 +688,13 @@
       <origin xyz="0 0 0.0225"/>
       <inertia ixx="0.0000098" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.0000018"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="lfproximal_visual">
         <mesh filename="meshes/visual/f_proximal/f_proximal_E3M5.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="Grey"/>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0.025"/>
       <geometry name="lfproximal_collision_geom">
@@ -713,13 +716,13 @@
       <mass value="0.017"/>
       <inertia ixx="0.0000026" ixy="0.0" ixz="0.0" iyy="0.0000027" iyz="0.0" izz="0.00000087"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="lfmiddle_visual">
         <mesh filename="meshes/visual/f_middle/f_middle_E3M5.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="Grey"/>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry name="lfmiddle_collision_geom">
@@ -753,12 +756,12 @@
       <origin xyz="0 0 0.012"/>
       <inertia ixx="0.00000094" ixy="0.0" ixz="0.0" iyy="0.0000011" iyz="0.0" izz="0.00000053"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="1.5708 0 0" xyz="0 0 0"/>
       <geometry name="lfdistal_visual">
         <mesh filename="meshes/visual/f_distal/pst/f_distal_pst.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="lfdistal_collision_geom">
@@ -786,13 +789,14 @@
     <child link="lftip"/>
     <origin rpy="0 0 0" xyz="0 0 0.026"/>
   </joint>
+
   <link name="thbase">
     <inertial>
       <mass value="0.010"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <inertia ixx="0.00000016" ixy="0.0" ixz="0.0" iyy="0.00000016" iyz="0.0" izz="0.00000016"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="thbase_visual">
         <box size="0.001 0.001 0.001"/>
@@ -800,7 +804,7 @@
       <material name="shadow_thbase_material">
         <color rgba="0.5 0.5 0.5 1.0"/>
       </material>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="thbase_collision_geom">
@@ -808,29 +812,32 @@
       </geometry>
     </collision>
   </link>
+
   <joint name="THJ5" type="revolute">
     <parent link="palm"/>
     <child link="thbase"/>
-    <origin rpy="-0.785398163397 0 -1.57079632679" xyz="0.034 -0.00858 0.029"/>
+    <origin rpy="-0.785398163397 0 1.57079632679" xyz="-0.034 -0.00858 0.029"/>
+    <!-- Todo check revolute direction -->
     <axis xyz="0 0 -1"/>
     <limit effort="5.0" lower="-1.047" upper="1.047" velocity="4.0"/>
     <dynamics damping="0.2"/>
   </joint>
+
   <link name="thproximal">
     <inertial>
       <mass value="0.040"/>
       <origin rpy="0 0 0" xyz="0 0 0.019"/>
       <inertia ixx="0.0000136" ixy="0.0" ixz="0.0" iyy="0.0000136" iyz="0.0" izz="0.00000313"/>
     </inertial>
-    <!-- <visual>
-      <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
+    <visual>
+      <origin rpy="0 0 -1.57079632679" xyz="0 0 0"/>
       <geometry name="thproximal_visual">
         <mesh filename="meshes/visual/th_proximal/th_proximal_E3M5.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="shadow_thproximal_material">
         <color rgba="0.2 0.2 0.2 1.0"/>
       </material>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0.020"/>
       <geometry name="thproximal_collision_geom">
@@ -838,6 +845,7 @@
       </geometry>
     </collision>
   </link>
+
   <joint name="THJ4" type="revolute">
     <parent link="thbase"/>
     <child link="thproximal"/>
@@ -846,13 +854,14 @@
     <limit effort="3" lower="0.0" upper="1.222" velocity="4.0"/>
     <dynamics damping="0.2"/>
   </joint>
+
   <link name="thhub">
     <inertial>
       <mass value="0.005"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.0000003"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="thhub_visual">
         <box size="0.001 0.001 0.001"/>
@@ -860,7 +869,7 @@
       <material name="shadow_thhub_material">
         <color rgba="0.7 0.7 0.7 1.0"/>
       </material>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="thhub_collision_geom">
@@ -882,7 +891,7 @@
       <origin rpy="0 0 0" xyz="0 0 0.016"/>
       <inertia ixx="0.0000051" ixy="0.0" ixz="0.0" iyy="0.0000051" iyz="0.0" izz="0.00000121"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry name="thmiddle_visual">
         <mesh filename="meshes/visual/th_middle/th_middle_E3M5.dae" scale="0.001 0.001 0.001"/>
@@ -890,7 +899,7 @@
       <material name="shadow_thmiddle_material">
         <color rgba="0.2 0.2 0.2 1.0"/>
       </material>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0.012"/>
       <geometry name="thmiddle_collision_geom">
@@ -925,7 +934,7 @@
       <origin rpy="0 0 0" xyz="0 0 0.01375"/>
       <inertia ixx="0.0000021" ixy="0.0" ixz="0.0" iyy="0.0000022" iyz="0.0" izz="0.000001"/>
     </inertial>
-    <!-- <visual>
+    <visual>
       <origin rpy="1.5708 0 0" xyz="0 0 0"/>
       <geometry name="thdistal_visual">
         <mesh filename="meshes/visual/th_distal/pst/th_distal_pst.dae" scale="0.001 0.001 0.001"/>
@@ -933,7 +942,7 @@
       <material name="shadow_thmiddle_material">
         <color rgba="0.2 0.2 0.2 1.0"/>
       </material>
-    </visual> -->
+    </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="thmiddle_collision_geom">
