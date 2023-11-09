@@ -196,27 +196,27 @@ for i in range(num_envs):
     props = gym.get_actor_dof_properties(env, actor_handle)
     props["driveMode"] = (
         gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        #gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        #gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        #gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        #gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
+        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
     )
     props["stiffness"] = (
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        #1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        #1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        #1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        #1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0
     )
     Tval = 0.1
     Rval = 0.5
 
     props["damping"] = (
-                Tval, Tval, Tval, Rval, Rval, Rval,
-                #0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                #0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                #0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                #0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+        Tval, Tval, Tval, Rval, Rval, Rval,
+        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
     )            
 
     gym.set_actor_dof_properties(env, actor_handle, props)

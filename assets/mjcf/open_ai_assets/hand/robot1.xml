@@ -9,31 +9,37 @@
             <body name="robot1:wrist" pos="0 0 0.256">
                 <inertial pos="0.003 0 0.016" quat="0.504 0.496 0.495 0.504" mass="0.3" diaginertia="0.001 0.001 0.001"></inertial>
                 <joint name="robot1:WRJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.489 0.14" damping="0.5" armature="0.005" user="1123"></joint>
+                
                 <geom class="robot1:D_Vizual" name="robot1:V_wrist" mesh="robot1:wrist"></geom>
                 <geom class="robot1:DC_Hand" name="robot1:C_wrist" type="capsule" pos="0 0 0" quat="0.707 0.707 0 0" size="0.015 0.01" rgba="0.4 0.5 0.6 0.1"></geom>
                 <body name="robot1:palm" pos="0 0 0.034">
                     <inertial pos="0.006 0 0.036" quat="0.716 0.044 0.075 0.693" mass="0.3" diaginertia="0.001 0.001 0.001"></inertial>
                     <joint name="robot1:WRJ0" type="hinge" pos="0 0 0" axis="1 0 0" range="-0.698 0.489" damping="0.5" armature="0.005" user="1122"></joint>
+                    
                     <geom class="robot1:D_Vizual" name="robot1:V_palm" mesh="robot1:palm"></geom>
                     <geom class="robot1:DC_Hand" name="robot1:C_palm0" type="box" pos="0.011 0 0.038" size="0.032 0.0111 0.049" rgba="0.4 0.5 0.6 0.1"></geom>
                     <geom class="robot1:DC_Hand" name="robot1:C_palm1" type="box" pos="-0.032 0 0.014" size="0.011 0.0111 0.025" rgba="0.4 0.5 0.6 0.1"></geom>
                     <body name="robot1:ffknuckle" pos="0.033 0 0.095">
                         <inertial pos="0 0 0" quat="0.52 0.854 0.006 -0.003" mass="0.008" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot1:FFJ3" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.349 0.349" user="1103"></joint>
+                        
                         <geom class="robot1:D_Vizual" name="robot1:V_ffknuckle" mesh="robot1:knuckle"></geom>
                         <body name="robot1:ffproximal" pos="0 0 0">
                             <inertial pos="0 0 0.023" quat="0.707 -0.004 0.004 0.707" mass="0.014" diaginertia="1e-05 1e-05 1e-05"></inertial>
                             <joint name="robot1:FFJ2" type="hinge" pos="0 0 0" axis="1 0 0" range="0 1.571" user="1102"></joint>
+                            
                             <geom class="robot1:D_Vizual" name="robot1:V_ffproximal" mesh="robot1:F3"></geom>
                             <geom class="robot1:DC_Hand" name="robot1:C_ffproximal" type="capsule" pos="0 0 0.0225" size="0.01 0.0225"></geom>
                             <body name="robot1:ffmiddle" pos="0 0 0.045">
                                 <inertial pos="0 0 0.011" quat="0.707 0 0 0.707" mass="0.012" diaginertia="1e-05 1e-05 1e-05"></inertial>
                                 <joint name="robot1:FFJ1" type="hinge" pos="0 0 0" axis="1 0 0" range="0 1.571" user="1101"></joint>
+                                
                                 <geom class="robot1:D_Vizual" name="robot1:V_ffmiddle" mesh="robot1:F2"></geom>
                                 <geom class="robot1:DC_Hand" name="robot1:C_ffmiddle" type="capsule" pos="0 0 0.0125" size="0.00805 0.0125"></geom>
                                 <body name="robot1:ffdistal" pos="0 0 0.025">
                                     <inertial pos="0 0 0.015" quat="0.707 -0.003 0.003 0.707" mass="0.01" diaginertia="1e-05 1e-05 1e-05"></inertial>
                                     <joint name="robot1:FFJ0" type="hinge" pos="0 0 0" axis="1 0 0" range="0 1.571" user="1100"></joint>
+                                    
                                     <geom class="robot1:D_Vizual" name="robot1:V_ffdistal" pos="0 0 0.001" mesh="robot1:F1"></geom>
                                     <geom class="robot1:DC_Hand" name="robot1:C_ffdistal" type="capsule" pos="0 0 0.012" size="0.00705 0.012" condim="4"></geom>
                                     <site name="robot1:S_fftip" pos="0 0 0.026" group="3"></site>
