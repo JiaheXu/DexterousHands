@@ -101,54 +101,54 @@
     </visual>
 
     <collision>
-      <origin rpy="0 0 0" xyz="0.011 0.0085 0.038"/>
+      <origin rpy="0 0 0" xyz="-0.011 0.0085 0.038"/>
       <geometry name="palm_collision_geom">
         <box size="0.062 0.007 0.098"/>
       </geometry>
     </collision>
     <collision>
-      <origin rpy="0 0 0" xyz="-0.002 -0.0035 0.038"/>
+      <origin rpy="0 0 0" xyz="0.002 -0.0035 0.038"/>
       <geometry>
         <box size="0.036 0.017 0.098"/>
       </geometry>
     </collision>
     <!-- palm complement below first finger -->
     <collision>
-      <origin rpy="0 0 0" xyz="0.029 -0.0035 0.082"/>
+      <origin rpy="0 0 0" xyz="-0.029 -0.0035 0.082"/>
       <geometry>
         <box size="0.026 0.017 0.010"/>
       </geometry>
     </collision>
     <collision>
-      <origin rpy="0.2 0 0.25" xyz="0.0265 -0.001 0.070"/>
+      <origin rpy="0.2 0 0.25" xyz="-0.0265 -0.001 0.070"/>
       <geometry>
         <box size="0.026 0.014 0.018"/>
       </geometry>
     </collision>
     <!-- thumb pulp side -->
     <collision>
-      <origin rpy="0 0 0" xyz="0.0315 -0.0085 0.001"/>
+      <origin rpy="0 0 0" xyz="-0.0315 -0.0085 0.001"/>
       <geometry>
         <box size="0.021 0.027 0.024"/>
       </geometry>
     </collision>
     <!-- thumb pulp central -->
     <collision>
-      <origin rpy="0 0 -0.48" xyz="0.0125 -0.015 0.009"/>
+      <origin rpy="0 0 -0.48" xyz="-0.0125 -0.015 0.009"/>
       <geometry>
         <box size="0.022 0.005 0.040"/>
       </geometry>
     </collision>
     <!-- above middle finger-->
     <collision>
-      <origin rpy="0 0 0" xyz="0.011 0 0.089"/>
+      <origin rpy="0 0 0" xyz="-0.011 0 0.089"/>
       <geometry>
         <box size="0.018 0.024 0.004"/>
       </geometry>
     </collision>
     <!-- metacarpal side-->
     <collision>
-      <origin rpy="0 0 0" xyz="-0.03 0 0.009"/>
+      <origin rpy="0 0 0" xyz="0.03 0 0.009"/>
       <geometry>
         <box size="0.020 0.024 0.040"/>
       </geometry>
@@ -177,7 +177,7 @@
   <joint name="palm_to_imu" type="fixed">
     <parent link="palm"/>
     <child link="imu"/>
-    <origin rpy="-1.5707963 3.141592 0.0" xyz="0.01785 0.00765 0.049125"/>
+    <origin rpy="-1.5707963 3.141592 0.0" xyz="-0.01785 0.00765 0.049125"/>
   </joint>
   
   <link name="ffknuckle">
@@ -242,6 +242,7 @@
     <limit effort="2" lower="0.0" upper="1.571" velocity="2.0"/>
     <dynamics damping="0.1"/>
   </joint>
+
   <link name="ffmiddle">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0.0125"/>
@@ -631,7 +632,6 @@
       <origin rpy="0 0.9599 0" xyz="0 0 0"/>
       <geometry name="lfmetacarpal_visual">
         <mesh filename="meshes/visual/lf_metacarpal/lf_metacarpal_E3M5_left.dae" scale="0.001 0.001 0.001"/>
-        <!-- <mesh filename="meshes/visual/lf_metacarpal/lf_meta.dae" scale="0.001 0.001 0.001"/> -->
       </geometry>
       <material name="Grey"/>
     </visual>

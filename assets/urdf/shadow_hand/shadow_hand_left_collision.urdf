@@ -97,54 +97,54 @@
       <material name="Grey"/>
     </visual> -->
     <visual>
-      <origin rpy="0 0 0" xyz="0.011 0.0085 0.038"/>
+      <origin rpy="0 0 0" xyz="-0.011 0.0085 0.038"/>
       <geometry name="palm_collision_geom">
         <box size="0.062 0.007 0.098"/>
       </geometry>
     </visual>
     <visual>
-      <origin rpy="0 0 0" xyz="-0.002 -0.0035 0.038"/>
+      <origin rpy="0 0 0" xyz="0.002 -0.0035 0.038"/>
       <geometry>
         <box size="0.036 0.017 0.098"/>
       </geometry>
     </visual>
     <!-- palm complement below first finger -->
     <visual>
-      <origin rpy="0 0 0" xyz="0.029 -0.0035 0.082"/>
+      <origin rpy="0 0 0" xyz="-0.029 -0.0035 0.082"/>
       <geometry>
         <box size="0.026 0.017 0.010"/>
       </geometry>
     </visual>
     <visual>
-      <origin rpy="0.2 0 0.25" xyz="0.0265 -0.001 0.070"/>
+      <origin rpy="0.2 0 0.25" xyz="-0.0265 -0.001 0.070"/>
       <geometry>
         <box size="0.026 0.014 0.018"/>
       </geometry>
     </visual>
     <!-- thumb pulp side -->
     <visual>
-      <origin rpy="0 0 0" xyz="0.0315 -0.0085 0.001"/>
+      <origin rpy="0 0 0" xyz="-0.0315 -0.0085 0.001"/>
       <geometry>
         <box size="0.021 0.027 0.024"/>
       </geometry>
     </visual>
     <!-- thumb pulp central -->
     <visual>
-      <origin rpy="0 0 -0.48" xyz="0.0125 -0.015 0.009"/>
+      <origin rpy="0 0 0.48" xyz="-0.0125 -0.015 0.009"/>
       <geometry>
         <box size="0.022 0.005 0.040"/>
       </geometry>
     </visual>
     <!-- above middle finger-->
     <visual>
-      <origin rpy="0 0 0" xyz="0.011 0 0.089"/>
+      <origin rpy="0 0 0" xyz="-0.011 0 0.089"/>
       <geometry>
         <box size="0.018 0.024 0.004"/>
       </geometry>
     </visual>
     <!-- metacarpal side-->
     <visual>
-      <origin rpy="0 0 0" xyz="-0.03 0 0.009"/>
+      <origin rpy="0 0 0" xyz="0.03 0 0.009"/>
       <geometry>
         <box size="0.020 0.024 0.040"/>
       </geometry>
@@ -169,7 +169,7 @@
   <joint name="palm_to_imu" type="fixed">
     <parent link="palm"/>
     <child link="imu"/>
-    <origin rpy="-1.5707963 3.141592 0.0" xyz="0.01785 0.00765 0.049125"/>
+    <origin rpy="-1.5707963 3.141592 0.0" xyz="-0.01785 0.00765 0.049125"/>
   </joint>
   <link name="ffknuckle">
     <inertial>
@@ -195,7 +195,7 @@
     <parent link="palm"/>
     <child link="ffknuckle"/>
     <!--<origin xyz="0.033 0 0.095" rpy="0 0 0" />-->
-    <origin rpy="0 0 0" xyz="0.033 0 0.095"/>
+    <origin rpy="0 0 0" xyz="-0.033 0 0.095"/>
     <axis xyz="0 -1 0"/>
     <limit effort="2" lower="-0.349000" upper="0.349000" velocity="2.0"/>
     <dynamics damping="0.1"/>
@@ -228,6 +228,7 @@
     <limit effort="2" lower="0.0" upper="1.571" velocity="2.0"/>
     <dynamics damping="0.1"/>
   </joint>
+  
   <link name="ffmiddle">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0.0125"/>
@@ -331,7 +332,7 @@
     <parent link="palm"/>
     <child link="mfknuckle"/>
     <!--<origin xyz="0.033 0 0.095" rpy="0 0 0" />-->
-    <origin rpy="0 0 0" xyz="0.011 0 0.099"/>
+    <origin rpy="0 0 0" xyz="-0.011 0 0.099"/>
     <axis xyz="0 -1 0"/>
     <limit effort="2" lower="-0.349" upper="0.349" velocity="2.0"/>
     <dynamics damping="0.1"/>
@@ -471,7 +472,7 @@
     <parent link="palm"/>
     <child link="rfknuckle"/>
     <!--<origin xyz="0.033 0 0.095" rpy="0 0 0" />-->
-    <origin rpy="0 0 0" xyz="-0.011 0 0.095"/>
+    <origin rpy="0 0 0" xyz="0.011 0 0.095"/>
     <axis xyz="0 1 0"/>
     <limit effort="2" lower="-0.349065850399" upper="0.349065850399" velocity="2.0"/>
     <dynamics damping="0.1"/>
@@ -606,7 +607,7 @@
   <joint name="LFJ5" type="revolute">
     <parent link="palm"/>
     <child link="lfmetacarpal"/>
-    <origin rpy="0 -0.9599 0" xyz="-0.033 0 0.02071"/>
+    <origin rpy="0 -0.9599 0" xyz="0.033 0 0.02071"/>
     <axis xyz="0 1 0"/>
     <limit effort="2" lower="0" upper="0.785" velocity="2.0"/>
     <dynamics damping="0.1"/>
@@ -772,7 +773,7 @@
   <joint name="THJ5" type="revolute">
     <parent link="palm"/>
     <child link="thbase"/>
-    <origin rpy="-0.785398163397 0 -1.57079632679" xyz="0.034 -0.00858 0.029"/>
+    <origin rpy="-0.785398163397 0 1.57079632679" xyz="-0.034 -0.00858 0.029"/>
     <axis xyz="0 0 -1"/>
     <limit effort="5.0" lower="-1.047" upper="1.047" velocity="4.0"/>
     <dynamics damping="0.2"/>

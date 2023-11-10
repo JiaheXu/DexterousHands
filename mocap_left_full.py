@@ -42,7 +42,7 @@ asset_descriptors = [
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_left_full.xml", False), 
 ]
 
 
@@ -278,7 +278,7 @@ class isaac():
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         self.count = 0
-        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Left", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
