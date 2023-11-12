@@ -34,8 +34,8 @@
   <joint name="world_joint" type="fixed">
     <parent link="world"/>
     <child link="wrist"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-    <!-- <origin rpy="0.0 0.0 1.57079" xyz="0.0 0.0 0.0"/> -->
+    <!-- <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/> -->
+    <origin rpy="0.0 0.0 1.57079" xyz="0.0 0.0 0.0"/>
   </joint>
 
   <link name="wrist">
@@ -818,7 +818,7 @@
     <child link="thbase"/>
     <origin rpy="-0.785398163397 0 1.57079632679" xyz="-0.034 -0.00858 0.029"/>
     <!-- Todo check revolute direction -->
-    <axis xyz="0 0 -1"/>
+    <axis xyz="0 0 1"/>
     <limit effort="5.0" lower="-1.047" upper="1.047" velocity="4.0"/>
     <dynamics damping="0.2"/>
   </joint>
@@ -850,7 +850,7 @@
     <parent link="thbase"/>
     <child link="thproximal"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="0 -1 0"/>
     <limit effort="3" lower="0.0" upper="1.222" velocity="4.0"/>
     <dynamics damping="0.2"/>
   </joint>
@@ -881,7 +881,7 @@
     <parent link="thproximal"/>
     <child link="thhub"/>
     <origin rpy="0 0 0" xyz="0 0 0.038"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="0 -1 0"/>
     <limit effort="2.0" lower="-0.209" upper="0.209" velocity="4.0"/>
     <dynamics damping="0.2"/>
   </joint>

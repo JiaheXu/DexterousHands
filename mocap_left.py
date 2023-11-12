@@ -279,7 +279,7 @@ class isaac():
 
         self.count = 0
         self.qpos_sub = rospy.Subscriber("/qpos/Left", Float32MultiArray, self.callback)
-
+        # self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
@@ -291,7 +291,15 @@ class isaac():
         #print("pose: ", pose)
         action[6] = -1.0 * action[6]
         action[10] = -1.0 * action[10]
-        action[26] = -1.0 * action[26]
+
+
+
+        print("thumb act: ", action[23:28])
+        action[23] = -1.0 * action[23]
+        #action[24] = -1.0 * action[24]
+        #action[25] = -1.0 * action[25]
+        #action[26] = -1.0 * action[26]
+
         action[27] = -1.0 * action[27]
 
         action = action[4:] # 24 dim
