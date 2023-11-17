@@ -20,7 +20,7 @@ from isaacgym import gymtorch
 from isaacgym import gymapi
 
 
-class Mocap(BaseTask):
+class Mocap(BaseTask): #DoorOpenInward task. 
     def __init__(self, cfg, sim_params, physics_engine, device_type, device_id, headless, agent_index=[[[0, 1, 2, 3, 4, 5]], [[0, 1, 2, 3, 4, 5]]], is_multi_agent=False):
         self.cfg = cfg
         self.sim_params = sim_params
@@ -254,7 +254,7 @@ class Mocap(BaseTask):
         lower = gymapi.Vec3(-spacing, -spacing, 0.0)
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
-        asset_root = "../../assets"
+        asset_root = "../assets"
         shadow_hand_asset_file = "mjcf/open_ai_assets/hand/shadow_right_full.xml"
         shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_left_full.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
@@ -264,36 +264,37 @@ class Mocap(BaseTask):
         #     asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
-        # object_asset_file = self.asset_files_dict[self.object_type]
+        object_asset_file = self.asset_files_dict[self.object_type]
 
-        # # load shadow hand_ asset
-        # asset_options = gymapi.AssetOptions()
-        # asset_options.flip_visual_attachments = False
-        # asset_options.fix_base_link = False
-        # asset_options.collapse_fixed_joints = True
-        # asset_options.disable_gravity = True
-        # asset_options.thickness = 0.001
-        # asset_options.angular_damping = 100
-        # asset_options.linear_damping = 100
+        # load shadow hand_ asset
+        asset_options = gymapi.AssetOptions()
+        asset_options.flip_visual_attachments = False
+        asset_options.fix_base_link = False
+        asset_options.collapse_fixed_joints = True
+        asset_options.disable_gravity = True
+        asset_options.thickness = 0.001
+        asset_options.angular_damping = 100
+        asset_options.linear_damping = 100
 
-        # if self.physics_engine == gymapi.SIM_PHYSX:
-        #     asset_options.use_physx_armature = True
-        # asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+        if self.physics_engine == gymapi.SIM_PHYSX:
+            asset_options.use_physx_armature = True
+        asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+        print("shadow_hand_asset_file: ", shadow_hand_asset_file)
+        shadow_hand_asset = self.gym.load_asset(self.sim, asset_root, shadow_hand_asset_file, asset_options)
+        shadow_hand_another_asset = self.gym.load_asset(self.sim, asset_root, shadow_hand_another_asset_file, asset_options)
 
-        # shadow_hand_asset = self.gym.load_asset(self.sim, asset_root, shadow_hand_asset_file, asset_options)
-        # shadow_hand_another_asset = self.gym.load_asset(self.sim, asset_root, shadow_hand_another_asset_file, asset_options)
+        self.num_shadow_hand_bodies = self.gym.get_asset_rigid_body_count(shadow_hand_asset)
+        self.num_shadow_hand_shapes = self.gym.get_asset_rigid_shape_count(shadow_hand_asset)
+        
+        self.num_shadow_hand_dofs = self.gym.get_asset_dof_count(shadow_hand_asset)
+        self.num_shadow_hand_actuators = self.gym.get_asset_actuator_count(shadow_hand_asset)
+        self.num_shadow_hand_tendons = self.gym.get_asset_tendon_count(shadow_hand_asset)
 
-        # self.num_shadow_hand_bodies = self.gym.get_asset_rigid_body_count(shadow_hand_asset)
-        # self.num_shadow_hand_shapes = self.gym.get_asset_rigid_shape_count(shadow_hand_asset)
-        # self.num_shadow_hand_dofs = self.gym.get_asset_dof_count(shadow_hand_asset)
-        # self.num_shadow_hand_actuators = self.gym.get_asset_actuator_count(shadow_hand_asset)
-        # self.num_shadow_hand_tendons = self.gym.get_asset_tendon_count(shadow_hand_asset)
-
-        # print("self.num_shadow_hand_bodies: ", self.num_shadow_hand_bodies)
-        # print("self.num_shadow_hand_shapes: ", self.num_shadow_hand_shapes)
-        # print("self.num_shadow_hand_dofs: ", self.num_shadow_hand_dofs)
-        # print("self.num_shadow_hand_actuators: ", self.num_shadow_hand_actuators)
-        # print("self.num_shadow_hand_tendons: ", self.num_shadow_hand_tendons)
+        print("self.num_shadow_hand_bodies: ", self.num_shadow_hand_bodies)
+        print("self.num_shadow_hand_shapes: ", self.num_shadow_hand_shapes)
+        print("self.num_shadow_hand_dofs: ", self.num_shadow_hand_dofs)
+        print("self.num_shadow_hand_actuators: ", self.num_shadow_hand_actuators)
+        print("self.num_shadow_hand_tendons: ", self.num_shadow_hand_tendons)
 
         # # tendon set up
         # limit_stiffness = 30
