@@ -243,14 +243,14 @@ class isaac():
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,# gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           )
             props["stiffness"] =  ( 
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0, 1.0,# 1.0, 1.0,
 
                           )                          
             
@@ -262,7 +262,7 @@ class isaac():
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+                        0.1, 0.1, 0.1, 0.1,# 0.1, 0.1
             )
             
             self.gym.set_actor_dof_properties(env, actor_handle, props)
@@ -278,7 +278,8 @@ class isaac():
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         self.count = 0
-        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        #self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
@@ -287,20 +288,20 @@ class isaac():
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
         action = np.array(action)
-        pose = action[0:6].copy()
+        #pose = action[0:6].copy()
         #print("pose: ", pose)
         # action[6] = -1.0 * action[6]
         # action[10] = -1.0 * action[10]
         # action[26] = -1.0 * action[26]
         # action[27] = -1.0 * action[27]
 
-        action = action[4:] # 24 dim
-        action[0:2] = 0.0
+        #action = action[4:] # 24 dim
+        #action[0:2] = 0.0
         #pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
         
-        pose = pose.reshape(-1,1)
-        action = action.reshape(-1,1)
-        pose_test = pose.copy()
+        #pose = pose.reshape(-1,1)
+        #action = action.reshape(-1,1)
+        #pose_test = pose.copy()
 
         #pose_test = pose_test - pose_test
         #pose_test[0] = - 0.2
@@ -314,7 +315,7 @@ class isaac():
         #pose_test[4] = -1 * pose[5]
         #pose_test[5] = -1 * pose[4]
         
-        action = np.concatenate( [pose_test, action] , axis = 0) # 30
+        #action = np.concatenate( [pose_test, action] , axis = 0) # 30
         
         action = action.tolist()
         #print("count: ", self.count)

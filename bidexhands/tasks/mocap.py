@@ -152,70 +152,73 @@ class Mocap(BaseTask): #DoorOpenInward task.
             cam_target = gymapi.Vec3(6.0, 5.0, 0.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
-        # # get gym GPU state tensors
-        # actor_root_state_tensor = self.gym.acquire_actor_root_state_tensor(self.sim)
-        # dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
-        # rigid_body_tensor = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        # get gym GPU state tensors
+        actor_root_state_tensor = self.gym.acquire_actor_root_state_tensor(self.sim)
+        dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
+        rigid_body_tensor = self.gym.acquire_rigid_body_state_tensor(self.sim)
 
-        # sensor_tensor = self.gym.acquire_force_sensor_tensor(self.sim)
-        # self.vec_sensor_tensor = gymtorch.wrap_tensor(sensor_tensor).view(self.num_envs, self.num_fingertips * 6)
+        sensor_tensor = self.gym.acquire_force_sensor_tensor(self.sim)
+        self.vec_sensor_tensor = gymtorch.wrap_tensor(sensor_tensor).view(self.num_envs, self.num_fingertips * 6)
 
-        # dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
-        # self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + 4)
-        # self.dof_force_tensor = self.dof_force_tensor[:, :48]
+        dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
 
-        # self.gym.refresh_actor_root_state_tensor(self.sim)
-        # self.gym.refresh_dof_state_tensor(self.sim)
-        # self.gym.refresh_rigid_body_state_tensor(self.sim)
+        # Todo
+        #print("dof_force_tensor: ", dof_force_tensor.shape)
+        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 )
+        #self.dof_force_tensor = self.dof_force_tensor[:, :48]
 
-        # self.shadow_hand_default_dof_pos = torch.zeros(self.num_shadow_hand_dofs, dtype=torch.float, device=self.device)
+        self.gym.refresh_actor_root_state_tensor(self.sim)
+        self.gym.refresh_dof_state_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
 
-        # self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
-        # self.shadow_hand_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, :self.num_shadow_hand_dofs]
-        # self.shadow_hand_dof_pos = self.shadow_hand_dof_state[..., 0]
-        # self.shadow_hand_dof_vel = self.shadow_hand_dof_state[..., 1]
+        self.shadow_hand_default_dof_pos = torch.zeros(self.num_shadow_hand_dofs, dtype=torch.float, device=self.device)
 
-        # self.shadow_hand_another_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2]
-        # self.shadow_hand_another_dof_pos = self.shadow_hand_another_dof_state[..., 0]
-        # self.shadow_hand_another_dof_vel = self.shadow_hand_another_dof_state[..., 1]
+        self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
+        self.shadow_hand_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, :self.num_shadow_hand_dofs]
+        self.shadow_hand_dof_pos = self.shadow_hand_dof_state[..., 0]
+        self.shadow_hand_dof_vel = self.shadow_hand_dof_state[..., 1]
 
-        # self.object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + self.num_object_dofs]
-        # self.object_dof_pos = self.object_dof_state[..., 0]
-        # self.object_dof_vel = self.object_dof_state[..., 1]
+        self.shadow_hand_another_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2]
+        self.shadow_hand_another_dof_pos = self.shadow_hand_another_dof_state[..., 0]
+        self.shadow_hand_another_dof_vel = self.shadow_hand_another_dof_state[..., 1]
 
-        # self.goal_object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2 + self.num_object_dofs:self.num_shadow_hand_dofs*2 + 2*self.num_object_dofs]
-        # self.goal_object_dof_pos = self.goal_object_dof_state[..., 0]
-        # self.goal_object_dof_vel = self.goal_object_dof_state[..., 1]
+        self.object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + self.num_object_dofs]
+        self.object_dof_pos = self.object_dof_state[..., 0]
+        self.object_dof_vel = self.object_dof_state[..., 1]
 
-        # self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
-        # self.num_bodies = self.rigid_body_states.shape[1]
+        self.goal_object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2 + self.num_object_dofs:self.num_shadow_hand_dofs*2 + 2*self.num_object_dofs]
+        self.goal_object_dof_pos = self.goal_object_dof_state[..., 0]
+        self.goal_object_dof_vel = self.goal_object_dof_state[..., 1]
 
-        # self.root_state_tensor = gymtorch.wrap_tensor(actor_root_state_tensor).view(-1, 13)
-        # self.hand_positions = self.root_state_tensor[:, 0:3]
-        # self.hand_orientations = self.root_state_tensor[:, 3:7]
-        # self.hand_linvels = self.root_state_tensor[:, 7:10]
-        # self.hand_angvels = self.root_state_tensor[:, 10:13]
-        # self.saved_root_tensor = self.root_state_tensor.clone() 
+        self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
+        self.num_bodies = self.rigid_body_states.shape[1]
 
-        # self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
-        # self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
-        # self.cur_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
+        self.root_state_tensor = gymtorch.wrap_tensor(actor_root_state_tensor).view(-1, 13)
+        self.hand_positions = self.root_state_tensor[:, 0:3]
+        self.hand_orientations = self.root_state_tensor[:, 3:7]
+        self.hand_linvels = self.root_state_tensor[:, 7:10]
+        self.hand_angvels = self.root_state_tensor[:, 10:13]
+        self.saved_root_tensor = self.root_state_tensor.clone() 
 
-        # self.global_indices = torch.arange(self.num_envs * 3, dtype=torch.int32, device=self.device).view(self.num_envs, -1)
-        # self.x_unit_tensor = to_torch([1, 0, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
-        # self.y_unit_tensor = to_torch([0, 1, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
-        # self.z_unit_tensor = to_torch([0, 0, 1], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
+        self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
+        self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
+        self.cur_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
 
-        # self.reset_goal_buf = self.reset_buf.clone()
-        # self.successes = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
-        # self.consecutive_successes = torch.zeros(1, dtype=torch.float, device=self.device)
+        self.global_indices = torch.arange(self.num_envs * 3, dtype=torch.int32, device=self.device).view(self.num_envs, -1)
+        self.x_unit_tensor = to_torch([1, 0, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
+        self.y_unit_tensor = to_torch([0, 1, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
+        self.z_unit_tensor = to_torch([0, 0, 1], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
 
-        # self.av_factor = to_torch(self.av_factor, dtype=torch.float, device=self.device)
-        # self.apply_forces = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
-        # self.apply_torque = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
+        self.reset_goal_buf = self.reset_buf.clone()
+        self.successes = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+        self.consecutive_successes = torch.zeros(1, dtype=torch.float, device=self.device)
 
-        # self.total_successes = 0
-        # self.total_resets = 0
+        self.av_factor = to_torch(self.av_factor, dtype=torch.float, device=self.device)
+        self.apply_forces = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
+        self.apply_torque = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
+
+        self.total_successes = 0
+        self.total_resets = 0
 
     def create_sim(self):
         """
@@ -259,7 +262,7 @@ class Mocap(BaseTask): #DoorOpenInward task.
         shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_left_full.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
-
+        # Todso
         # if "asset" in self.cfg["env"]:
         #     asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
@@ -316,303 +319,242 @@ class Mocap(BaseTask): #DoorOpenInward task.
         # self.gym.set_asset_tendon_properties(shadow_hand_asset, tendon_props)
         # self.gym.set_asset_tendon_properties(shadow_hand_another_asset, a_tendon_props)
         
-        # actuated_dof_names = [self.gym.get_asset_actuator_joint_name(shadow_hand_asset, i) for i in range(self.num_shadow_hand_actuators)]
-        # self.actuated_dof_indices = [self.gym.find_asset_dof_index(shadow_hand_asset, name) for name in actuated_dof_names]
+        actuated_dof_names = [self.gym.get_asset_actuator_joint_name(shadow_hand_asset, i) for i in range(self.num_shadow_hand_actuators)]
+        self.actuated_dof_indices = [self.gym.find_asset_dof_index(shadow_hand_asset, name) for name in actuated_dof_names]
 
         # # set shadow_hand dof properties
-        # shadow_hand_dof_props = self.gym.get_asset_dof_properties(shadow_hand_asset)
-        # shadow_hand_another_dof_props = self.gym.get_asset_dof_properties(shadow_hand_another_asset)
+        shadow_hand_dof_props = self.gym.get_asset_dof_properties(shadow_hand_asset)
+        shadow_hand_another_dof_props = self.gym.get_asset_dof_properties(shadow_hand_another_asset)
 
-        # self.shadow_hand_dof_lower_limits = []
-        # self.shadow_hand_dof_upper_limits = []
-        # self.shadow_hand_dof_default_pos = []
-        # self.shadow_hand_dof_default_vel = []
-        # self.sensors = []
-        # sensor_pose = gymapi.Transform()
+        self.shadow_hand_dof_lower_limits = []
+        self.shadow_hand_dof_upper_limits = []
+        self.shadow_hand_dof_default_pos = []
+        self.shadow_hand_dof_default_vel = []
+        self.sensors = []
+        sensor_pose = gymapi.Transform()
 
-        # for i in range(self.num_shadow_hand_dofs):
-        #     self.shadow_hand_dof_lower_limits.append(shadow_hand_dof_props['lower'][i])
-        #     self.shadow_hand_dof_upper_limits.append(shadow_hand_dof_props['upper'][i])
-        #     self.shadow_hand_dof_default_pos.append(0.0)
-        #     self.shadow_hand_dof_default_vel.append(0.0)
+        for i in range(self.num_shadow_hand_dofs):
+            self.shadow_hand_dof_lower_limits.append(shadow_hand_dof_props['lower'][i])
+            self.shadow_hand_dof_upper_limits.append(shadow_hand_dof_props['upper'][i])
+            self.shadow_hand_dof_default_pos.append(0.0)
+            self.shadow_hand_dof_default_vel.append(0.0)
 
-        # self.actuated_dof_indices = to_torch(self.actuated_dof_indices, dtype=torch.long, device=self.device)
-        # self.shadow_hand_dof_lower_limits = to_torch(self.shadow_hand_dof_lower_limits, device=self.device)
-        # self.shadow_hand_dof_upper_limits = to_torch(self.shadow_hand_dof_upper_limits, device=self.device)
-        # self.shadow_hand_dof_default_pos = to_torch(self.shadow_hand_dof_default_pos, device=self.device)
-        # self.shadow_hand_dof_default_vel = to_torch(self.shadow_hand_dof_default_vel, device=self.device)
+        self.actuated_dof_indices = to_torch(self.actuated_dof_indices, dtype=torch.long, device=self.device)
+        self.shadow_hand_dof_lower_limits = to_torch(self.shadow_hand_dof_lower_limits, device=self.device)
+        self.shadow_hand_dof_upper_limits = to_torch(self.shadow_hand_dof_upper_limits, device=self.device)
+        self.shadow_hand_dof_default_pos = to_torch(self.shadow_hand_dof_default_pos, device=self.device)
+        self.shadow_hand_dof_default_vel = to_torch(self.shadow_hand_dof_default_vel, device=self.device)
 
-        # # load manipulated object and goal assets
-        # object_asset_options = gymapi.AssetOptions()
-        # object_asset_options.density = 500
-        # object_asset_options.fix_base_link = True
-        # object_asset_options.disable_gravity = True
-        # object_asset_options.use_mesh_materials = True
-        # object_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
-        # object_asset_options.override_com = True
-        # object_asset_options.override_inertia = True
-        # object_asset_options.vhacd_enabled = True
-        # object_asset_options.vhacd_params = gymapi.VhacdParams()
-        # object_asset_options.vhacd_params.resolution = 100000
-        # object_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+        # load manipulated object and goal assets
+        object_asset_options = gymapi.AssetOptions()
+        object_asset_options.density = 500
+        object_asset_options.fix_base_link = True
+        object_asset_options.disable_gravity = True
+        object_asset_options.use_mesh_materials = True
+        object_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
+        object_asset_options.override_com = True
+        object_asset_options.override_inertia = True
+        object_asset_options.vhacd_enabled = True
+        object_asset_options.vhacd_params = gymapi.VhacdParams()
+        object_asset_options.vhacd_params.resolution = 100000
+        object_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
-        # object_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
+        object_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
 
-        # object_asset_options.disable_gravity = True
-        # goal_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
+        object_asset_options.disable_gravity = True
+        goal_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
         
-        # self.num_object_bodies = self.gym.get_asset_rigid_body_count(object_asset)
-        # self.num_object_shapes = self.gym.get_asset_rigid_shape_count(object_asset)
+        self.num_object_bodies = self.gym.get_asset_rigid_body_count(object_asset)
+        self.num_object_shapes = self.gym.get_asset_rigid_shape_count(object_asset)
 
-        # # set object dof properties
-        # self.num_object_dofs = self.gym.get_asset_dof_count(object_asset)
-        # object_dof_props = self.gym.get_asset_dof_properties(object_asset)
+        # set object dof properties
+        self.num_object_dofs = self.gym.get_asset_dof_count(object_asset)
+        object_dof_props = self.gym.get_asset_dof_properties(object_asset)
 
-        # self.object_dof_lower_limits = []
-        # self.object_dof_upper_limits = []
+        self.object_dof_lower_limits = []
+        self.object_dof_upper_limits = []
 
-        # for i in range(self.num_object_dofs):
-        #     self.object_dof_lower_limits.append(object_dof_props['lower'][i])
-        #     self.object_dof_upper_limits.append(object_dof_props['upper'][i])
+        for i in range(self.num_object_dofs):
+            self.object_dof_lower_limits.append(object_dof_props['lower'][i])
+            self.object_dof_upper_limits.append(object_dof_props['upper'][i])
 
-        # self.object_dof_lower_limits = to_torch(self.object_dof_lower_limits, device=self.device)
-        # self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
+        self.object_dof_lower_limits = to_torch(self.object_dof_lower_limits, device=self.device)
+        self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
-        # # create table asset
-        # table_dims = gymapi.Vec3(0.3, 0.3, 0.)
-        # asset_options = gymapi.AssetOptions()
-        # asset_options.fix_base_link = True
-        # asset_options.flip_visual_attachments = True
-        # asset_options.collapse_fixed_joints = True
-        # asset_options.disable_gravity = True
-        # asset_options.thickness = 0.001
+        # create table asset
+        table_dims = gymapi.Vec3(0.3, 0.3, 0.)
+        asset_options = gymapi.AssetOptions()
+        asset_options.fix_base_link = True
+        asset_options.flip_visual_attachments = True
+        asset_options.collapse_fixed_joints = True
+        asset_options.disable_gravity = True
+        asset_options.thickness = 0.001
 
-        # table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
+        table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
-        # shadow_hand_start_pose = gymapi.Transform()
-        # shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.6)
-        # shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 1.57, 1.57)
+        shadow_hand_start_pose = gymapi.Transform()
+        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.6)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 1.57, 1.57)
 
-        # shadow_another_hand_start_pose = gymapi.Transform()
-        # shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.6)
-        # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, -1.57, 1.57)
+        shadow_another_hand_start_pose = gymapi.Transform()
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.6)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, -1.57, 1.57)
 
-        # object_start_pose = gymapi.Transform()
-        # object_start_pose.p = gymapi.Vec3(0.0, 0., 0.7)
-        # object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 3.14159, 0.0)
-        # pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
+        object_start_pose = gymapi.Transform()
+        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.7)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 3.14159, 0.0)
+        pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
-        # # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
-        # # object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
-        # # object_start_pose.p.z = shadow_hand_start_pose.p.z + pose_dz
+        if self.object_type == "pen":
+            object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
 
-        # if self.object_type == "pen":
-        #     object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
+        self.goal_displacement = gymapi.Vec3(-0., 0.0, 5.)
+        self.goal_displacement_tensor = to_torch(
+            [self.goal_displacement.x, self.goal_displacement.y, self.goal_displacement.z], device=self.device)
+        goal_start_pose = gymapi.Transform()
+        goal_start_pose.p = object_start_pose.p + self.goal_displacement
 
-        # self.goal_displacement = gymapi.Vec3(-0., 0.0, 5.)
-        # self.goal_displacement_tensor = to_torch(
-        #     [self.goal_displacement.x, self.goal_displacement.y, self.goal_displacement.z], device=self.device)
-        # goal_start_pose = gymapi.Transform()
-        # goal_start_pose.p = object_start_pose.p + self.goal_displacement
+        table_pose = gymapi.Transform()
+        table_pose.p = gymapi.Vec3(0.0, -0.6, 0.5 * table_dims.z)
+        table_pose.r = gymapi.Quat().from_euler_zyx(-0., 0, 0)
 
-        # goal_start_pose.p.z -= 0.0
+        # compute aggregate size
+        max_agg_bodies = self.num_shadow_hand_bodies * 2 + 2 * self.num_object_bodies + 1
+        max_agg_shapes = self.num_shadow_hand_shapes * 2 + 2 * self.num_object_shapes + 1
 
-        # table_pose = gymapi.Transform()
-        # table_pose.p = gymapi.Vec3(0.0, -0.6, 0.5 * table_dims.z)
-        # table_pose.r = gymapi.Quat().from_euler_zyx(-0., 0, 0)
+        self.shadow_hands = []
+        self.envs = []
 
-        # # compute aggregate size
-        # max_agg_bodies = self.num_shadow_hand_bodies * 2 + 2 * self.num_object_bodies + 1
-        # max_agg_shapes = self.num_shadow_hand_shapes * 2 + 2 * self.num_object_shapes + 1
+        self.object_init_state = []
+        self.hand_start_states = []
 
-        # self.shadow_hands = []
-        # self.envs = []
+        self.hand_indices = []
+        self.another_hand_indices = []
+        self.fingertip_indices = []
+        self.object_indices = []
+        self.goal_object_indices = []
+        self.table_indices = []
 
-        # self.object_init_state = []
-        # self.hand_start_states = []
+        self.fingertip_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_asset, name) for name in self.fingertips]
+        self.fingertip_another_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_another_asset, name) for name in self.a_fingertips]
 
-        # self.hand_indices = []
-        # self.another_hand_indices = []
-        # self.fingertip_indices = []
-        # self.object_indices = []
-        # self.goal_object_indices = []
-        # self.table_indices = []
+        # create fingertip force sensors, if needed
+        sensor_pose = gymapi.Transform()
+        for ft_handle in self.fingertip_handles:
+            self.gym.create_asset_force_sensor(shadow_hand_asset, ft_handle, sensor_pose)
+        for ft_a_handle in self.fingertip_another_handles:
+            self.gym.create_asset_force_sensor(shadow_hand_another_asset, ft_a_handle, sensor_pose)
 
-        # self.fingertip_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_asset, name) for name in self.fingertips]
-        # self.fingertip_another_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_another_asset, name) for name in self.a_fingertips]
+        for i in range(self.num_envs):
+            # create env instance
+            env_ptr = self.gym.create_env(
+                self.sim, lower, upper, num_per_row
+            )
 
-        # # create fingertip force sensors, if needed
-        # sensor_pose = gymapi.Transform()
-        # for ft_handle in self.fingertip_handles:
-        #     self.gym.create_asset_force_sensor(shadow_hand_asset, ft_handle, sensor_pose)
-        # for ft_a_handle in self.fingertip_another_handles:
-        #     self.gym.create_asset_force_sensor(shadow_hand_another_asset, ft_a_handle, sensor_pose)
-
-        # if self.obs_type in ["point_cloud"]:
-        #     self.cameras = []
-        #     self.camera_tensors = []
-        #     self.camera_view_matrixs = []
-        #     self.camera_proj_matrixs = []
-
-        #     self.camera_props = gymapi.CameraProperties()
-        #     self.camera_props.width = 256
-        #     self.camera_props.height = 256
-        #     self.camera_props.enable_tensors = True
-
-        #     self.env_origin = torch.zeros((self.num_envs, 3), device=self.device, dtype=torch.float)
-        #     self.pointCloudDownsampleNum = 768
-        #     self.camera_u = torch.arange(0, self.camera_props.width, device=self.device)
-        #     self.camera_v = torch.arange(0, self.camera_props.height, device=self.device)
-
-        #     self.camera_v2, self.camera_u2 = torch.meshgrid(self.camera_v, self.camera_u, indexing='ij')
-
-        #     if self.point_cloud_debug:
-        #         import open3d as o3d
-        #         from bidexhands.utils.o3dviewer import PointcloudVisualizer
-        #         self.pointCloudVisualizer = PointcloudVisualizer()
-        #         self.pointCloudVisualizerInitialized = False
-        #         self.o3d_pc = o3d.geometry.PointCloud()
-        #     else :
-        #         self.pointCloudVisualizer = None
-
-        # for i in range(self.num_envs):
-        #     # create env instance
-        #     env_ptr = self.gym.create_env(
-        #         self.sim, lower, upper, num_per_row
-        #     )
-
-        #     if self.aggregate_mode >= 1:
-        #         self.gym.begin_aggregate(env_ptr, max_agg_bodies, max_agg_shapes, True)
+            if self.aggregate_mode >= 1:
+                self.gym.begin_aggregate(env_ptr, max_agg_bodies, max_agg_shapes, True)
 
 
-        #     # add hand - collision filter = -1 to use asset collision filters set in mjcf loader
-        #     shadow_hand_actor = self.gym.create_actor(env_ptr, shadow_hand_asset, shadow_hand_start_pose, "hand", i, 0, 0)
-        #     shadow_hand_another_actor = self.gym.create_actor(env_ptr, shadow_hand_another_asset, shadow_another_hand_start_pose, "another_hand", i, 0, 0)
+            # add hand - collision filter = -1 to use asset collision filters set in mjcf loader
+            shadow_hand_actor = self.gym.create_actor(env_ptr, shadow_hand_asset, shadow_hand_start_pose, "hand", i, 0, 0)
+            shadow_hand_another_actor = self.gym.create_actor(env_ptr, shadow_hand_another_asset, shadow_another_hand_start_pose, "another_hand", i, 0, 0)
             
-        #     self.hand_start_states.append([shadow_hand_start_pose.p.x, shadow_hand_start_pose.p.y, shadow_hand_start_pose.p.z,
-        #                                    shadow_hand_start_pose.r.x, shadow_hand_start_pose.r.y, shadow_hand_start_pose.r.z, shadow_hand_start_pose.r.w,
-        #                                    0, 0, 0, 0, 0, 0])
+            self.hand_start_states.append([shadow_hand_start_pose.p.x, shadow_hand_start_pose.p.y, shadow_hand_start_pose.p.z,
+                                           shadow_hand_start_pose.r.x, shadow_hand_start_pose.r.y, shadow_hand_start_pose.r.z, shadow_hand_start_pose.r.w,
+                                           0, 0, 0, 0, 0, 0])
             
-        #     self.gym.set_actor_dof_properties(env_ptr, shadow_hand_actor, shadow_hand_dof_props)
-        #     hand_idx = self.gym.get_actor_index(env_ptr, shadow_hand_actor, gymapi.DOMAIN_SIM)
-        #     self.hand_indices.append(hand_idx)
+            self.gym.set_actor_dof_properties(env_ptr, shadow_hand_actor, shadow_hand_dof_props)
+            hand_idx = self.gym.get_actor_index(env_ptr, shadow_hand_actor, gymapi.DOMAIN_SIM)
+            self.hand_indices.append(hand_idx)
 
-        #     self.gym.set_actor_dof_properties(env_ptr, shadow_hand_another_actor, shadow_hand_another_dof_props)
-        #     another_hand_idx = self.gym.get_actor_index(env_ptr, shadow_hand_another_actor, gymapi.DOMAIN_SIM)
-        #     self.another_hand_indices.append(another_hand_idx)            
+            self.gym.set_actor_dof_properties(env_ptr, shadow_hand_another_actor, shadow_hand_another_dof_props)
+            another_hand_idx = self.gym.get_actor_index(env_ptr, shadow_hand_another_actor, gymapi.DOMAIN_SIM)
+            self.another_hand_indices.append(another_hand_idx)            
 
-        #     # randomize colors and textures for rigid body
-        #     num_bodies = self.gym.get_actor_rigid_body_count(env_ptr, shadow_hand_actor)
-        #     hand_rigid_body_index = [[0,1,2,3], [4,5,6,7], [8,9,10,11], [12,13,14,15], [16,17,18,19,20], [21,22,23,24,25]]
+            # randomize colors and textures for rigid body
+            num_bodies = self.gym.get_actor_rigid_body_count(env_ptr, shadow_hand_actor)
+            # hand_rigid_body_index = [[0,1,2,3], [4,5,6,7], [8,9,10,11], [12,13,14,15], [16,17,18,19,20], [21,22,23,24,25]]
             
-        #     for n in self.agent_index[0]:
-        #         colorx = random.uniform(0, 1)
-        #         colory = random.uniform(0, 1)
-        #         colorz = random.uniform(0, 1)
-        #         for m in n:
-        #             for o in hand_rigid_body_index[m]:
-        #                 self.gym.set_rigid_body_color(env_ptr, shadow_hand_actor, o, gymapi.MESH_VISUAL,
-        #                                         gymapi.Vec3(colorx, colory, colorz))
-        #     for n in self.agent_index[1]:                
-        #         colorx = random.uniform(0, 1)
-        #         colory = random.uniform(0, 1)
-        #         colorz = random.uniform(0, 1)
-        #         for m in n:
-        #             for o in hand_rigid_body_index[m]:
-        #                 self.gym.set_rigid_body_color(env_ptr, shadow_hand_another_actor, o, gymapi.MESH_VISUAL,
-        #                                         gymapi.Vec3(colorx, colory, colorz))
-        #         # gym.set_rigid_body_texture(env, actor_handles[-1], n, gymapi.MESH_VISUAL,
-        #         #                            loaded_texture_handle_list[random.randint(0, len(loaded_texture_handle_list)-1)])
+            # for n in self.agent_index[0]:
+            #     colorx = random.uniform(0, 1)
+            #     colory = random.uniform(0, 1)
+            #     colorz = random.uniform(0, 1)
+            #     for m in n:
+            #         for o in hand_rigid_body_index[m]:
+            #             self.gym.set_rigid_body_color(env_ptr, shadow_hand_actor, o, gymapi.MESH_VISUAL,
+            #                                     gymapi.Vec3(colorx, colory, colorz))
+            # for n in self.agent_index[1]:                
+            #     colorx = random.uniform(0, 1)
+            #     colory = random.uniform(0, 1)
+            #     colorz = random.uniform(0, 1)
+            #     for m in n:
+            #         for o in hand_rigid_body_index[m]:
+            #             self.gym.set_rigid_body_color(env_ptr, shadow_hand_another_actor, o, gymapi.MESH_VISUAL,
+            #                                     gymapi.Vec3(colorx, colory, colorz))
 
-        #     # create fingertip force-torque sensors
-        #     self.gym.enable_actor_dof_force_sensors(env_ptr, shadow_hand_actor)
-        #     self.gym.enable_actor_dof_force_sensors(env_ptr, shadow_hand_another_actor)
+            # create fingertip force-torque sensors
+            self.gym.enable_actor_dof_force_sensors(env_ptr, shadow_hand_actor)
+            self.gym.enable_actor_dof_force_sensors(env_ptr, shadow_hand_another_actor)
             
-        #     # add object
-        #     object_handle = self.gym.create_actor(env_ptr, object_asset, object_start_pose, "object", i, 0, 0)
-        #     self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
-        #                                    object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
-        #                                    0, 0, 0, 0, 0, 0])
+            # add object
+            object_handle = self.gym.create_actor(env_ptr, object_asset, object_start_pose, "object", i, 0, 0)
+            self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
+                                           object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
+                                           0, 0, 0, 0, 0, 0])
             
-        #     self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
+            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
 
-        #     object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
-        #     self.object_indices.append(object_idx)
-        #     # self.gym.set_actor_scale(env_ptr, object_handle, 0.3)
+            object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
+            self.object_indices.append(object_idx)
+            # self.gym.set_actor_scale(env_ptr, object_handle, 0.3)
 
-        #     # add goal object
-        #     goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
-        #     goal_object_idx = self.gym.get_actor_index(env_ptr, goal_handle, gymapi.DOMAIN_SIM)
-        #     self.goal_object_indices.append(goal_object_idx)
-        #     # self.gym.set_actor_scale(env_ptr, goal_handle, 0.3)
+            # add goal object
+            goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
+            goal_object_idx = self.gym.get_actor_index(env_ptr, goal_handle, gymapi.DOMAIN_SIM)
+            self.goal_object_indices.append(goal_object_idx)
+            # self.gym.set_actor_scale(env_ptr, goal_handle, 0.3)
 
-        #     # add table
-        #     # table_handle = self.gym.create_actor(env_ptr, table_asset, table_pose, "table", i, -1, 0)
-        #     # self.gym.set_rigid_body_texture(env_ptr, table_handle, 0, gymapi.MESH_VISUAL, table_texture_handle)
-        #     # table_idx = self.gym.get_actor_index(env_ptr, table_handle, gymapi.DOMAIN_SIM)
-        #     # self.table_indices.append(table_idx)
+            object_dof_props = self.gym.get_actor_dof_properties(env_ptr, object_handle)
+            for object_dof_prop in object_dof_props:
+                object_dof_prop[4] = 100
+                object_dof_prop[5] = 100
+                object_dof_prop[6] = 5
+                object_dof_prop[7] = 1
+            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
 
-        #     object_dof_props = self.gym.get_actor_dof_properties(env_ptr, object_handle)
-        #     for object_dof_prop in object_dof_props:
-        #         object_dof_prop[4] = 100
-        #         object_dof_prop[5] = 100
-        #         object_dof_prop[6] = 5
-        #         object_dof_prop[7] = 1
-        #     self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
+            #set friction
+            object_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, object_handle)
+            for object_shape_prop in object_shape_props:
+                object_shape_prop.friction = 0.1
+            self.gym.set_actor_rigid_shape_properties(env_ptr, object_handle, object_shape_props)
 
-        #     #set friction
-        #     object_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, object_handle)
-        #     for object_shape_prop in object_shape_props:
-        #         object_shape_prop.friction = 0.1
-        #     self.gym.set_actor_rigid_shape_properties(env_ptr, object_handle, object_shape_props)
+            if self.object_type != "block":
+                self.gym.set_rigid_body_color(
+                    env_ptr, object_handle, 0, gymapi.MESH_VISUAL, gymapi.Vec3(0.6, 0.72, 0.98))
+                self.gym.set_rigid_body_color(
+                    env_ptr, goal_handle, 0, gymapi.MESH_VISUAL, gymapi.Vec3(0.6, 0.72, 0.98))
 
-        #     if self.object_type != "block":
-        #         self.gym.set_rigid_body_color(
-        #             env_ptr, object_handle, 0, gymapi.MESH_VISUAL, gymapi.Vec3(0.6, 0.72, 0.98))
-        #         self.gym.set_rigid_body_color(
-        #             env_ptr, goal_handle, 0, gymapi.MESH_VISUAL, gymapi.Vec3(0.6, 0.72, 0.98))
+            if self.aggregate_mode > 0:
+                self.gym.end_aggregate(env_ptr)
 
-        #     if self.obs_type in ["point_cloud"]:
-        #         camera_handle = self.gym.create_camera_sensor(env_ptr, self.camera_props)
-        #         self.gym.set_camera_location(camera_handle, env_ptr, gymapi.Vec3(1.0, -0.0, 1.0), gymapi.Vec3(-0.5, -0.0, 0.5))
-        #         camera_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, env_ptr, camera_handle, gymapi.IMAGE_DEPTH)
-        #         torch_cam_tensor = gymtorch.wrap_tensor(camera_tensor)
-        #         cam_vinv = torch.inverse((torch.tensor(self.gym.get_camera_view_matrix(self.sim, env_ptr, camera_handle)))).to(self.device)
-        #         cam_proj = torch.tensor(self.gym.get_camera_proj_matrix(self.sim, env_ptr, camera_handle), device=self.device)
+            self.envs.append(env_ptr)
+            self.shadow_hands.append(shadow_hand_actor)
 
-        #         origin = self.gym.get_env_origin(env_ptr)
-        #         self.env_origin[i][0] = origin.x
-        #         self.env_origin[i][1] = origin.y
-        #         self.env_origin[i][2] = origin.z
-        #         self.camera_tensors.append(torch_cam_tensor)
-        #         self.camera_view_matrixs.append(cam_vinv)
-        #         self.camera_proj_matrixs.append(cam_proj)
-        #         self.cameras.append(camera_handle)
+        self.object_init_state = to_torch(self.object_init_state, device=self.device, dtype=torch.float).view(self.num_envs, 13)
+        self.goal_states = self.object_init_state.clone()
 
-        #     if self.aggregate_mode > 0:
-        #         self.gym.end_aggregate(env_ptr)
+        self.goal_init_state = self.goal_states.clone()
+        self.hand_start_states = to_torch(self.hand_start_states, device=self.device).view(self.num_envs, 13)
 
-        #     self.envs.append(env_ptr)
-        #     self.shadow_hands.append(shadow_hand_actor)
+        self.fingertip_handles = to_torch(self.fingertip_handles, dtype=torch.long, device=self.device)
+        self.fingertip_another_handles = to_torch(self.fingertip_another_handles, dtype=torch.long, device=self.device)
 
-        # self.object_init_state = to_torch(self.object_init_state, device=self.device, dtype=torch.float).view(self.num_envs, 13)
-        # self.goal_states = self.object_init_state.clone()
-        # # self.goal_pose = self.goal_states[:, 0:7]
-        # # self.goal_pos = self.goal_states[:, 0:3]
-        # # self.goal_rot = self.goal_states[:, 3:7]
-        # # self.goal_states[:, self.up_axis_idx] -= 0.04
-        # self.goal_init_state = self.goal_states.clone()
-        # self.hand_start_states = to_torch(self.hand_start_states, device=self.device).view(self.num_envs, 13)
+        self.hand_indices = to_torch(self.hand_indices, dtype=torch.long, device=self.device)
+        self.another_hand_indices = to_torch(self.another_hand_indices, dtype=torch.long, device=self.device)
 
-        # self.fingertip_handles = to_torch(self.fingertip_handles, dtype=torch.long, device=self.device)
-        # self.fingertip_another_handles = to_torch(self.fingertip_another_handles, dtype=torch.long, device=self.device)
-
-        # self.hand_indices = to_torch(self.hand_indices, dtype=torch.long, device=self.device)
-        # self.another_hand_indices = to_torch(self.another_hand_indices, dtype=torch.long, device=self.device)
-
-        # self.object_indices = to_torch(self.object_indices, dtype=torch.long, device=self.device)
-        # self.goal_object_indices = to_torch(self.goal_object_indices, dtype=torch.long, device=self.device)
-        # self.table_indices = to_torch(self.table_indices, dtype=torch.long, device=self.device)
+        self.object_indices = to_torch(self.object_indices, dtype=torch.long, device=self.device)
+        self.goal_object_indices = to_torch(self.goal_object_indices, dtype=torch.long, device=self.device)
+        self.table_indices = to_torch(self.table_indices, dtype=torch.long, device=self.device)
 
     def compute_reward(self, actions):
         """
