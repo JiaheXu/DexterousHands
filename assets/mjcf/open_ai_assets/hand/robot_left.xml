@@ -1,30 +1,30 @@
 <!-- See LICENSE.md for legal notices. LICENSE.md must be kept together with this file. -->
 <mujoco>
     <body name="robot1:basement" pos="0 0 0" euler="0 0 0">
-    <body name="ARTx" pos="0 0 0" euler="0 0 0">
-        <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
-    <body name="ARTy" pos="0 0 0" euler="0 0 0">
-        <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
-    <body name="ARTz" pos="0 0 0" euler="0 0 0">
-        <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
-    <body name="ARRx" pos="0 0 0" euler="0 0 0">
-        <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
-    <body name="ARRy" pos="0 0 0" euler="0 0 0">
-        <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
-    <body name="ARRz:" pos="0 0 0" euler="0 0 0">
-        <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot1:TRANSX" pos="0 0 0" euler="0 0 0">
+        <joint name="robot1:TRANSX" pos="0 0 0" axis="1 0 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot1:TRANSY" pos="0 0 0" euler="0 0 0">
+        <joint name="robot1:TRANSY" pos="0 0 0" axis="0 1 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot1:TRANSZ" pos="0 0 0" euler="0 0 0">
+        <joint name="robot1:TRANSZ" pos="0 0 0" axis="0 0 1" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot1:ROTX" pos="0 0 0" euler="0 0 0">
+        <joint name="robot1:ROTX" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot1:ROTY" pos="0 0 0" euler="0 0 0">
+        <joint name="robot1:ROTY" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot1:ROTZ" pos="0 0 0" euler="0 0 0">
+        <joint name="robot1:ROTZ" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
     
     <!-- <body name="robot0:wrist" pos="0 0 0.256" quat="-0.707 0.0 0.0 0.707"> -->
     <!-- <body name="robot0:wrist" pos="0 0 0.256" quat="-0.5 -0.5 -0.5 0.5"> -->            
     <!-- <body name="robot1:wrist" pos="0 0 0" euler="0.0 0.0 0.0">  -->
     <body name="robot1:wrist" pos="0 0 0" euler="0.0 0.0 1.5707">
         <!-- <inertial pos="0.003 0 0.016" quat="0.504 0.496 0.495 0.504" mass="0.3" diaginertia="0.001 0.001 0.001"></inertial> -->
-        <joint name="robot1:WRJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.489 0.14" damping="0.5" armature="0.005" user="1123"></joint>      
+        <!-- <joint name="robot1:WRJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.489 0.14" damping="0.5" armature="0.005" user="1123"></joint>       -->
         <geom class="robot1:D_Vizual" name="robot1:V_wrist" mesh="robot1:wrist"></geom>
         <geom class="robot1:DC_Hand" name="robot1:C_wrist" type="capsule" pos="0 0 0" quat="0.707 0.707 0 0" size="0.01 0.01" rgba="0.4 0.5 0.6 0.1"></geom>
         <body name="robot1:palm" pos="0 0 0.034">
             <!-- <inertial pos="0.006 0 0.036" quat="0.716 0.044 0.075 0.693" mass="0.3" diaginertia="0.001 0.001 0.001"></inertial> -->
-            <joint name="robot1:WRJ0" type="hinge" pos="0 0 0" axis="1 0 0" range="-0.698 0.489" damping="0.5" armature="0.005" user="1122"></joint>
+            <!-- <joint name="robot1:WRJ0" type="hinge" pos="0 0 0" axis="1 0 0" range="-0.698 0.489" damping="0.5" armature="0.005" user="1122"></joint> -->
             <geom class="robot1:D_Vizual" name="robot1:V_palm" mesh="robot1:palm"></geom>
             <geom class="robot1:DC_Hand" name="robot1:C_palm0" type="box" pos="0.011 0 0.038" size="0.032 0.0111 0.049" rgba="0.4 0.5 0.6 0.1"></geom>
             <geom class="robot1:DC_Hand" name="robot1:C_palm1" type="box" pos="-0.032 0 0.014" size="0.011 0.0111 0.025" rgba="0.4 0.5 0.6 0.1"></geom>

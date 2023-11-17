@@ -289,10 +289,10 @@ class isaac():
         action = np.array(action)
         pose = action[0:6].copy()
         #print("pose: ", pose)
-        action[6] = -1.0 * action[6]
-        action[10] = -1.0 * action[10]
-        action[26] = -1.0 * action[26]
-        action[27] = -1.0 * action[27]
+        # action[6] = -1.0 * action[6]
+        # action[10] = -1.0 * action[10]
+        # action[26] = -1.0 * action[26]
+        # action[27] = -1.0 * action[27]
 
         action = action[4:] # 24 dim
         action[0:2] = 0.0
@@ -314,7 +314,7 @@ class isaac():
         #pose_test[4] = -1 * pose[5]
         #pose_test[5] = -1 * pose[4]
         
-        action = np.concatenate( [pose_test, action] , axis = 0)
+        action = np.concatenate( [pose_test, action] , axis = 0) # 30
         
         action = action.tolist()
         #print("count: ", self.count)
