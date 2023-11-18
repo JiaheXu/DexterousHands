@@ -228,6 +228,7 @@ class ShadowHandDoorCloseInward(BaseTask):
         self.goal_object_dof_vel = self.goal_object_dof_state[..., 1]
 
         self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
+        print("self.rigid_body_states: ", self.rigid_body_states.shape)
         self.num_bodies = self.rigid_body_states.shape[1]
 
         self.root_state_tensor = gymtorch.wrap_tensor(actor_root_state_tensor).view(-1, 13)

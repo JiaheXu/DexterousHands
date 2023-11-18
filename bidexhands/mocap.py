@@ -1,7 +1,9 @@
 import bidexhands as bi
 import torch
 import numpy as np
-env_name = 'Mocap'
+#env_name = 'Mocap'
+
+env_name = 'ShadowHandDoorCloseInward'
 algo = "manual"
 # env_name = 'ShadowHandDoorOpenOutward'
 # algo = "ppo"
