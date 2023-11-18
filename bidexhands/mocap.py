@@ -2,8 +2,8 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-env_name = 'ShadowHandDoorCloseInward'
-#env_name = 'Mocap'
+#env_name = 'ShadowHandDoorCloseInward'
+env_name = 'Mocap'
 algo = "manual"
 # env_name = 'ShadowHandDoorOpenOutward'
 # algo = "ppo"
@@ -32,7 +32,7 @@ class isaac():
         # removed 18 13 9 5
         #idx = [0, 1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 19, 20, 21, 22, 23]
         action = self.env.action_space.sample()
-
+        print("action.shape: ", action.shape)
         # np_pos = np.array(qpos_msg.data)
         
         # np_pos[0:2] = 0.0
@@ -59,7 +59,7 @@ class isaac():
         rospy.spin()  
 
 def main():
-    rospy.init_node("isaac_node")
+    rospy.init_node("isaac_mocap_node")
     isaac_node = isaac()
     isaac_node.run()
 
