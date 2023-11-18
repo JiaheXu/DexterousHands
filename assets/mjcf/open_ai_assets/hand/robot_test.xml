@@ -2,11 +2,11 @@
 <mujoco>
     <body name="robot0:basement" pos="0 0 0" euler="0 0 0">
     <body name="robot0:TRANSX" pos="0 0 0" euler="0 0 0">
-        <joint name="robot0:TRANSX" pos="0 0 0" axis="1 0 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="robot0:TRANSX" pos="0 0 0" axis="1 0 0" type="slide" range="-5 5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
     <body name="robot0:TRANSY" pos="0 0 0" euler="0 0 0">
-        <joint name="robot0:TRANSY" pos="0 0 0" axis="0 1 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="robot0:TRANSY" pos="0 0 0" axis="0 1 0" type="slide" range="-5 5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
     <body name="robot0:TRANSZ" pos="0 0 0" euler="0 0 0">
-        <joint name="robot0:TRANSZ" pos="0 0 0" axis="0 0 1" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="robot0:TRANSZ" pos="0 0 0" axis="0 0 1" type="slide" range="-5 5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
     <body name="robot0:ROTX" pos="0 0 0" euler="0 0 0">
         <joint name="robot0:ROTX" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
     <body name="robot0:ROTY" pos="0 0 0" euler="0 0 0">

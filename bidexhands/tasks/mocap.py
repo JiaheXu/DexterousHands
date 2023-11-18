@@ -105,6 +105,8 @@ class Mocap(BaseTask): #DoorOpenInward task.
             "point_cloud_for_distill": 417 + self.num_point_cloud_feature_dim * 3,
             "full_state": 417
         }
+
+        # Todo
         self.num_hand_obs = 72 + 95 + 26 + 6
         self.up_axis = 'z'
 
@@ -112,6 +114,12 @@ class Mocap(BaseTask): #DoorOpenInward task.
         self.a_fingertips = ["robot1:ffdistal", "robot1:mfdistal", "robot1:rfdistal", "robot1:lfdistal", "robot1:thdistal"]
 
         self.hand_center = ["robot1:palm"]
+        self.hand_center_idx = 8
+        self.ff_idx = 12
+        self.mf_idx = 16
+        self.rf_idx = 20
+        self.lf_idx = 25
+        self.th_idx = 30
 
         self.num_fingertips = len(self.fingertips) * 2
 
@@ -148,8 +156,8 @@ class Mocap(BaseTask): #DoorOpenInward task.
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(10.0, 5.0, 1.0)
-            cam_target = gymapi.Vec3(6.0, 5.0, 0.0)
+            cam_pos = gymapi.Vec3(3.0, 3.0, 1.0)
+            cam_target = gymapi.Vec3(0.0, 0.0, 0.5)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
         # get gym GPU state tensors
@@ -164,8 +172,8 @@ class Mocap(BaseTask): #DoorOpenInward task.
 
         # Todo
         #print("dof_force_tensor: ", dof_force_tensor.shape)
-        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 )
-        #self.dof_force_tensor = self.dof_force_tensor[:, :48]
+        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + 4)
+        self.dof_force_tensor = self.dof_force_tensor[:, : 2*self.num_shadow_hand_dofs]
 
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_dof_state_tensor(self.sim)
@@ -263,13 +271,13 @@ class Mocap(BaseTask): #DoorOpenInward task.
         shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_left_full.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
-        # Todso
+        # Todo
         # if "asset" in self.cfg["env"]:
         #     asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
         object_asset_file = self.asset_files_dict[self.object_type]
-
+        print("object_asset_file: ", object_asset_file)
         # load shadow hand_ asset
         asset_options = gymapi.AssetOptions()
         asset_options.flip_visual_attachments = False
@@ -283,13 +291,14 @@ class Mocap(BaseTask): #DoorOpenInward task.
         if self.physics_engine == gymapi.SIM_PHYSX:
             asset_options.use_physx_armature = True
         asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+
         print("shadow_hand_asset_file: ", shadow_hand_asset_file)
+        
         shadow_hand_asset = self.gym.load_asset(self.sim, asset_root, shadow_hand_asset_file, asset_options)
         shadow_hand_another_asset = self.gym.load_asset(self.sim, asset_root, shadow_hand_another_asset_file, asset_options)
 
         self.num_shadow_hand_bodies = self.gym.get_asset_rigid_body_count(shadow_hand_asset)
         self.num_shadow_hand_shapes = self.gym.get_asset_rigid_shape_count(shadow_hand_asset)
-        
         self.num_shadow_hand_dofs = self.gym.get_asset_dof_count(shadow_hand_asset)
         self.num_shadow_hand_actuators = self.gym.get_asset_actuator_count(shadow_hand_asset)
         self.num_shadow_hand_tendons = self.gym.get_asset_tendon_count(shadow_hand_asset)
@@ -595,59 +604,59 @@ class Mocap(BaseTask): #DoorOpenInward task.
         self.object_linvel = self.root_state_tensor[self.object_indices, 7:10]
         self.object_angvel = self.root_state_tensor[self.object_indices, 10:13]
 
-        self.door_left_handle_pos = self.rigid_body_states[:, 26 * 2 + 3, 0:3]
-        self.door_left_handle_rot = self.rigid_body_states[:, 26 * 2 + 3, 3:7]
+        self.door_left_handle_pos = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2 + 3, 0:3]
+        self.door_left_handle_rot = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2 + 3, 3:7]
         self.door_left_handle_pos = self.door_left_handle_pos + quat_apply(self.door_left_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.5)
         self.door_left_handle_pos = self.door_left_handle_pos + quat_apply(self.door_left_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * -0.39)
         self.door_left_handle_pos = self.door_left_handle_pos + quat_apply(self.door_left_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.04)
 
-        self.door_right_handle_pos = self.rigid_body_states[:, 26 * 2 + 2, 0:3]
-        self.door_right_handle_rot = self.rigid_body_states[:, 26 * 2 + 2, 3:7]
+        self.door_right_handle_pos = self.rigid_body_states[:, self.num_shadow_hand_dofs * 2 + 2, 0:3]
+        self.door_right_handle_rot = self.rigid_body_states[:, self.num_shadow_hand_dofs * 2 + 2, 3:7]
         self.door_right_handle_pos = self.door_right_handle_pos + quat_apply(self.door_right_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.5)
         self.door_right_handle_pos = self.door_right_handle_pos + quat_apply(self.door_right_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.39)
         self.door_right_handle_pos = self.door_right_handle_pos + quat_apply(self.door_right_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.04)
 
-        self.left_hand_pos = self.rigid_body_states[:, 3 + 26, 0:3]
-        self.left_hand_rot = self.rigid_body_states[:, 3 + 26, 3:7]
+        self.left_hand_pos = self.rigid_body_states[:, 3 + self.num_shadow_hand_bodies, 0:3]
+        self.left_hand_rot = self.rigid_body_states[:, 3 + self.num_shadow_hand_bodies, 3:7]
         self.left_hand_pos = self.left_hand_pos + quat_apply(self.left_hand_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.08)
         self.left_hand_pos = self.left_hand_pos + quat_apply(self.left_hand_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.02)
 
-        self.right_hand_pos = self.rigid_body_states[:, 3, 0:3]
-        self.right_hand_rot = self.rigid_body_states[:, 3, 3:7]
+        self.right_hand_pos = self.rigid_body_states[:, self.hand_center_idx, 0:3]
+        self.right_hand_rot = self.rigid_body_states[:, self.hand_center_idx, 3:7]
         self.right_hand_pos = self.right_hand_pos + quat_apply(self.right_hand_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.08)
         self.right_hand_pos = self.right_hand_pos + quat_apply(self.right_hand_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.02)
 
         # right hand finger
-        self.right_hand_ff_pos = self.rigid_body_states[:, 7, 0:3]
-        self.right_hand_ff_rot = self.rigid_body_states[:, 7, 3:7]
+        self.right_hand_ff_pos = self.rigid_body_states[:, self.ff_idx, 0:3]
+        self.right_hand_ff_rot = self.rigid_body_states[:, self.ff_idx, 3:7]
         self.right_hand_ff_pos = self.right_hand_ff_pos + quat_apply(self.right_hand_ff_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.right_hand_mf_pos = self.rigid_body_states[:, 11, 0:3]
-        self.right_hand_mf_rot = self.rigid_body_states[:, 11, 3:7]
+        self.right_hand_mf_pos = self.rigid_body_states[:, self.mf_idx, 0:3]
+        self.right_hand_mf_rot = self.rigid_body_states[:, self.mf_idx, 3:7]
         self.right_hand_mf_pos = self.right_hand_mf_pos + quat_apply(self.right_hand_mf_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.right_hand_rf_pos = self.rigid_body_states[:, 15, 0:3]
-        self.right_hand_rf_rot = self.rigid_body_states[:, 15, 3:7]
+        self.right_hand_rf_pos = self.rigid_body_states[:, self.rf_idx, 0:3]
+        self.right_hand_rf_rot = self.rigid_body_states[:, self.rf_idx, 3:7]
         self.right_hand_rf_pos = self.right_hand_rf_pos + quat_apply(self.right_hand_rf_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.right_hand_lf_pos = self.rigid_body_states[:, 20, 0:3]
-        self.right_hand_lf_rot = self.rigid_body_states[:, 20, 3:7]
+        self.right_hand_lf_pos = self.rigid_body_states[:, self.lf_idx, 0:3]
+        self.right_hand_lf_rot = self.rigid_body_states[:, self.lf_idx, 3:7]
         self.right_hand_lf_pos = self.right_hand_lf_pos + quat_apply(self.right_hand_lf_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.right_hand_th_pos = self.rigid_body_states[:, 25, 0:3]
-        self.right_hand_th_rot = self.rigid_body_states[:, 25, 3:7]
+        self.right_hand_th_pos = self.rigid_body_states[:, self.th_idx, 0:3]
+        self.right_hand_th_rot = self.rigid_body_states[:, self.th_idx, 3:7]
         self.right_hand_th_pos = self.right_hand_th_pos + quat_apply(self.right_hand_th_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
 
-        self.left_hand_ff_pos = self.rigid_body_states[:, 7 + 26, 0:3]
-        self.left_hand_ff_rot = self.rigid_body_states[:, 7 + 26, 3:7]
+        self.left_hand_ff_pos = self.rigid_body_states[:, self.ff_idx + self.num_shadow_hand_bodies, 0:3]
+        self.left_hand_ff_rot = self.rigid_body_states[:, self.ff_idx + self.num_shadow_hand_bodies, 3:7]
         self.left_hand_ff_pos = self.left_hand_ff_pos + quat_apply(self.left_hand_ff_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.left_hand_mf_pos = self.rigid_body_states[:, 11 + 26, 0:3]
-        self.left_hand_mf_rot = self.rigid_body_states[:, 11 + 26, 3:7]
+        self.left_hand_mf_pos = self.rigid_body_states[:, self.mf_idx + self.num_shadow_hand_bodies, 0:3]
+        self.left_hand_mf_rot = self.rigid_body_states[:, self.mf_idx + self.num_shadow_hand_bodies, 3:7]
         self.left_hand_mf_pos = self.left_hand_mf_pos + quat_apply(self.left_hand_mf_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.left_hand_rf_pos = self.rigid_body_states[:, 15 + 26, 0:3]
-        self.left_hand_rf_rot = self.rigid_body_states[:, 15 + 26, 3:7]
+        self.left_hand_rf_pos = self.rigid_body_states[:, self.rf_idx + self.num_shadow_hand_bodies, 0:3]
+        self.left_hand_rf_rot = self.rigid_body_states[:, self.rf_idx + self.num_shadow_hand_bodies, 3:7]
         self.left_hand_rf_pos = self.left_hand_rf_pos + quat_apply(self.left_hand_rf_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.left_hand_lf_pos = self.rigid_body_states[:, 20 + 26, 0:3]
-        self.left_hand_lf_rot = self.rigid_body_states[:, 20 + 26, 3:7]
+        self.left_hand_lf_pos = self.rigid_body_states[:, self.lf_idx + self.num_shadow_hand_bodies, 0:3]
+        self.left_hand_lf_rot = self.rigid_body_states[:, self.lf_idx + self.num_shadow_hand_bodies, 3:7]
         self.left_hand_lf_pos = self.left_hand_lf_pos + quat_apply(self.left_hand_lf_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
-        self.left_hand_th_pos = self.rigid_body_states[:, 25 + 26, 0:3]
-        self.left_hand_th_rot = self.rigid_body_states[:, 25 + 26, 3:7]
+        self.left_hand_th_pos = self.rigid_body_states[:, self.th_idx + self.num_shadow_hand_bodies, 0:3]
+        self.left_hand_th_rot = self.rigid_body_states[:, self.th_idx + self.num_shadow_hand_bodies, 3:7]
         self.left_hand_th_pos = self.left_hand_th_pos + quat_apply(self.left_hand_th_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.02)
 
         self.goal_pose = self.goal_states[:, 0:7]
