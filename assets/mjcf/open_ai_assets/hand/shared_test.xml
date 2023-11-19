@@ -29,8 +29,6 @@
     </default>
 
     <sensor>
-        <jointpos name="robot0:Sjp_WRJ1" joint="robot0:WRJ1"></jointpos>
-        <jointpos name="robot0:Sjp_WRJ0" joint="robot0:WRJ0"></jointpos>
         <jointpos name="robot0:Sjp_FFJ3" joint="robot0:FFJ3"></jointpos>
         <jointpos name="robot0:Sjp_FFJ2" joint="robot0:FFJ2"></jointpos>
         <jointpos name="robot0:Sjp_FFJ1" joint="robot0:FFJ1"></jointpos>

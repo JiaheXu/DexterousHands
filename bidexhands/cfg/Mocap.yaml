@@ -1,6 +1,6 @@
 # if given, will override the device setting in gym. 
 env: 
-  env_name: "shadow_hand_door_open_inward"
+  env_name: "mocap"
   numEnvs: 1
   envSpacing: 1.5
   episodeLength: 250

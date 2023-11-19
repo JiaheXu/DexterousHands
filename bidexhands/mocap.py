@@ -33,6 +33,8 @@ class isaac():
         # removed 18 13 9 5
         #idx = [0, 1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 19, 20, 21, 22, 23]
         action = self.env.action_space.sample()
+        self.count += 1
+        print("self.count: ", self.count)
         #print("action.shape: ", action.shape)
         # print("got a pos msg")
         # action_right =  list(qpos_msg.data) #28 dim 6 + 24 - 2
