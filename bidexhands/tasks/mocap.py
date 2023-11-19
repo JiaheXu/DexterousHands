@@ -213,7 +213,7 @@ class Mocap(BaseTask): #DoorOpenInward task.
         self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
         self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
         self.cur_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
-
+        print("self.num_dofs: ", self.num_dofs)
         self.global_indices = torch.arange(self.num_envs * 3, dtype=torch.int32, device=self.device).view(self.num_envs, -1)
         self.x_unit_tensor = to_torch([1, 0, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
         self.y_unit_tensor = to_torch([0, 1, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
@@ -926,9 +926,13 @@ class Mocap(BaseTask): #DoorOpenInward task.
             targets = self.prev_targets[:, self.actuated_dof_indices] + self.shadow_hand_dof_speed_scale * self.dt * self.actions
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets, self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
         else:
-            self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 6: self.action_dim],
-                                                                   self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            print("self.shadow_hand_dof_lower_limits: ", self.shadow_hand_dof_lower_limits)
+            print("self.actions: ", self.actions.shape)
+            print("self.cur_targets: ", self.cur_targets.shape)
+            self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 6: self.action_dim], self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            #self.cur_targets = self.actions
 
+        #print("self.cur_targets: ", self.cur_targets)
         self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self.cur_targets))
         print("pre_physics_step")
         print("pre_physics_step")

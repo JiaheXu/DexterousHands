@@ -238,6 +238,9 @@ class ShadowHandDoorOpenInward(BaseTask):
         self.saved_root_tensor = self.root_state_tensor.clone() 
 
         self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
+        print("self.num_dofs: ", self.num_dofs)
+        print("self.num_dofs: ", self.num_dofs)
+        print("self.num_dofs: ", self.num_dofs)
         self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
         self.cur_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
 
@@ -1165,6 +1168,10 @@ class ShadowHandDoorOpenInward(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
         else:
+            print("self.shadow_hand_dof_lower_limits: ", self.shadow_hand_dof_lower_limits)
+            print("self.actions: ", self.actions.shape)
+            print("self.cur_targets: ", self.cur_targets.shape)
+
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 6:26],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,

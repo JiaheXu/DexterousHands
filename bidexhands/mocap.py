@@ -2,10 +2,11 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-#env_name = 'ShadowHandDoorCloseInward'
+
 env_name = 'Mocap'
+#env_name = 'ShadowHandDoorOpenInward'
 algo = "manual"
-# env_name = 'ShadowHandDoorOpenOutward'
+
 # algo = "ppo"
 import rospy
 from sensor_msgs.msg import Image
@@ -24,7 +25,7 @@ class isaac():
         self.env = bi.make(env_name, algo)
         self.obs = self.env.reset()
         self.terminated = False
-        self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
         self.count = 0
 
 
@@ -32,26 +33,14 @@ class isaac():
         # removed 18 13 9 5
         #idx = [0, 1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 19, 20, 21, 22, 23]
         action = self.env.action_space.sample()
-        print("action.shape: ", action.shape)
-        # np_pos = np.array(qpos_msg.data)
-        
-        # np_pos[0:2] = 0.0
-
-        # np_pos[2] = -1.0 * np_pos[2]
-        # np_pos[6] = -1.0 * np_pos[6]
-        # np_pos[22] = -1.0 * np_pos[22]
-        # np_pos[23] = -1.0 * np_pos[23]
-
-        # #print(action)
-        # action[ 6:26 ] =  torch.from_numpy( np_pos[idx])
-        
-        # action[ 0 ] = 1.0 
-        # action[ 3 ] = 1.0 
-        # #self.count += 1
-        # #action[0] = ( self.count//30 ) % 5 * 0.2
-        # # action = self.env.action_space.sample() * 0.0
-        # # action = torch.from_numpy( np.array(qpos_msg.data))
+        #print("action.shape: ", action.shape)
+        # print("got a pos msg")
+        # action_right =  list(qpos_msg.data) #28 dim 6 + 24 - 2
+        # action_right = np.array(action_right)
+        # action_left = np.zeros((28,))
+        # action = np.concatenate( [action_right, action_left] , axis = 0)
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
+        act = act.to(torch.float32)
         obs, reward, done, info = self.env.step(act)
         return
 
