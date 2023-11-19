@@ -135,21 +135,21 @@ class Mocap(BaseTask):
 
         print("Obs type:", self.obs_type)
 
-        self.num_point_cloud_feature_dim = 768
-        self.num_obs_dict = {
-            "point_cloud": 456 + self.num_point_cloud_feature_dim * 3,
-            "point_cloud_for_distill": 456 + self.num_point_cloud_feature_dim * 3,
-            "full_state": 456
-        }
-        self.num_hand_obs = 84 + 95 + 28 + 6
-
-
+        # self.num_point_cloud_feature_dim = 768
         # self.num_obs_dict = {
-        #     "point_cloud": 417 + self.num_point_cloud_feature_dim * 3,
-        #     "point_cloud_for_distill": 417 + self.num_point_cloud_feature_dim * 3,
-        #     "full_state": 417
+        #     "point_cloud": 456 + self.num_point_cloud_feature_dim * 3,
+        #     "point_cloud_for_distill": 456 + self.num_point_cloud_feature_dim * 3,
+        #     "full_state": 456
         # }
-        # self.num_hand_obs = 72 + 95 + 26 + 6
+        # self.num_hand_obs = 84 + 95 + 28 + 6
+
+
+        self.num_obs_dict = {
+            "point_cloud": 417 + self.num_point_cloud_feature_dim * 3,
+            "point_cloud_for_distill": 417 + self.num_point_cloud_feature_dim * 3,
+            "full_state": 417
+        }
+        self.num_hand_obs = 72 + 95 + 30 + 6
         
         
         self.up_axis = 'z'
@@ -158,21 +158,22 @@ class Mocap(BaseTask):
         self.a_fingertips = ["robot1:ffdistal", "robot1:mfdistal", "robot1:rfdistal", "robot1:lfdistal", "robot1:thdistal"]
 
         self.hand_center = ["robot1:palm"]
-        self.hand_center_idx = 8
-        self.ff_idx = 12
-        self.mf_idx = 16
-        self.rf_idx = 20
-        self.lf_idx = 25
-        self.th_idx = 30
-        self.action_dim = 28
+
+        # self.hand_center_idx = 8
+        # self.ff_idx = 12
+        # self.mf_idx = 16
+        # self.rf_idx = 20
+        # self.lf_idx = 25
+        # self.th_idx = 30
+        # self.action_dim = 28
         
-        # self.hand_center_idx = 3
-        # self.ff_idx = 7
-        # self.mf_idx = 11
-        # self.rf_idx = 15
-        # self.lf_idx = 20
-        # self.th_idx = 25
-        # self.action_dim = 26
+        self.hand_center_idx = 3
+        self.ff_idx = 7
+        self.mf_idx = 11
+        self.rf_idx = 15
+        self.lf_idx = 20
+        self.th_idx = 25
+        self.action_dim = 30
 
 
         self.num_fingertips = len(self.fingertips) * 2
@@ -187,18 +188,19 @@ class Mocap(BaseTask):
 
         self.cfg["env"]["numObservations"] = self.num_obs_dict[self.obs_type]
         self.cfg["env"]["numStates"] = num_states
-        # if self.is_multi_agent:
-        #     self.num_agents = 2
-        #     self.cfg["env"]["numActions"] = 26
-        # else:
-        #     self.num_agents = 1
-        #     self.cfg["env"]["numActions"] = 52
         if self.is_multi_agent:
             self.num_agents = 2
-            self.cfg["env"]["numActions"] = 28
+            self.cfg["env"]["numActions"] = 30
         else:
             self.num_agents = 1
-            self.cfg["env"]["numActions"] = 56
+            self.cfg["env"]["numActions"] = 60
+
+        # if self.is_multi_agent:
+        #     self.num_agents = 2
+        #     self.cfg["env"]["numActions"] = 28
+        # else:
+        #     self.num_agents = 1
+        #     self.cfg["env"]["numActions"] = 56
 
         self.cfg["device_type"] = device_type
         self.cfg["device_id"] = device_id
@@ -327,20 +329,20 @@ class Mocap(BaseTask):
 
 
 
-        asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand/shadow_right_full.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_left_full.xml"
-        table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
-        table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
-
-        # asset_root = "../../assets"
-        # shadow_hand_asset_file = "mjcf/open_ai_assets/hand/shadow_hand.xml"
-        # shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_hand1.xml"
+        # asset_root = "../assets"
+        # shadow_hand_asset_file = "mjcf/open_ai_assets/hand/shadow_right_full.xml"
+        # shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_left_full.xml"
         # table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         # table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
-        # if "asset" in self.cfg["env"]:
-        #     asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
-        #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
+
+        asset_root = "../../assets"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand/shadow_hand.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_hand1.xml"
+        table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
+        table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
+        if "asset" in self.cfg["env"]:
+            asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
+            shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
         object_asset_file = self.asset_files_dict[self.object_type]
         print("object_asset_file: ", object_asset_file)
