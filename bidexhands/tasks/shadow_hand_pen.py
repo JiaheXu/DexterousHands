@@ -234,7 +234,6 @@ class ShadowHandPen(BaseTask):
         self.saved_root_tensor = self.root_state_tensor.clone() 
 
         self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
-        print("self.num_dofs: ", self.num_dofs)
         self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
         self.cur_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
 
@@ -882,8 +881,7 @@ class ShadowHandPen(BaseTask):
         137 - 166	right shadow hand fingertip force, torque (5 x 6)
         167 - 169	right shadow hand base position
         170 - 172	right shadow hand base rotation
-        173 - 198	right shadow hand actions 20 + xyz rpy = 26
-
+        173 - 198	right shadow hand actions
         199 - 222	left shadow hand dof position
         223 - 246	left shadow hand dof velocity
         247 - 270	left shadow hand dof force
@@ -910,7 +908,8 @@ class ShadowHandPen(BaseTask):
 
         fingertip_obs_start = 72  # 168 = 157 + 11
         self.obs_buf[:, fingertip_obs_start:fingertip_obs_start + num_ft_states] = self.fingertip_state.reshape(self.num_envs, num_ft_states)
-        self.obs_buf[:, fingertip_obs_start + num_ft_states:fingertip_obs_start + num_ft_states + num_ft_force_torques] = self.force_torque_obs_scale * self.vec_sensor_tensor[:, :30]
+        self.obs_buf[:, fingertip_obs_start + num_ft_states:fingertip_obs_start + num_ft_states +
+                    num_ft_force_torques] = self.force_torque_obs_scale * self.vec_sensor_tensor[:, :30]
         
         hand_pose_start = fingertip_obs_start + 95
         self.obs_buf[:, hand_pose_start:hand_pose_start + 3] = self.right_hand_pos

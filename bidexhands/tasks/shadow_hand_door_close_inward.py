@@ -228,7 +228,6 @@ class ShadowHandDoorCloseInward(BaseTask):
         self.goal_object_dof_vel = self.goal_object_dof_state[..., 1]
 
         self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
-        print("self.rigid_body_states: ", self.rigid_body_states.shape)
         self.num_bodies = self.rigid_body_states.shape[1]
 
         self.root_state_tensor = gymtorch.wrap_tensor(actor_root_state_tensor).view(-1, 13)
@@ -295,7 +294,7 @@ class ShadowHandDoorCloseInward(BaseTask):
 
         asset_root = "../../assets"
         shadow_hand_asset_file = "mjcf/open_ai_assets/hand/shadow_hand.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_hand.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand/shadow_hand1.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
