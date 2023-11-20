@@ -43,8 +43,8 @@ asset_descriptors = [
     # AssetDesc("urdf/shadow_hand_description/shadowhand.urdf", False),  # okay to use
     # AssetDesc("urdf/shadow_hand_description/shadow_hand_right.urdf", False) #Nope
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
-     AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False),
-    #AssetDesc("mjcf/open_ai_assets/hand/shadow_right_full.xml", False),
+    #AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False),
+    AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_right.xml", False),
 ]
 
 args = gymutil.parse_arguments(
@@ -199,20 +199,20 @@ for i in range(num_envs):
         gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
         gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
         gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-        gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
+        #gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS
     )
     props["stiffness"] = (
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+        #1.0, 1.0, 1.0, 1.0, 1.0, 1.0
     )
     Tval = 0.1
     Rval = 0.5
 
     props["damping"] = (
-                Tval, Tval, Tval, Rval, Rval, Rval,
+                #Tval, Tval, Tval, Rval, Rval, Rval,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
