@@ -5,14 +5,12 @@
         <flag warmstart="enable"></flag>
     </option>
 
-    <include file="shared_test.xml"></include>
-
-    <asset>
-        <include file="shared_asset.xml"></include>
-    </asset>
-
     <worldbody>
-        <include file="robot_test.xml"></include>
+        <body name="object" pos="1 0.87 0.2">
+            <geom name="object" type="ellipsoid" size="0.03 0.03 0.04" material="material:object" condim="4"></geom>
+            <site name="object:center" pos="0 0 0" rgba="1 0 0 0" size="0.01 0.01 0.01"></site>
+            <joint name="object:joint" type="free" damping="0.01"></joint>
+        </body>
         
         <light directional="true" ambient="0.2 0.2 0.2" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" castshadow="false" pos="0 1 4" dir="0 0 -1" name="light0"></light>
     </worldbody>

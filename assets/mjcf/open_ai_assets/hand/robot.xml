@@ -17,7 +17,6 @@
                     <geom class="robot0:D_Vizual" name="robot0:V_palm" mesh="robot0:palm"></geom>
                     <geom class="robot0:DC_Hand" name="robot0:C_palm0" type="box" pos="0.011 0 0.038" size="0.032 0.0111 0.049" rgba="0.4 0.5 0.6 0.1"></geom>
                     <geom class="robot0:DC_Hand" name="robot0:C_palm1" type="box" pos="-0.032 0 0.014" size="0.011 0.0111 0.025" rgba="0.4 0.5 0.6 0.1"></geom>
-                    
                     <body name="robot0:ffknuckle" pos="0.033 0 0.095">
                         <inertial pos="0 0 0" quat="0.52 0.854 0.006 -0.003" mass="0.008" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:FFJ3" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.349 0.349" user="1103"></joint>
@@ -43,7 +42,6 @@
                             </body>
                         </body>
                     </body>
-
                     <body name="robot0:mfknuckle" pos="0.011 0 0.099">
                         <inertial pos="0 0 0" quat="0.52 0.854 0.006 -0.003" mass="0.008" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:MFJ3" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.349 0.349" user="1107"></joint>
