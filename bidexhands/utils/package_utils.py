@@ -27,7 +27,7 @@ def make(task_name, algo):
     print("Algorithm: ", args.algo)
     agent_index = get_AgentIndex(cfg)
 
-    if args.algo in ["mocap"]:  
+    if args.algo in ["mocap", "manual"]:  
         args.task_type = "Mocap"
         task, env = parse_task(args, cfg, cfg_train, sim_params, agent_index)
 
