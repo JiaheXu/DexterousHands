@@ -5,7 +5,6 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-from bidexhands.tasks.manual import Manual
 from bidexhands.tasks.mocap import Mocap
 
 from bidexhands.tasks.shadow_hand_over import ShadowHandOver
@@ -59,7 +58,7 @@ def parse_task(args, cfg, cfg_train, sim_params, agent_index):
     cfg_task = cfg["env"]
     cfg_task["seed"] = cfg["seed"]
 
-    if args.task_type == "Manual":
+    if args.task_type == "Mocap":
         print("In manual mode, mainly for testing mocap!!!")
         print("In manual mode, mainly for testing mocap!!!")
         print("In manual mode, mainly for testing mocap!!!")                
