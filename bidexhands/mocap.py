@@ -32,15 +32,16 @@ class isaac():
         
         qpos = np.array( qpos_msg.data )
         qpos[0:6] = 0.0
+        print("qpos.shape: ", qpos.shape)
         #qpos = qpos[idx]
-        #zeros = np.zeros((8,))
-        #action_right = np.concatenate( [zeros, qpos] , axis = 0)
+        zeros = np.zeros((2,))
+        qpos = np.concatenate( [zeros, qpos] , axis = 0)
         
-        # action_right = qpos
-        # action_left = action_right.copy()
-        # action = np.concatenate( [action_right, action_left] , axis = 0)        
+        action_right = qpos
+        action_left = action_right.copy()
+        action = np.concatenate( [action_right, action_left] , axis = 0)        
         
-        action = self.env.action_space.sample()
+        #action = self.env.action_space.sample()
 
         self.count += 1
         print("self.count: ", self.count)

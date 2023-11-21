@@ -862,6 +862,11 @@ class Mocap(BaseTask):
         self.obs_buf[:, hand_another_pose_start+5:hand_another_pose_start+6] = get_euler_xyz(self.hand_orientations[self.another_hand_indices, :])[2].unsqueeze(-1)
 
         action_another_obs_start = hand_another_pose_start + 6
+
+        # print("self.action_dim: ", self.action_dim)
+        # print("self.action_dim: ", self.action_dim)
+        # print("self.action_dim: ", self.action_dim)
+
         self.obs_buf[:, action_another_obs_start:action_another_obs_start + self.action_dim] = self.actions[:, self.action_dim:]
 
         obj_obs_start = action_another_obs_start + self.action_dim
@@ -1058,7 +1063,8 @@ class Mocap(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
 
-            self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim + 6 : self.action_dim*2],
+            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim + 6 : self.action_dim*2],
+            self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 6 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices + self.num_shadow_hand_dofs] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
@@ -1075,7 +1081,7 @@ class Mocap(BaseTask):
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
         self.prev_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs]
 
-        self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self.cur_targets_zeros))
+        self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self.cur_targets))
 
     def post_physics_step(self):
         """
