@@ -1078,6 +1078,13 @@ class Mocap(BaseTask):
 
             # self.gym.apply_rigid_body_force_tensors(self.sim, gymtorch.unwrap_tensor(self.apply_forces), gymtorch.unwrap_tensor(self.apply_torque), gymapi.ENV_SPACE)
 
+        print("self.cur_targets:\n", self.cur_targets[:, self.actuated_dof_indices])
+        print("self.actions:\n", self.actions[:, 6:self.action_dim])
+        print("diff: ",  self.cur_targets[:, self.actuated_dof_indices] - self.actions[:, 6:self.action_dim] )
+        print("\n\n")
+        self.cur_targets[:, self.actuated_dof_indices] = self.actions[:, 6:self.action_dim]
+        self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.actions[:, 6 : self.action_dim]
+
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
         self.prev_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs]
 
