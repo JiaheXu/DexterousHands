@@ -278,8 +278,8 @@ class isaac():
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         self.count = 0
-        #self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
-        self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        #self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
