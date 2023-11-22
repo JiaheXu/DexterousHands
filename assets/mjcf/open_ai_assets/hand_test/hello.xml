@@ -1,0 +1,72 @@
+<!-- <mujoco>
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+    <body pos="0 0 0">
+      <body>
+        <joint name="X" type="slide" pos="0 0 0" axis="1 0 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1129"></joint>
+        <body>
+          <joint name="Y" type="slide" pos="0 0 0" axis="0 1 0" range="-2.0 2.0" damping="0.5" armature="0.005" user="1128"></joint>
+            <body>
+            <joint name="Z" type="slide" pos="0 0 0" axis="0 0 1" range="-2.0 2.0" damping="0.5" armature="0.005" user="1127"></joint>
+            <body>
+              <joint name="ROLL" type="hinge" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1126"></joint>
+              <body>
+                <joint name="PITCH" type="hinge" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1125"></joint>
+                <body>
+                  <joint name="YAW" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.5" armature="0.005" user="1124"></joint>
+                  <geom type="box" size=".1 .2 .3" rgba="0 .9 0 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco> -->
+
+<mujoco>
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+    <body pos="0 0 0">
+      <body>
+        <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <body>
+          <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+            <body>
+            <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.5 0.5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+            <body>
+              <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+              <body>
+                <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+                <body>
+                  <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+                  
+                  <!-- <inertial pos="0.01 0 0.01" quat="0.504 0.496 0.495 0.504" mass="3" diaginertia="0.001 0.001 0.001"></inertial> -->
+
+                  <geom type="box" size=".01 .02 .03" rgba="0 .9 0 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
+
+<!-- <mujoco>
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+    <body pos="0 0 0">
+      <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.25 0.25" damping="20" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+      <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="0 0.2" damping="20" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+      <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.3 0.5" damping="20" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+      <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-0.75 0.75" damping="20" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+      <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-0.75 0.75" damping="20" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+      <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-0.75 0.75" damping="20" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+      <geom type="box" size=".1 .2 .3" rgba="0 .9 0 1"/>
+
+    </body>
+  </worldbody>
+</mujoco> -->

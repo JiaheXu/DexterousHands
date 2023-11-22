@@ -42,7 +42,7 @@ asset_descriptors = [
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand_test/shadow_test.xml", False), 
 ]
 
 
@@ -243,14 +243,14 @@ class isaac():
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,# gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           )
             props["stiffness"] =  ( 
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0, 1.0,# 1.0, 1.0,
 
                           )                          
             
@@ -262,7 +262,7 @@ class isaac():
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+                        0.1, 0.1, 0.1, 0.1,# 0.1, 0.1
             )
             
             self.gym.set_actor_dof_properties(env, actor_handle, props)
@@ -285,16 +285,13 @@ class isaac():
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         print("got a pos msg")
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
-
+        
+        action = [0.3410,  1.0000,  1.0000,  1.0000,  0.0446,  1.0000,
+          1.0000,  1.0000, -0.1041,  1.0000,  1.0000,  1.0000,  0.0020, -0.2012,
+          1.0000,  1.0000,  1.0000,  0.6530,  0.1115, -0.1736,  0.0265, -0.0133]
+        
         action = np.array(action)
         pose = action[0:6].copy()
-        #print("pose: ", pose)
-        #action[6] = -1.0 * action[6]
-        #action[10] = -1.0 * action[10]
-        #action[26] = -1.0 * action[26]
-        #action[27] = -1.0 * action[27]
-
-        action = action[4:] # 24 dim
         action[0:2] = 0.0
         #pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
         

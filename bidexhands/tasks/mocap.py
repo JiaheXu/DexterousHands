@@ -141,8 +141,8 @@ class Mocap(BaseTask):
         self.rf_idx = 15
         self.lf_idx = 20
         self.th_idx = 25
-        self.action_dim = 30
-        self.num_shadow_hand_dofs = 24
+        self.action_dim = 28
+        self.num_shadow_hand_dofs = 22
 
         self.num_point_cloud_feature_dim = 768
         self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 19
@@ -176,11 +176,11 @@ class Mocap(BaseTask):
         self.cfg["env"]["numStates"] = num_states
         if self.is_multi_agent:
             self.num_agents = 2
-            self.cfg["env"]["numActions"] = 30
+            self.cfg["env"]["numActions"] = 28
             
         else:
             self.num_agents = 1
-            self.cfg["env"]["numActions"] = 30 * 2
+            self.cfg["env"]["numActions"] = 28 * 2
 
         self.cfg["device_type"] = device_type
         self.cfg["device_id"] = device_id

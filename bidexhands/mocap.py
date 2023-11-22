@@ -30,11 +30,16 @@ class isaac():
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         
-        qpos = np.array( qpos_msg.data )
-        qpos[0:6] = 0.0
-        print("qpos.shape: ", qpos.shape)
+        # qpos = np.array( qpos_msg.data )
+        qpos = [0.3410,  1.0000,  1.0000,  1.0000,  0.0446,  1.0000,
+          1.0000,  1.0000, -0.1041,  1.0000,  1.0000,  1.0000,  0.0020, -0.2012,
+          1.0000,  1.0000,  1.0000,  0.6530,  0.1115, -0.1736,  0.0265, -0.0133
+        ]
+        qpos = np.array( qpos )
+        # qpos[0:6] = 0.0
+        # print("qpos.shape: ", qpos.shape)
         #qpos = qpos[idx]
-        zeros = np.zeros((2,))
+        zeros = np.zeros((6,))
         qpos = np.concatenate( [zeros, qpos] , axis = 0)
         
         action_right = qpos
@@ -48,6 +53,7 @@ class isaac():
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
+        print("act: ", act)
         obs, reward, done, info = self.env.step(act)
         return
 
