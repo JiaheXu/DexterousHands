@@ -42,7 +42,8 @@ asset_descriptors = [
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
-    AssetDesc("mjcf/open_ai_assets/hand_test/shadow_left_full.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand_test/shadow_test.xml", False), 
+    # AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_right.xml", False), 
 ]
 
 
@@ -279,6 +280,7 @@ class isaac():
 
         self.count = 0
         self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        #self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
@@ -287,6 +289,35 @@ class isaac():
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
         action = np.array(action)
+        #pose = action[0:6].copy()
+        #print("pose: ", pose)
+        # action[6] = -1.0 * action[6]
+        # action[10] = -1.0 * action[10]
+        # action[26] = -1.0 * action[26]
+        # action[27] = -1.0 * action[27]
+
+        #action = action[4:] # 24 dim
+        #action[0:2] = 0.0
+        #pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
+        
+        #pose = pose.reshape(-1,1)
+        #action = action.reshape(-1,1)
+        #pose_test = pose.copy()
+
+        #pose_test = pose_test - pose_test
+        #pose_test[0] = - 0.2
+        #pose_test[1] = - 0.003
+        #pose_test[2] = 0.17
+
+        #pose_test[3:6] = 0.0
+
+        # swith pitch yaw
+        #pose_test[4] = (self.count % 100 ) * 0.01
+        #pose_test[4] = -1 * pose[5]
+        #pose_test[5] = -1 * pose[4]
+        
+        #action = np.concatenate( [pose_test, action] , axis = 0) # 30
+        
         action = action.tolist()
         #print("count: ", self.count)
         self.count += 1   
@@ -316,7 +347,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_mocap_left_test")
+    rospy.init_node("isaac_mocap_right_test")
     isaac_node = isaac()
     isaac_node.run()
 

@@ -287,7 +287,7 @@ class isaac():
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
         action = action[6:]
 
-        print("action, \n",action)
+        #print("action, \n",action)
 
         action = np.array(action)
 

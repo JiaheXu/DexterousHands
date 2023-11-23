@@ -42,7 +42,7 @@ asset_descriptors = [
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
-    AssetDesc("mjcf/open_ai_assets/hand_test/shadow_left_full.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_left.xml", False), 
 ]
 
 
@@ -316,7 +316,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_mocap_left_test")
+    rospy.init_node("isaac_mocap_left")
     isaac_node = isaac()
     isaac_node.run()
 
