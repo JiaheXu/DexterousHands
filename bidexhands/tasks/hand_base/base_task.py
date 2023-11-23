@@ -131,10 +131,10 @@ class BaseTask():
         #    actions = self.dr_randomizations['actions']['noise_lambda'](actions)
 
         # apply actions
-        torch.cuda.synchronize()
-        print("base_task action:\n", actions)
+        #torch.cuda.synchronize()
+        #print("base_task action:\n", actions)
         
-        print("actions.dtype: ", actions.dtype)
+        #print("actions.dtype: ", actions.dtype)
         self.pre_physics_step(actions)
 
         # step physics and render each frame
