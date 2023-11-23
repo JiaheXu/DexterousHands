@@ -48,19 +48,19 @@ class isaac():
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         
-        #qpos = np.array( qpos_msg.data )
+        qpos = np.array( qpos_msg.data )
         # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
         #   1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
         #   1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
         #   0.3093,  0.1722,  0.3505, -0.2404]
 
-        qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-          0.0,  0.0,  0.0,
-          0.0,  0.0,  0.0,  
-          0.0,  0.0,  0.0,  
-          0.0,  0.0,  0.0,  
-          0.0,  0.0,  0.0,  0.0,  0.0,
-          0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
+        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
+        #   0.0,  0.0,  0.0,
+        #   0.0,  0.0,  0.0,  
+        #   0.0,  0.0,  0.0,  
+        #   0.0,  0.0,  0.0,  
+        #   0.0,  0.0,  0.0,  0.0,  0.0,
+        #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
 
         qpos = np.array( qpos )
         qpos = qpos[6:]
@@ -73,7 +73,7 @@ class isaac():
         
         #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         qpos = (qpos - self.middle_bound_np ) / self.scale_np
-        print("qpos", qpos)
+        #print("qpos", qpos)
         action_right = np.concatenate( [zeros, qpos] , axis = 0)
         action_left = action_right.copy()
         action = np.concatenate( [action_right, action_left] , axis = 0)        
@@ -86,10 +86,10 @@ class isaac():
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
         #act = act.to("cuda:0")
-        print("act: ", act)
-        print("act.dtype: ", act.dtype)
+        #print("act: ", act)
+        #print("act.dtype: ", act.dtype)
         obs, reward, done, info = self.env.step(act)
-        print("after act: ", act)
+        #print("after act: ", act)
         return
 
     def run(self):
