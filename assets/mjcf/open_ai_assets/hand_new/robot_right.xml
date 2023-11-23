@@ -2,6 +2,27 @@
 <mujoco>
     <body name="robot0:hand mount" pos="1 1.25 0.15" euler="1.5708 0 3.14159">
         <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        
+    <body name="robot0:trans_x" pos="0 0 0" euler="0 0 0">
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <joint name="robot0:trans_x" pos="0 0 0" axis="1 0 0" type="slide" range="-5 5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot0:trans_y" pos="0 0 0" euler="0 0 0">
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <joint name="robot0:trans_y" pos="0 0 0" axis="0 1 0" type="slide" range="-5 5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot0:trans_z" pos="0 0 0" euler="0 0 0">
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <joint name="robot0:trans_z" pos="0 0 0" axis="0 0 1" type="slide" range="-5 5" damping="1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot0:rot_x" pos="0 0 0" euler="0 0 0">
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <joint name="robot0:rot_x" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot0:rot_y" pos="0 0 0" euler="0 0 0">
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <joint name="robot0:rot_y" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+    <body name="robot0:rot_z" pos="0 0 0" euler="0 0 0">
+        <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
+        <joint name="robot0:rot_z" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+          
+        
         <body childclass="robot0:asset_class" name="robot0:forearm" pos="0 0.01 0" euler="0 0 0">
             <inertial pos="0.001 -0.002 0.29" quat="0.982 -0.016 0 -0.188" mass="4" diaginertia="0.01 0.01 0.0075"></inertial>
             <geom class="robot0:D_Vizual" pos="0 0.01 0.04" name="robot0:V_forearm" mesh="robot0:forearm" euler="0 0 1.57"></geom>
@@ -160,6 +181,14 @@
 
             </body>
         </body>
+
+    </body>
+    </body>
+    </body>
+    </body>
+    </body>
+    </body>
+
     </body>
     
 </mujoco>

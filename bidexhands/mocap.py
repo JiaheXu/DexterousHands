@@ -81,7 +81,7 @@ class isaac():
         #action = self.env.action_space.sample()
 
         self.count += 1
-        print("\n\n\n self.count: ", self.count)
+        print("\n\n self.count: ", self.count)
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
