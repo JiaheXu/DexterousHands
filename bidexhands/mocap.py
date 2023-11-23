@@ -24,29 +24,57 @@ class isaac():
         self.terminated = False
         self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
         self.count = 0
+        self.lower_bound_np = np.array([
+            -0.3490,  0.0000,  0.0000,  0.0000,
+            -0.3490,  0.0000,  0.0000,  0.0000,
+            -0.3490,  0.0000,  0.0000,  0.0000,
+            0.0000, -0.3490,  0.0000,  0.0000, 0.0000,
+            -1.0470,  0.0000, -0.2090, -0.5240, -1.5710])
 
+        self.upper_bound_np = np.array([
+            0.3490, 1.5710, 1.5710, 1.5710,
+            0.3490, 1.5710, 1.5710, 1.5710, 
+            0.3490, 1.5710, 1.5710, 1.5710,
+            0.7850, 0.3490, 1.5710, 1.5710, 1.5710,
+            1.0470, 1.2220, 0.2090, 0.5240, 0.0000])
+
+        #self.lower_bound = torch.from_numpy(self.lower_bound_np, dtype = torch.float32)
+        #self.upper_bound = torch.from_numpy(self.upper_bound_np, dtype = torch.float32)
+        self.middle_bound_np = ( self.upper_bound_np + self.lower_bound_np ) / 2.0
+        
+        self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
 
     def callback(self, qpos_msg):
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         
         #qpos = np.array( qpos_msg.data )
-        qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
-          1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
-          1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
-          0.3093,  0.1722,  0.3505, -0.2404]
+        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
+        #   1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
+        #   1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
+        #   0.3093,  0.1722,  0.3505, -0.2404]
 
+        qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
+          0.0,  0.0,  0.0,
+          0.0,  0.0,  0.0,  
+          0.0,  0.0,  0.0,  
+          0.0,  0.0,  0.0,  
+          0.0,  0.0,  0.0,  0.0,  0.0,
+          0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
 
         qpos = np.array( qpos )
-        #qpos = qpos[6:]
+        qpos = qpos[6:]
         
-        qpos[0:6] = 0.0
+        #qpos[0:6] = 0.0
         # print("qpos.shape: ", qpos.shape)
         #qpos = qpos[idx]
-        #zeros = np.zeros((2,))
-        #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         
-        action_right = qpos
+        zeros = np.zeros((6,))
+        
+        #qpos = np.concatenate( [zeros, qpos] , axis = 0)
+        qpos = (qpos - self.middle_bound_np ) / self.scale_np
+        print("qpos", qpos)
+        action_right = np.concatenate( [zeros, qpos] , axis = 0)
         action_left = action_right.copy()
         action = np.concatenate( [action_right, action_left] , axis = 0)        
         
@@ -57,8 +85,9 @@ class isaac():
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
-        act = act.to("cuda:0")
+        #act = act.to("cuda:0")
         print("act: ", act)
+        print("act.dtype: ", act.dtype)
         obs, reward, done, info = self.env.step(act)
         print("after act: ", act)
         return

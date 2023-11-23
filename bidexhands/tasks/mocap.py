@@ -1051,7 +1051,12 @@ class Mocap(BaseTask):
             self.reset(env_ids, goal_env_ids)
 
         self.actions = actions.clone().to(self.device)
-        print("self.actions: \n", self.actions)
+        print("pre_physics_step.actions: \n", self.actions)
+        print("pre_physics_step.actions type: ", self.actions.dtype)
+
+        print("lower_bound: ", self.shadow_hand_dof_lower_limits[self.actuated_dof_indices])
+        print("upper_bound: ", self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+
         if self.use_relative_control:
             targets = self.prev_targets[:, self.actuated_dof_indices] + self.shadow_hand_dof_speed_scale * self.dt * self.actions
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
@@ -1059,11 +1064,15 @@ class Mocap(BaseTask):
         else:
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 6:self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
+
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
+
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-
+            print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
             #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim + 6 : self.action_dim*2],
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 6 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
@@ -1079,10 +1088,9 @@ class Mocap(BaseTask):
 
             # self.gym.apply_rigid_body_force_tensors(self.sim, gymtorch.unwrap_tensor(self.apply_forces), gymtorch.unwrap_tensor(self.apply_torque), gymapi.ENV_SPACE)
 
-        print("self.cur_targets:\n", self.cur_targets[:, self.actuated_dof_indices])
+        #print("self.cur_targets:\n", self.cur_targets[:, self.actuated_dof_indices])
         print("self.actions:\n", self.actions[:, 6:self.action_dim])
         print("diff: ",  self.cur_targets[:, self.actuated_dof_indices] - self.actions[:, 6:self.action_dim] )
-        print("\n\n")
         # self.cur_targets[:, self.actuated_dof_indices] = self.actions[:, 6:self.action_dim]
         # self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.actions[:, 6 : self.action_dim]
 
