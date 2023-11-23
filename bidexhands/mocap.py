@@ -30,17 +30,21 @@ class isaac():
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         
-        # qpos = np.array( qpos_msg.data )
-        qpos = [0.3410,  1.0000,  1.0000,  1.0000,  0.0446,  1.0000,
-          1.0000,  1.0000, -0.1041,  1.0000,  1.0000,  1.0000,  0.0020, -0.2012,
-          1.0000,  1.0000,  1.0000,  0.6530,  0.1115, -0.1736,  0.0265, -0.0133
-        ]
+        #qpos = np.array( qpos_msg.data )
+        qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
+          1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
+          1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
+          0.3093,  0.1722,  0.3505, -0.2404]
+
+
         qpos = np.array( qpos )
-        # qpos[0:6] = 0.0
+        #qpos = qpos[6:]
+        
+        qpos[0:6] = 0.0
         # print("qpos.shape: ", qpos.shape)
         #qpos = qpos[idx]
-        zeros = np.zeros((6,))
-        qpos = np.concatenate( [zeros, qpos] , axis = 0)
+        #zeros = np.zeros((2,))
+        #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         
         action_right = qpos
         action_left = action_right.copy()
@@ -49,12 +53,14 @@ class isaac():
         #action = self.env.action_space.sample()
 
         self.count += 1
-        print("self.count: ", self.count)
+        print("\n\n\n self.count: ", self.count)
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
+        act = act.to("cuda:0")
         print("act: ", act)
         obs, reward, done, info = self.env.step(act)
+        print("after act: ", act)
         return
 
     def run(self):

@@ -131,6 +131,7 @@ class BaseTask():
         #    actions = self.dr_randomizations['actions']['noise_lambda'](actions)
 
         # apply actions
+        print("base_task action:\n", actions)
         self.pre_physics_step(actions)
 
         # step physics and render each frame

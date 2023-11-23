@@ -285,33 +285,20 @@ class isaac():
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         print("got a pos msg")
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
-        
-        action = [0.3410,  1.0000,  1.0000,  1.0000,  0.0446,  1.0000,
-          1.0000,  1.0000, -0.1041,  1.0000,  1.0000,  1.0000,  0.0020, -0.2012,
-          1.0000,  1.0000,  1.0000,  0.6530,  0.1115, -0.1736,  0.0265, -0.0133]
-        
+        action = action[6:]
+
+        print("action, \n",action)
+
         action = np.array(action)
-        pose = action[0:6].copy()
-        action[0:2] = 0.0
-        #pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
-        
-        pose = pose.reshape(-1,1)
-        action = action.reshape(-1,1)
-        pose_test = pose.copy()
 
-        pose_test = pose_test - pose_test
-        #pose_test[0] = - 0.2
-        #pose_test[1] = - 0.003
-        #pose_test[2] = 0.17
+        # action = [ 0.2643,  1.0000,  1.0000,  1.0000,  -0.0710,  1.0000,  1.0000,  1.0000,
+        #  -0.2756,  1.0000,  1.0000,  1.0000,   0.0043, -0.3452,  1.0000,  1.0000,
+        #   1.0000,  0.1579,  0.3054, -0.1697,  0.1750, -0.0741]
 
-        #pose_test[3:6] = 0.0
+        pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
+        pose = pose.reshape(-1,)
 
-        # swith pitch yaw
-        #pose_test[4] = (self.count % 100 ) * 0.01
-        #pose_test[4] = -1 * pose[5]
-        #pose_test[5] = -1 * pose[4]
-        
-        action = np.concatenate( [pose_test, action] , axis = 0)
+        action = np.concatenate( [pose, action] , axis = 0)
         
         action = action.tolist()
         #print("count: ", self.count)

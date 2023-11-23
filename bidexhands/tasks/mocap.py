@@ -1051,6 +1051,7 @@ class Mocap(BaseTask):
             self.reset(env_ids, goal_env_ids)
 
         self.actions = actions.clone().to(self.device)
+        print("self.actions: \n", self.actions)
         if self.use_relative_control:
             targets = self.prev_targets[:, self.actuated_dof_indices] + self.shadow_hand_dof_speed_scale * self.dt * self.actions
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
@@ -1082,8 +1083,8 @@ class Mocap(BaseTask):
         print("self.actions:\n", self.actions[:, 6:self.action_dim])
         print("diff: ",  self.cur_targets[:, self.actuated_dof_indices] - self.actions[:, 6:self.action_dim] )
         print("\n\n")
-        self.cur_targets[:, self.actuated_dof_indices] = self.actions[:, 6:self.action_dim]
-        self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.actions[:, 6 : self.action_dim]
+        # self.cur_targets[:, self.actuated_dof_indices] = self.actions[:, 6:self.action_dim]
+        # self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.actions[:, 6 : self.action_dim]
 
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
         self.prev_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs]
