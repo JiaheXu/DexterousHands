@@ -47,6 +47,7 @@ asset_descriptors = [
 
 
 
+np.set_printoptions(precision=4)
 
 def random_quaternion():
     """Random quaternion of the form (x, y, z, w).
@@ -297,9 +298,15 @@ class isaac():
 
         pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
         pose = pose.reshape(-1,)
-
+        print("action:")
+        print("FF: ", action[0:4])
+        print("MF: ", action[4:8])
+        print("RF: ", action[8:12])        
+        print("LF: ", action[12:17])
+        print("TH: ", action[17:22])
+        print("\n") 
         action = np.concatenate( [pose, action] , axis = 0)
-        
+
         action = action.tolist()
         #print("count: ", self.count)
         self.count += 1   

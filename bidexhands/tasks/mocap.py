@@ -197,7 +197,7 @@ class Mocap(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(1.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -445,11 +445,11 @@ class Mocap(BaseTask):
 
         shadow_hand_start_pose = gymapi.Transform()
         shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.6)
-        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 1.57)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_another_hand_start_pose = gymapi.Transform()
         shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.6)
-        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 1.57)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, 0., 0.7)
@@ -1051,7 +1051,12 @@ class Mocap(BaseTask):
             self.reset(env_ids, goal_env_ids)
 
         self.actions = actions.clone().to(self.device)
-        #print("pre_physics_step.actions: \n", self.actions)
+        print("pre_physics_step.actions:\n")
+        print("FF: ", self.actions[:, 6:10])
+        print("MF: ", self.actions[:, 10:14])
+        print("RF: ", self.actions[:, 14:18])        
+        print("LF: ", self.actions[:, 18:23])
+        print("TH: ", self.actions[:, 23:28])
         #print("pre_physics_step.actions type: ", self.actions.dtype)
 
         #print("lower_bound: ", self.shadow_hand_dof_lower_limits[self.actuated_dof_indices])
@@ -1064,15 +1069,15 @@ class Mocap(BaseTask):
         else:
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 0:self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-            #print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
+            print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
 
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
-            #print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
+            print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
 
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-            #print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
+            print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
             #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim + 6 : self.action_dim*2],
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
