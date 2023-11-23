@@ -43,26 +43,29 @@ class isaac():
         self.middle_bound_np = ( self.upper_bound_np + self.lower_bound_np ) / 2.0
         
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
+        self.count = 0
+
 
     def callback(self, qpos_msg):
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
+        self.count = self.count + 1
+
+        if(self.count % 10 == 0 ): 
+            return
         
-        # qpos = np.array( qpos_msg.data )
+        qpos = np.array( qpos_msg.data )
         
         # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
         #   1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
         #   1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
         #   0.3093,  0.1722,  0.3505, -0.2404]
-        qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000, 
-            -0.349,   0.9305,  1.571,   1.571,
-            -0.3489,  1.2059,  1.571,   1.5513,
-            -0.349,   0.9256,  1.571,   1.571,
-            7.8775e-05, -3.4897e-01,  3.4559e-01,  1.5710e+00,  1.5710e+00,
-            0.0129,  0.3373,  0.1,     0.4326, -0.4756]
-
-
-
+        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000, 
+        #     -0.349,   0.9305,  1.571,   1.571,
+        #     -0.3489,  1.2059,  1.571,   1.5513,
+        #     -0.349,   0.9256,  1.571,   1.571,
+        #     7.8775e-05, -3.4897e-01,  3.4559e-01,  1.5710e+00,  1.5710e+00,
+        #     0.0129,  0.3373,  0.1,     0.4326, -0.4756]
         # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
         #   0.0,  0.0,  0.0,
         #   0.0,  0.0,  0.0,  
@@ -70,10 +73,17 @@ class isaac():
         #   0.0,  0.0,  0.0,  
         #   0.0,  0.0,  0.0,  0.0,  0.0,
         #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
-
-        qpos = np.array( qpos )
-        qpos = qpos[6:]
+        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
+        #     0.0035, 1.5695, 1.571,  1.1453,
+        #     -0.148,   1.5605,  1.5572,  1.084, 
+        #     -0.3265,  1.5617,  1.571,   1.2783,
+        #     0.1048, -0.349,   1.245,   1.5708,  1.5075,
+        #     -7.0803e-02,  1.2115e-01, -1.6294e-01,  5.2230e-01, -5.0136e-04]
+        # qpos = np.array( qpos )
         
+        
+        root_pos = qpos[:6].copy()
+        qpos = qpos[6:]
         #qpos[0:6] = 0.0
         # print("qpos.shape: ", qpos.shape)
         #qpos = qpos[idx]
@@ -82,8 +92,8 @@ class isaac():
         
         #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         qpos = (qpos - self.middle_bound_np ) / self.scale_np
-        #print("qpos", qpos)
-        action_right = np.concatenate( [zeros, qpos] , axis = 0)
+        print("qpos", qpos)
+        action_right = np.concatenate( [root_pos, qpos] , axis = 0)
         action_left = action_right.copy()
         action = np.concatenate( [action_right, action_left] , axis = 0)        
         
