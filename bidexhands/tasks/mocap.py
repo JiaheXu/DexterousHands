@@ -18,7 +18,8 @@ from bidexhands.utils.torch_jit_utils import *
 from bidexhands.tasks.hand_base.base_task import BaseTask
 from isaacgym import gymtorch
 from isaacgym import gymapi
-
+from torch import Tensor
+from isaacgym import gymapi, gymutil
 
 class Mocap(BaseTask):
     """
@@ -101,6 +102,7 @@ class Mocap(BaseTask):
 
         self.transition_scale = self.cfg["env"]["transition_scale"]
         self.orientation_scale = self.cfg["env"]["orientation_scale"]
+
 
         control_freq_inv = self.cfg["env"].get("controlFrequencyInv", 1)
         if self.reset_time > 0.0:
@@ -194,6 +196,10 @@ class Mocap(BaseTask):
         self.camera_debug = self.cfg["env"].get("cameraDebug", False)
         self.point_cloud_debug = self.cfg["env"].get("pointCloudDebug", False)
 
+        self.axes_geom = gymutil.AxesGeometry(0.5)
+        self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
+        self.goal_viz_T = gymapi.Transform(r=gymapi.Quat(*self.goal_quat))
+        
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
@@ -318,7 +324,9 @@ class Mocap(BaseTask):
         # load shadow hand_ asset
         asset_options = gymapi.AssetOptions()
         asset_options.flip_visual_attachments = False
-        asset_options.fix_base_link = False
+        ###########################################################################
+        asset_options.fix_base_link = True
+        ###########################################################################
         asset_options.collapse_fixed_joints = True
         asset_options.disable_gravity = True
         asset_options.thickness = 0.001
@@ -1051,12 +1059,7 @@ class Mocap(BaseTask):
             self.reset(env_ids, goal_env_ids)
 
         self.actions = actions.clone().to(self.device)
-        print("pre_physics_step.actions:\n")
-        print("FF: ", self.actions[:, 6:10])
-        print("MF: ", self.actions[:, 10:14])
-        print("RF: ", self.actions[:, 14:18])        
-        print("LF: ", self.actions[:, 18:23])
-        print("TH: ", self.actions[:, 23:28])
+
         #print("pre_physics_step.actions type: ", self.actions.dtype)
 
         #print("lower_bound: ", self.shadow_hand_dof_lower_limits[self.actuated_dof_indices])
@@ -1067,29 +1070,40 @@ class Mocap(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
         else:
+                        
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 0:self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-            print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
+            #print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
 
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
-            print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
+            #print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
 
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-            print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
-            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim + 6 : self.action_dim*2],
-            self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
+            #print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
+            self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim: self.action_dim*2],
+            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-            print("left after 1st step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+            #print("left after 1st step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
             
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices + self.num_shadow_hand_dofs] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
-            print("left after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+            #print("left after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
 
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-            print("left after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+            
+            print("pre_physics_step.cur_targets:")
+            print("POSE: ", self.cur_targets[:, 0:6])
+            print("FF: ", self.cur_targets[:, 6:10])
+            print("MF: ", self.cur_targets[:, 10:14])
+            print("RF: ", self.cur_targets[:, 14:18])        
+            print("LF: ", self.cur_targets[:, 18:23])
+            print("TH: ", self.cur_targets[:, 23:28])
+
+            #print("left after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+            
             # self.apply_forces[:, 1, :] = actions[:, 0:3] * self.dt * self.transition_scale * 100000
             # self.apply_forces[:, 1 + self.num_shadow_hand_bodies, :] = actions[:, self.action_dim : self.action_dim+3 ] * self.dt * self.transition_scale * 100000
             # self.apply_torque[:, 1, :] = self.actions[:, 3:6] * self.dt * self.orientation_scale * 1000
@@ -1099,7 +1113,9 @@ class Mocap(BaseTask):
 
         # print("self.cur_targets:\n", self.cur_targets[:, self.actuated_dof_indices])
         # print("self.actions:\n", self.actions[:, 6:self.action_dim])
-        # print("diff: ",  self.cur_targets[:, self.actuated_dof_indices] - self.actions[:, 6:self.action_dim] )
+        print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:, self.actuated_dof_indices] - self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] ) ) )
+        
+        gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.envs[0], self.goal_viz_T)
 
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
         self.prev_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs]

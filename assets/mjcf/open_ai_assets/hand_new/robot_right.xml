@@ -1,7 +1,6 @@
 <!-- See LICENSE.md for legal notices. LICENSE.md must be kept together with this file. -->
 <mujoco>
     <body name="robot0:hand mount" pos="0.0 0.0 0.0" euler="0 0 0">
-    <!-- <body name="robot0:hand mount" pos="0 0 0" euler="0 0 0"> -->
         <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
         
     <body childclass="robot0:asset_class" name="robot0:trans_x" pos="0 0 0" euler="0 0 0">
@@ -162,7 +161,7 @@
                                 <geom name="robot0:V_thhub" type="box" group="1" pos="0 0 0" size="0.001 0.001 0.001"></geom>
                                 <body name="robot0:thmiddle" pos="0 0 0">
                                     <inertial pos="0 0 0.016" quat="1 -0.001 -0.007 0.003" mass="0.016" diaginertia="1e-05 1e-05 1e-05"></inertial>
-                                    <joint name="robot0:THJ1" type="hinge" pos="0 0 0" axis="0 -1 0" range="-0.524 0.524" user="1118"></joint>
+                                    <joint name="robot0:THJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.524 0.524" user="1118"></joint>
                                     <geom class="robot0:D_Vizual" name="robot0:V_thmiddle" mesh="robot0:TH2_z"></geom>
                                     <geom class="robot0:DC_Hand" name="robot0:C_thmiddle" type="capsule" pos="0 0 0.016" size="0.011 0.016"></geom>
                                     <body name="robot0:thdistal" pos="0 0 0.032">

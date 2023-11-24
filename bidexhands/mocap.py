@@ -25,6 +25,8 @@ class isaac():
         self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
         self.count = 0
         self.lower_bound_np = np.array([
+            -5.0, -5.0, -5.0, -3.14159, -3.14159, -3.14159,
+
             -0.3490,  0.0000,  0.0000,  0.0000,
             -0.3490,  0.0000,  0.0000,  0.0000,
             -0.3490,  0.0000,  0.0000,  0.0000,
@@ -32,6 +34,8 @@ class isaac():
             -1.0470,  0.0000, -0.2090, -0.5240, -1.5710])
 
         self.upper_bound_np = np.array([
+            5.0, 5.0, 5.0, 3.14159, 3.14159, 3.14159,
+            
             0.3490, 1.5710, 1.5710, 1.5710,
             0.3490, 1.5710, 1.5710, 1.5710, 
             0.3490, 1.5710, 1.5710, 1.5710,
@@ -51,8 +55,8 @@ class isaac():
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         self.count = self.count + 1
 
-        if(self.count % 10 == 0 ): 
-            return
+        # if(self.count % 5 != 0 ): 
+        #     return
         
         qpos = np.array( qpos_msg.data )
         
@@ -73,34 +77,39 @@ class isaac():
         #   0.0,  0.0,  0.0,  
         #   0.0,  0.0,  0.0,  0.0,  0.0,
         #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
-        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
-        #     0.0035, 1.5695, 1.571,  1.1453,
-        #     -0.148,   1.5605,  1.5572,  1.084, 
-        #     -0.3265,  1.5617,  1.571,   1.2783,
-        #     0.1048, -0.349,   1.245,   1.5708,  1.5075,
-        #     -7.0803e-02,  1.2115e-01, -1.6294e-01,  5.2230e-01, -5.0136e-04]
-        # qpos = np.array( qpos )
+        qpos = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0]
+        qpos = np.array( qpos )
         
         
         root_pos = qpos[:6].copy()
-        qpos = qpos[6:]
+        print("\n")
+        print("new iter root_pose: ", root_pos)
+        #qpos = qpos[6:]
         #qpos[0:6] = 0.0
         # print("qpos.shape: ", qpos.shape)
         #qpos = qpos[idx]
         
-        zeros = np.zeros((6,))
+        #zeros = np.zeros((6,))
         
         #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         qpos = (qpos - self.middle_bound_np ) / self.scale_np
-        print("qpos", qpos)
-        action_right = np.concatenate( [root_pos, qpos] , axis = 0)
-        action_left = action_right.copy()
-        action = np.concatenate( [action_right, action_left] , axis = 0)        
+        #print("qpos", qpos)
+        #action_right = np.concatenate( [root_pos, qpos] , axis = 0)
         
+        action_right = qpos
+        action_left = action_right.copy()
+        action_left[1] = 0.0
+        action = np.concatenate( [action_right, action_left] , axis = 0)        
+        print("action: ", action)
         #action = self.env.action_space.sample()
 
         self.count += 1
-        print("\n\n self.count: ", self.count)
+        print("self.count: ", self.count)
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)

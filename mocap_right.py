@@ -299,11 +299,7 @@ class isaac():
         #   1.2450e+00,  1.5708e+00,  1.5075e+00, -7.0803e-02,  1.2115e-01,
         #  -1.6294e-01,  5.2230e-01, -5.0134e-04]
 
-        pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
-        pose = pose.reshape(-1,)
-        print("action:")
-        print("FF: ", action[0:4])
-        print("MF: ", action[4:8])
+*;.
         print("RF: ", action[8:12])        
         print("LF: ", action[12:17])
         print("TH: ", action[17:22])
