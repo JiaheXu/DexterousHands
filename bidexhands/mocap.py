@@ -95,9 +95,13 @@ class isaac():
         #qpos = qpos[idx]
         
         #zeros = np.zeros((6,))
-        
+        qpos[0] = -1 * qpos[0]
+        qpos[1] = -1 * qpos[1]
+        qpos[3] = -1 * qpos[3]
+        qpos[4] = -1 * qpos[4]        
         #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         qpos = (qpos - self.middle_bound_np ) / self.scale_np
+
         # print("qpos", qpos)
         # action_right = np.concatenate( [root_pos, qpos] , axis = 0)
         

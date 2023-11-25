@@ -289,6 +289,12 @@ class isaac():
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
         action = np.array(action)
+        action[0] = -1 * action[0]
+        action[1] = -1 * action[1]
+        
+        action[3] = -1 * action[3]
+        action[4] = -1 * action[4]
+
         #pose = action[0:6].copy()
         #print("pose: ", pose)
         # action[6] = -1.0 * action[6]

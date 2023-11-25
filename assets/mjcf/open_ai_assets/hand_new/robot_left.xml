@@ -23,7 +23,7 @@
         <joint name="robot1:rot_z" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
   
 
-        <body name="robot1:forearm" pos="0 0 0" euler="0 0 1.57">
+        <body name="robot1:forearm" pos="0 0 0" euler="0 0 -1.57">
             <inertial pos="0.001 -0.002 0.034" quat="0.982 -0.016 0 -0.188" mass="0.1" diaginertia="0.01 0.01 0.0075"></inertial>
             <geom class="robot1:D_Vizual" pos="0 0.01 -0.216" name="robot1:V_forearm" mesh="robot1:forearm" euler="0 0 1.57"></geom>
             <geom class="robot1:DC_Hand" name="robot1:C_forearm" type="mesh" mesh="robot1:forearm_cvx" pos="0 0.01 -0.216" euler="0 0 1.57" rgba="0.4 0.5 0.6 0.7"></geom>
