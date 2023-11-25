@@ -451,13 +451,22 @@ class Mocap(BaseTask):
 
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
+        # shadow_hand_start_pose = gymapi.Transform()
+        # shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.6)
+        # shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+
+        # shadow_another_hand_start_pose = gymapi.Transform()
+        # shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.6)
+        # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.6)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.1, 0.4)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.6)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.25, -0.1, 0.4)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, 0., 0.7)

@@ -15,6 +15,23 @@ bridge = CvBridge()
 import time
 from std_msgs.msg import Float32MultiArray
 
+z_rot = np.array([
+    [0.0, -1.0, 0.0],
+    [1.0,  0.0, 0.0],
+    [0.0,  0.0, 1.0]
+])
+
+x_rot = np.array([
+    [1.0, 0.0, 0.0],
+    [0.0, 0.0, -1.0],
+    [0.0, 1.0, 0.0]
+]) 
+
+y_rot = np.array([
+    [0.0, 0.0, 1.0],
+    [0.0, 1.0, 0.0],
+    [-1.0, 0.0, 0.0]
+]) 
 
 class isaac():
     def __init__(self):
@@ -99,8 +116,14 @@ class isaac():
         qpos[1] = -1 * qpos[1]
         qpos[3] = -1 * qpos[3]
         qpos[4] = -1 * qpos[4]        
+        qpos[0:3] = z_rot @ qpos[0:3]
+        qpos[3], qpos[4] = qpos[4], qpos[3]
+        qpos[3] = -1 * qpos[3]
+        qpos[5] = qpos[5] + np.pi/2
         #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         qpos = (qpos - self.middle_bound_np ) / self.scale_np
+
+
 
         # print("qpos", qpos)
         # action_right = np.concatenate( [root_pos, qpos] , axis = 0)
