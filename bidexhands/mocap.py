@@ -77,13 +77,13 @@ class isaac():
         #   0.0,  0.0,  0.0,  
         #   0.0,  0.0,  0.0,  0.0,  0.0,
         #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
-        qpos = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0]
-        qpos = np.array( qpos )
+        # qpos = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
+        #     0.0, 0.0, 0.0, 0.0,
+        #     0.0, 0.0, 0.0, 0.0,
+        #     0.0, 0.0, 0.0, 0.0,
+        #     0.0, 0.0, 0.0, 0.0, 0.0,
+        #     0.0, 0.0, 0.0, 0.0, 0.0]
+        # qpos = np.array( qpos )
         
         
         root_pos = qpos[:6].copy()
@@ -98,12 +98,16 @@ class isaac():
         
         #qpos = np.concatenate( [zeros, qpos] , axis = 0)
         qpos = (qpos - self.middle_bound_np ) / self.scale_np
-        #print("qpos", qpos)
-        #action_right = np.concatenate( [root_pos, qpos] , axis = 0)
+        # print("qpos", qpos)
+        # action_right = np.concatenate( [root_pos, qpos] , axis = 0)
         
         action_right = qpos
         action_left = action_right.copy()
-        action_left[1] = 0.0
+        #action_left[0:3] = action_left[0:3] - action_left[0:3]
+        action_left[1] = -1 * action_left[1]
+        action_left[3] = -1 * action_left[3]
+        action_left[5] = -1 * action_left[5]
+
         action = np.concatenate( [action_right, action_left] , axis = 0)        
         print("action: ", action)
         #action = self.env.action_space.sample()

@@ -24,7 +24,7 @@
           
         
         <body name="robot0:forearm" pos="0 0 0" euler="0 0 1.57">
-            <inertial pos="0.001 -0.002 0.034" quat="0.982 -0.016 0 -0.188" mass="4" diaginertia="0.01 0.01 0.0075"></inertial>
+            <inertial pos="0.001 -0.002 0.034" quat="0.982 -0.016 0 -0.188" mass="0.1" diaginertia="0.01 0.01 0.0075"></inertial>
             <geom class="robot0:D_Vizual" pos="0 0.01 -0.216" name="robot0:V_forearm" mesh="robot0:forearm" euler="0 0 1.57"></geom>
             <geom class="robot0:DC_Hand" name="robot0:C_forearm" type="mesh" mesh="robot0:forearm_cvx" pos="0 0.01 -0.216" euler="0 0 1.57" rgba="0.4 0.5 0.6 0.7"></geom>
             <body name="robot0:wrist" pos="0 0 0">
@@ -90,6 +90,7 @@
                             </body>
                         </body>
                     </body>
+
                     <body name="robot0:rfknuckle" pos="-0.011 0 0.095">
                         <inertial pos="0 0 0" quat="0.52 0.854 0.006 -0.003" mass="0.008" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:RFJ3" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.349 0.349" user="1111"></joint>
@@ -115,6 +116,7 @@
                             </body>
                         </body>
                     </body>
+
                     <body name="robot0:lfmetacarpal" pos="-0.017 0 0.044">
                         <inertial pos="-0.014 0.001 0.014" quat="0.709 -0.092 -0.063 0.696" mass="0.075" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:LFJ4" type="hinge" pos="0 0 0" axis="0.571 0 0.821" range="0 0.785" user="1116"></joint>
@@ -146,6 +148,7 @@
                             </body>
                         </body>
                     </body>
+                    
                     <body name="robot0:thbase" pos="0.034 -0.009 0.029" axisangle="0 1 0 0.785">
                         <inertial pos="0 0 0" mass="0.01" diaginertia="1e-05 1e-05 1e-05"></inertial>
                         <joint name="robot0:THJ4" type="hinge" pos="0 0 0" axis="0 0 -1" range="-1.047 1.047" user="1121"></joint>
