@@ -129,11 +129,16 @@ class isaac():
         # action_right = np.concatenate( [root_pos, qpos] , axis = 0)
         
         action_right = qpos
+        if action[0] < 0.0:
+            action_right[0] = action_right[0]*2
+        action_right[1] = action_right[1]-0.05
         action_left = action_right.copy()
         #action_left[0:3] = action_left[0:3] - action_left[0:3]
         action_left[1] = -1 * action_left[1]
         action_left[3] = -1 * action_left[3]
         action_left[5] = -1 * action_left[5]
+
+        
 
         action = np.concatenate( [action_right, action_left] , axis = 0)        
         print("action: ", action)
