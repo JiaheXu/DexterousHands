@@ -65,75 +65,83 @@ class isaac():
         
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
         self.count = 0
+        self.init_pos = np.array([0.0, 0.0, 0.0])
 
 
     def callback(self, qpos_msg):
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         self.count = self.count + 1
+        
+        action = np.array( qpos_msg.data )
 
-        # if(self.count % 5 != 0 ): 
+        if( self.count == 1): # initialize (x,y,z)
+            self.init_pos =  action[0:3].copy()
+        action[0:3] = action[0:3] - self.init_pos
+        # if(self.count % 5 != 0 ): # freq control
         #     return
         
-        qpos = np.array( qpos_msg.data )
-        
-        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
+        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
         #   1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
         #   1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
         #   0.3093,  0.1722,  0.3505, -0.2404]
-        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000, 
+        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000, 
         #     -0.349,   0.9305,  1.571,   1.571,
         #     -0.3489,  1.2059,  1.571,   1.5513,
         #     -0.349,   0.9256,  1.571,   1.571,
         #     7.8775e-05, -3.4897e-01,  3.4559e-01,  1.5710e+00,  1.5710e+00,
         #     0.0129,  0.3373,  0.1,     0.4326, -0.4756]
-        # qpos = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
+        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
         #   0.0,  0.0,  0.0,
         #   0.0,  0.0,  0.0,  
         #   0.0,  0.0,  0.0,  
         #   0.0,  0.0,  0.0,  
         #   0.0,  0.0,  0.0,  0.0,  0.0,
         #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
-        # qpos = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
+        # action = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
         #     0.0, 0.0, 0.0, 0.0,
         #     0.0, 0.0, 0.0, 0.0,
         #     0.0, 0.0, 0.0, 0.0,
         #     0.0, 0.0, 0.0, 0.0, 0.0,
         #     0.0, 0.0, 0.0, 0.0, 0.0]
-        # qpos = np.array( qpos )
+        # action = np.array( action )
         
-        
-        root_pos = qpos[:6].copy()
+        root_pos = action[:6].copy()
         print("\n")
         print("new iter root_pose: ", root_pos)
-        #qpos = qpos[6:]
-        #qpos[0:6] = 0.0
-        # print("qpos.shape: ", qpos.shape)
-        #qpos = qpos[idx]
         
         #zeros = np.zeros((6,))
-        qpos[0] = -1 * qpos[0]
-        qpos[1] = -1 * qpos[1]
-        qpos[3] = -1 * qpos[3]
-        qpos[4] = -1 * qpos[4]        
-        qpos[0:3] = z_rot @ qpos[0:3]
-        qpos[3], qpos[4] = qpos[4], qpos[3]
-        qpos[3] = -1 * qpos[3]
-        qpos[5] = qpos[5] + np.pi/2
-        #qpos = np.concatenate( [zeros, qpos] , axis = 0)
-        qpos = (qpos - self.middle_bound_np ) / self.scale_np
+        action[0] = -1 * action[0]
+        action[1] = -1 * action[1]
+        action[3] = -1 * action[3]
+        action[4] = -1 * action[4]        
+        action[0:3] = z_rot @ action[0:3]
 
 
+        action[3], action[4] = action[4], action[3]
+        action[3] = -1 * action[3]
+        # action[4] += 0.5
+        action[5] = action[5] + np.pi/2
 
-        # print("qpos", qpos)
-        # action_right = np.concatenate( [root_pos, qpos] , axis = 0)
-        
-        action_right = qpos
+        print("action[3:6]: ", action[3:6])
         if action[0] < 0.0:
-            action_right[0] = action_right[0]*2
-        action_right[1] = action_right[1]-0.05
+            action[0] = action[0]*3
+        
+        action[2] = action[2]*2
+        ################################################################################        
+        # below are template
+        ################################################################################ 
+        
+        action = (action - self.middle_bound_np ) / self.scale_np
+        #
+        # input should be scaled to -1.0 ~ 1.0
+        #
+
+        action_right = action        
         action_left = action_right.copy()
         #action_left[0:3] = action_left[0:3] - action_left[0:3]
+        
+        # left hand mirror up right hand 
         action_left[1] = -1 * action_left[1]
         action_left[3] = -1 * action_left[3]
         action_left[5] = -1 * action_left[5]
@@ -144,8 +152,7 @@ class isaac():
         print("action: ", action)
         #action = self.env.action_space.sample()
 
-        self.count += 1
-        print("self.count: ", self.count)
+
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)

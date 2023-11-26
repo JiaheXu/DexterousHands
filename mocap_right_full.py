@@ -363,24 +363,38 @@ class isaac():
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
+        
+        self.count = self.count + 1
         print("got a pos msg: ", self.count)
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
         action = np.array(action)
-        action[0] = -1 * action[0]
-        action[1] = -1 * action[1]        
-        action[3] = -1 * action[3]
-        action[4] = -1 * action[4]
 
+        if( self.count == 1): # initialize (x,y,z)
+            self.init_pos =  action[0:3].copy()
+        action[0:3] = action[0:3] - self.init_pos
+        # print("action[0:3] = ", action[0:3])
+        #zeros = np.zeros((6,))
+        action[0] = -1 * action[0]
+        action[1] = -1 * action[1]
+        action[3] = -1 * action[3]
+        action[4] = -1 * action[4]        
         action[0:3] = z_rot @ action[0:3]
         action[3], action[4] = action[4], action[3]
         action[3] = -1 * action[3]
+        action[4] += 0.2
         action[5] = action[5] + np.pi/2
-        # action[3:6] = eul2quat(action[3], action[4], action[5]+np.pi/2)
-        
+
+        print("action[3:6]: ", action[3:6])
+        # if action[0] < 0.0:
+        #     action[0] = action[0]*2
+        #action[1] = action[1]-0.3
+
+        ################################################################################        
+        # below are template
+        ################################################################################  
         action = action.tolist()
 
-        self.count += 1   
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
 
