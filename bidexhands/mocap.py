@@ -123,7 +123,7 @@ class isaac():
         # action[4] += 0.5
         action[5] = action[5] + np.pi/2
 
-        print("action[3:6]: ", action[3:6])
+        #print("action[3:6]: ", action[3:6])
         if action[0] < 0.0:
             action[0] = action[0]*3
         
@@ -149,7 +149,7 @@ class isaac():
         
 
         action = np.concatenate( [action_right, action_left] , axis = 0)        
-        print("action: ", action)
+        #print("action: ", action)
         #action = self.env.action_space.sample()
 
 
