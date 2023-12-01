@@ -21,7 +21,7 @@ from isaacgym import gymapi
 from torch import Tensor
 from isaacgym import gymapi, gymutil
 
-class MocapShadowHandBlockStack(BaseTask):
+class Mocap(BaseTask):
     """
     This class corresponds to the Block Stack task. This environment involves dual hands and two blocks, and we need to stack the block
     as a tower.
@@ -117,7 +117,8 @@ class MocapShadowHandBlockStack(BaseTask):
 
         # Specifies the object to be manipulated, which can be an object in the sapien dataset. 
         # Only useful in certain environments
-        self.object_type = self.cfg["env"]["objectType"]
+        # self.object_type = self.cfg["env"]["objectType"]
+        self.object_type = "block"
         # assert self.object_type in ["block", "egg", "pen"]
 
         self.ignore_z = (self.object_type == "pen")
@@ -127,7 +128,7 @@ class MocapShadowHandBlockStack(BaseTask):
             "block": "urdf/objects/cube_multicolor.urdf",
             "egg": "mjcf/open_ai_assets/hand/egg.xml",
             "pen": "mjcf/open_ai_assets/hand/pen.xml",
-            "pot": "mjcf/pot/mobility.urdf"
+            "pot": "mjcf/pen/mobility.urdf"
         }
 
         if "asset" in self.cfg["env"]:
@@ -225,7 +226,11 @@ class MocapShadowHandBlockStack(BaseTask):
         self.vec_sensor_tensor = gymtorch.wrap_tensor(sensor_tensor).view(self.num_envs, self.num_fingertips * 6)
 
         dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
+
+        print("self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2: ", self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
+
         self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
+
         self.dof_force_tensor = self.dof_force_tensor[:, : 2*self.num_shadow_hand_dofs ]
 
         self.gym.refresh_actor_root_state_tensor(self.sim)
@@ -325,6 +330,8 @@ class MocapShadowHandBlockStack(BaseTask):
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
         object_asset_file = self.asset_files_dict[self.object_type]
+        # object_asset_file:  urdf/objects/cube_multicolor.urdf
+
         print("object_asset_file: ", object_asset_file)
         # load shadow hand_ asset
         asset_options = gymapi.AssetOptions()
@@ -429,6 +436,9 @@ class MocapShadowHandBlockStack(BaseTask):
 
         # set object dof properties
         self.num_object_dofs = self.gym.get_asset_dof_count(object_asset)
+
+        print("num_object_dofs: ", self.num_object_dofs)
+
         object_dof_props = self.gym.get_asset_dof_properties(object_asset)
 
         self.object_dof_lower_limits = []
@@ -450,8 +460,8 @@ class MocapShadowHandBlockStack(BaseTask):
         asset_options.disable_gravity = True
         asset_options.thickness = 0.001
 
-        table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
-        #table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, gymapi.AssetOptions())
+        #table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
+        table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, gymapi.AssetOptions())
 
         # shadow_hand_start_pose = gymapi.Transform()
         # shadow_hand_start_pose.p = gymapi.Vec3(0.0, 0.6, 0.7)
