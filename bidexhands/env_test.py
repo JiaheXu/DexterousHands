@@ -4,10 +4,10 @@ import numpy as np
 
 #env_name = 'Mocap'
 #env_name = 'ShadowHandDoorCloseInward'
-env_name = 'ShadowHandDoorOpenInward'
-algo = "manual"
+env_name = 'ShadowHandBlockStack'
+#algo = "manual"
 
-# algo = "ppo"
+algo = "ppo"
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
