@@ -117,7 +117,8 @@ class Mocap(BaseTask):
 
         # Specifies the object to be manipulated, which can be an object in the sapien dataset. 
         # Only useful in certain environments
-        self.object_type = self.cfg["env"]["objectType"]
+        # self.object_type = self.cfg["env"]["objectType"]
+        self.object_type = "block"
         # assert self.object_type in ["block", "egg", "pen"]
 
         self.ignore_z = (self.object_type == "pen")
@@ -127,7 +128,7 @@ class Mocap(BaseTask):
             "block": "urdf/objects/cube_multicolor.urdf",
             "egg": "mjcf/open_ai_assets/hand/egg.xml",
             "pen": "mjcf/open_ai_assets/hand/pen.xml",
-            "pot": "mjcf/pot/mobility.urdf"
+            "pot": "mjcf/pen/mobility.urdf"
         }
 
         if "asset" in self.cfg["env"]:
@@ -329,6 +330,8 @@ class Mocap(BaseTask):
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
         object_asset_file = self.asset_files_dict[self.object_type]
+        # object_asset_file:  urdf/objects/cube_multicolor.urdf
+
         print("object_asset_file: ", object_asset_file)
         # load shadow hand_ asset
         asset_options = gymapi.AssetOptions()
