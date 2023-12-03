@@ -286,6 +286,9 @@ class isaac():
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
         print("got a pos msg")
         action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
+        action = np.array(action)
+        pose = action[0:6].copy()
+
         action = action[6:]
 
         #print("action, \n",action)
@@ -299,11 +302,12 @@ class isaac():
         #   1.2450e+00,  1.5708e+00,  1.5075e+00, -7.0803e-02,  1.2115e-01,
         #  -1.6294e-01,  5.2230e-01, -5.0134e-04]
 
-*;.
         print("RF: ", action[8:12])        
         print("LF: ", action[12:17])
         print("TH: ", action[17:22])
         print("\n") 
+
+        pose = pose - pose
         action = np.concatenate( [pose, action] , axis = 0)
 
         action = action.tolist()
