@@ -1103,13 +1103,13 @@ class Mocap(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             
-            print("pre_physics_step.cur_targets:")
-            print("POSE: ", self.cur_targets[:, 0:6])
-            print("FF: ", self.cur_targets[:, 6:10])
-            print("MF: ", self.cur_targets[:, 10:14])
-            print("RF: ", self.cur_targets[:, 14:18])        
-            print("LF: ", self.cur_targets[:, 18:23])
-            print("TH: ", self.cur_targets[:, 23:28])
+            # print("pre_physics_step.cur_targets:")
+            # print("POSE: ", self.cur_targets[:, 0:6])
+            # print("FF: ", self.cur_targets[:, 6:10])
+            # print("MF: ", self.cur_targets[:, 10:14])
+            # print("RF: ", self.cur_targets[:, 14:18])        
+            # print("LF: ", self.cur_targets[:, 18:23])
+            # print("TH: ", self.cur_targets[:, 23:28])
 
             #print("left after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
             
@@ -1122,7 +1122,7 @@ class Mocap(BaseTask):
 
         # print("self.cur_targets:\n", self.cur_targets[:, self.actuated_dof_indices])
         # print("self.actions:\n", self.actions[:, 6:self.action_dim])
-        print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:, self.actuated_dof_indices] - self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] ) ) )
+        print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:,6: 28] - self.cur_targets[:, 34:56 ] ) ) )
         
         gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.envs[0], self.goal_viz_T)
 

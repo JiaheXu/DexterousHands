@@ -67,6 +67,7 @@ class isaac():
         self.count = 0
         self.init_pos = np.array([0.0, 0.0, 0.0])
 
+        self.hand_action_pub = rospy.Publisher("/action", Float32MultiArray, queue_size=1000)
 
     def callback(self, qpos_msg):
     
@@ -122,7 +123,7 @@ class isaac():
         action[3] = -1 * action[3]
         # action[4] += 0.5
         action[5] = action[5] + np.pi/2
-
+        print("action[5]: ", action[5]/np.pi )
         #print("action[3:6]: ", action[3:6])
         if action[0] < 0.0:
             action[0] = action[0]*3
@@ -151,6 +152,10 @@ class isaac():
         action = np.concatenate( [action_right, action_left] , axis = 0)        
         #print("action: ", action)
         #action = self.env.action_space.sample()
+        action_msg = Float32MultiArray()
+        #print("published")
+        action_msg.data = action
+        self.hand_action_pub.publish(action_msg)
 
 
 
