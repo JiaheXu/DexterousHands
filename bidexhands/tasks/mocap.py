@@ -1364,7 +1364,7 @@ def compute_hand_reward(
     successes = torch.where(successes == 0, 
                     torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > 0.5, torch.ones_like(successes), successes), successes)
 
-    resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+    resets = torch.where(progress_buf >= 800000, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
 
