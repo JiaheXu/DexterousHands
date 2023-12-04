@@ -13,6 +13,7 @@ import numpy as np
 import os
 import random
 import torch
+import cv2
 
 from bidexhands.utils.torch_jit_utils import *
 from bidexhands.tasks.hand_base.base_task import BaseTask
@@ -20,6 +21,12 @@ from isaacgym import gymtorch
 from isaacgym import gymapi
 from torch import Tensor
 from isaacgym import gymapi, gymutil
+
+from sensor_msgs.msg import Image, CameraInfo
+import rospy
+from cv_bridge import CvBridge
+bridge = CvBridge()
+import std_msgs
 
 class Mocap(BaseTask):
     """
@@ -63,11 +70,11 @@ class Mocap(BaseTask):
         self.agent_index = agent_index
 
         self.is_multi_agent = is_multi_agent
-        # Domain randomization configuration
+
         self.randomize = self.cfg["task"]["randomize"]
         self.randomization_params = self.cfg["task"]["randomization_params"]
         self.aggregate_mode = self.cfg["env"]["aggregateMode"]
-        # Reward configuration
+
         self.dist_reward_scale = self.cfg["env"]["distRewardScale"]
         self.rot_reward_scale = self.cfg["env"]["rotRewardScale"]
         self.action_penalty_scale = self.cfg["env"]["actionPenaltyScale"]
@@ -77,26 +84,20 @@ class Mocap(BaseTask):
         self.fall_penalty = self.cfg["env"]["fallPenalty"]
         self.rot_eps = self.cfg["env"]["rotEps"]
 
-        # Scale factor of velocity based observations
-        self.vel_obs_scale = 0.2
-        # Scale factor of velocity based observations
-        self.force_torque_obs_scale = 10.0 
+        self.vel_obs_scale = 0.2  # scale factor of velocity based observations
+        self.force_torque_obs_scale = 10.0  # scale factor of velocity based observations
 
-        # The noise of the initial state each time the environment is reset
         self.reset_position_noise = self.cfg["env"]["resetPositionNoise"]
         self.reset_rotation_noise = self.cfg["env"]["resetRotationNoise"]
         self.reset_dof_pos_noise = self.cfg["env"]["resetDofPosRandomInterval"]
         self.reset_dof_vel_noise = self.cfg["env"]["resetDofVelRandomInterval"]
 
-        # The configuration of how to control the ShadowHand (Action in RL)
         self.shadow_hand_dof_speed_scale = self.cfg["env"]["dofSpeedScale"]
         self.use_relative_control = self.cfg["env"]["useRelativeControl"]
         self.act_moving_average = self.cfg["env"]["actionsMovingAverage"]
 
-        # Whether to enable debug mode during visualization
         self.debug_viz = self.cfg["env"]["enableDebugVis"]
 
-        # Success and goal configuration
         self.max_episode_length = self.cfg["env"]["episodeLength"]
         self.reset_time = self.cfg["env"].get("resetTime", -1.0)
         self.print_success_stat = self.cfg["env"]["printNumSuccesses"]
@@ -104,11 +105,9 @@ class Mocap(BaseTask):
         self.av_factor = self.cfg["env"].get("averFactor", 0.01)
         print("Averaging factor: ", self.av_factor)
 
-        # Scale factor of transition and orientation when the base of Shadowhand is not fixed
         self.transition_scale = self.cfg["env"]["transition_scale"]
         self.orientation_scale = self.cfg["env"]["orientation_scale"]
 
-        # The inverser number of the control frequency
         control_freq_inv = self.cfg["env"].get("controlFrequencyInv", 1)
         if self.reset_time > 0.0:
             self.max_episode_length = int(round(self.reset_time/(control_freq_inv * self.sim_params.dt)))
@@ -128,7 +127,8 @@ class Mocap(BaseTask):
             "block": "urdf/objects/cube_multicolor.urdf",
             "egg": "mjcf/open_ai_assets/hand/egg.xml",
             "pen": "mjcf/open_ai_assets/hand/pen.xml",
-            "pot": "mjcf/pen/mobility.urdf"
+            # "pot": "mjcf/pot.xml",
+            "pot": "mjcf/door/mobility.urdf"
         }
 
         if "asset" in self.cfg["env"]:
@@ -167,7 +167,6 @@ class Mocap(BaseTask):
 
         self.up_axis = 'z'
 
-        # The names of the five fingertips of Shadowhand, which are used to obtain force information later
         self.fingertips = ["robot0:ffdistal", "robot0:mfdistal", "robot0:rfdistal", "robot0:lfdistal", "robot0:thdistal"]
         self.a_fingertips = ["robot1:ffdistal", "robot1:mfdistal", "robot1:rfdistal", "robot1:lfdistal", "robot1:thdistal"]
 
@@ -205,13 +204,15 @@ class Mocap(BaseTask):
         self.camera_debug = self.cfg["env"].get("cameraDebug", False)
         self.point_cloud_debug = self.cfg["env"].get("pointCloudDebug", False)
 
+        self.cam1_pub = rospy.Publisher("cam1", Image, queue_size=100)
+        self.cam2_pub = rospy.Publisher("cam2", Image, queue_size=100)
+
         self.axes_geom = gymutil.AxesGeometry(0.5)
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
         self.goal_viz_T = gymapi.Transform(r=gymapi.Quat(*self.goal_quat))
 
         super().__init__(cfg=self.cfg)
 
-        # Viewer settings, including the camera's initial position and viewing direction
         if self.viewer != None:
             cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
@@ -226,9 +227,6 @@ class Mocap(BaseTask):
         self.vec_sensor_tensor = gymtorch.wrap_tensor(sensor_tensor).view(self.num_envs, self.num_fingertips * 6)
 
         dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
-
-        print("self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2: ", self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
-
         self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
 
         self.dof_force_tensor = self.dof_force_tensor[:, : 2*self.num_shadow_hand_dofs ]
@@ -437,7 +435,7 @@ class Mocap(BaseTask):
         # set object dof properties
         self.num_object_dofs = self.gym.get_asset_dof_count(object_asset)
 
-        print("num_object_dofs: ", self.num_object_dofs)
+        print("self.num_object_dofs: ", self.num_object_dofs)
 
         object_dof_props = self.gym.get_asset_dof_properties(object_asset)
 
@@ -558,6 +556,22 @@ class Mocap(BaseTask):
                 self.o3d_pc = o3d.geometry.PointCloud()
             else:
                 self.pointCloudVisualizer = None
+
+
+        self.cams = []
+        # add cameras
+        cam_props = gymapi.CameraProperties()
+        cam_props.width = 512
+        cam_props.height = 512
+        cam_props.enable_tensors = True
+
+        self.cam1_handle  = None
+        self.cam2_handle  = None
+        self.cam1_tensor = None
+        self.cam2_tensor = None
+        self.torch_cam1_tensor = None
+        self.torch_cam2_tensor = None
+        self.cam_tensors = []
 
         for i in range(self.num_envs):
             # create env instance
@@ -689,6 +703,22 @@ class Mocap(BaseTask):
             self.envs.append(env_ptr)
             self.shadow_hands.append(shadow_hand_actor)
 
+            if(self.num_envs == 1):
+                self.cam1_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
+                self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
+
+                # set camera 1 location
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                # set camera 2 location using the cam1's transform
+                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
+                self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
+                self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
+                self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
+                self.torch_cam2_tensor = gymtorch.wrap_tensor(self.cam2_tensor)
+                self.cam_tensors.append(self.torch_cam1_tensor)
+                self.cam_tensors.append(self.torch_cam2_tensor)
+
+
         self.object_init_state = to_torch(self.object_init_state, device=self.device, dtype=torch.float).view(self.num_envs, 13)
         self.goal_states = self.object_init_state.clone()
 
@@ -757,6 +787,8 @@ class Mocap(BaseTask):
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         self.gym.refresh_force_sensor_tensor(self.sim)
         self.gym.refresh_dof_force_tensor(self.sim)
+        self.gym.render_all_camera_sensors(self.sim)
+        self.gym.start_access_image_tensors(self.sim)
 
         if self.obs_type in ["point_cloud"]:
             self.gym.render_all_camera_sensors(self.sim)
@@ -1221,20 +1253,39 @@ class Mocap(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
         else:
+                        
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 0:self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            #print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
+
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            #print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
+
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-
+            #print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim: self.action_dim*2],
+            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            #print("left after 1st step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+            
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices + self.num_shadow_hand_dofs] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            #print("left after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
 
+        #     print("pre_physics_step.cur_targets:")
+        #     print("POSE: ", self.cur_targets[:, 0:6])
+        #     print("FF: ", self.cur_targets[:, 6:10])
+        #     print("MF: ", self.cur_targets[:, 10:14])
+        #     print("RF: ", self.cur_targets[:, 14:18])        
+        #     print("LF: ", self.cur_targets[:, 18:23])
+        #     print("TH: ", self.cur_targets[:, 23:28])
+        # print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:, self.actuated_dof_indices] - self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] ) ) )
+        
         gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.envs[0], self.goal_viz_T)
 
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
@@ -1250,9 +1301,32 @@ class Mocap(BaseTask):
         """
         self.progress_buf += 1
         self.randomize_buf += 1
-
+        # print("compute_observations")
         self.compute_observations()
+        # print("compute_reward")
         self.compute_reward(self.actions)
+        # print("get img")
+        if (self.num_envs == 1):
+            cam1_img = self.cam_tensors[0].cpu().numpy()
+            cam2_img = self.cam_tensors[1].cpu().numpy()
+
+            # # Convert images to a format suitable for OpenCV
+            header = std_msgs.msg.Header()
+            header.stamp = rospy.Time.now()
+            header.frame_id = 'map'
+
+            cam1_img = cam1_img.reshape(cam1_img.shape[0], -1, 4)[..., :3]
+            cam2_img = cam2_img.reshape(cam2_img.shape[0], -1, 4)[..., :3]
+
+
+            cam1_msg = bridge.cv2_to_imgmsg(cam1_img, encoding="rgb8")
+            cam1_msg.header = header
+
+            cam2_msg = bridge.cv2_to_imgmsg(cam2_img, encoding="rgb8")
+            cam2_msg.header = header
+
+            self.cam1_pub.publish(cam1_msg)
+            self.cam2_pub.publish(cam2_msg)
 
         if self.viewer and self.debug_viz:
             # draw axes on target object

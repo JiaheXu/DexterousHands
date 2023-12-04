@@ -14,12 +14,20 @@ import os
 import random
 import torch
 
+import cv2
+
 from bidexhands.utils.torch_jit_utils import *
 from bidexhands.tasks.hand_base.base_task import BaseTask
 from isaacgym import gymtorch
 from isaacgym import gymapi
 from torch import Tensor
 from isaacgym import gymapi, gymutil
+
+from sensor_msgs.msg import Image, CameraInfo
+import rospy
+from cv_bridge import CvBridge
+bridge = CvBridge()
+import std_msgs
 
 class Mocap(BaseTask):
     """
@@ -205,6 +213,9 @@ class Mocap(BaseTask):
         self.camera_debug = self.cfg["env"].get("cameraDebug", False)
         self.point_cloud_debug = self.cfg["env"].get("pointCloudDebug", False)
 
+        self.cam1_pub = rospy.Publisher("cam1", Image, queue_size=100)
+        self.cam2_pub = rospy.Publisher("cam2", Image, queue_size=100)
+
         self.axes_geom = gymutil.AxesGeometry(0.5)
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
         self.goal_viz_T = gymapi.Transform(r=gymapi.Quat(*self.goal_quat))
@@ -226,7 +237,7 @@ class Mocap(BaseTask):
         self.vec_sensor_tensor = gymtorch.wrap_tensor(sensor_tensor).view(self.num_envs, self.num_fingertips * 6)
 
         dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
-        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + 4)
+        self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
         self.dof_force_tensor = self.dof_force_tensor[:, : 2*self.num_shadow_hand_dofs ]
 
         self.gym.refresh_actor_root_state_tensor(self.sim)
@@ -555,6 +566,22 @@ class Mocap(BaseTask):
             else:
                 self.pointCloudVisualizer = None
 
+
+        self.cams = []
+        # add cameras
+        cam_props = gymapi.CameraProperties()
+        cam_props.width = 512
+        cam_props.height = 512
+        cam_props.enable_tensors = True
+
+        self.cam1_handle  = None
+        self.cam2_handle  = None
+        self.cam1_tensor = None
+        self.cam2_tensor = None
+        self.torch_cam1_tensor = None
+        self.torch_cam2_tensor = None
+        self.cam_tensors = []
+
         for i in range(self.num_envs):
             # create env instance
             env_ptr = self.gym.create_env(
@@ -667,6 +694,22 @@ class Mocap(BaseTask):
             self.envs.append(env_ptr)
             self.shadow_hands.append(shadow_hand_actor)
 
+            if(self.num_envs == 1):
+                self.cam1_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
+                self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
+
+                # set camera 1 location
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                # set camera 2 location using the cam1's transform
+                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
+                self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
+                self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
+                self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
+                self.torch_cam2_tensor = gymtorch.wrap_tensor(self.cam2_tensor)
+                self.cam_tensors.append(self.torch_cam1_tensor)
+                self.cam_tensors.append(self.torch_cam2_tensor)
+
+
         self.object_init_state = to_torch(self.object_init_state, device=self.device, dtype=torch.float).view(self.num_envs, 13)
         self.goal_states = self.object_init_state.clone()
 
@@ -734,6 +777,8 @@ class Mocap(BaseTask):
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         self.gym.refresh_force_sensor_tensor(self.sim)
         self.gym.refresh_dof_force_tensor(self.sim)
+        self.gym.render_all_camera_sensors(self.sim)
+        self.gym.start_access_image_tensors(self.sim)
 
         if self.obs_type in ["point_cloud"]:
             self.gym.render_all_camera_sensors(self.sim)
@@ -987,9 +1032,7 @@ class Mocap(BaseTask):
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
         self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
         self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
-        # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
-        # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
-        # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
+
         point_clouds = torch.zeros((self.num_envs, self.pointCloudDownsampleNum, 3), device=self.device)
         
         if self.camera_debug:
@@ -1201,20 +1244,39 @@ class Mocap(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
         else:
+                        
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 0:self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            #print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
+
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            #print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
+
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
-
+            #print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim: self.action_dim*2],
+            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            #print("left after 1st step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+            
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices + self.num_shadow_hand_dofs] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            #print("left after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
+
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
 
+        #     print("pre_physics_step.cur_targets:")
+        #     print("POSE: ", self.cur_targets[:, 0:6])
+        #     print("FF: ", self.cur_targets[:, 6:10])
+        #     print("MF: ", self.cur_targets[:, 10:14])
+        #     print("RF: ", self.cur_targets[:, 14:18])        
+        #     print("LF: ", self.cur_targets[:, 18:23])
+        #     print("TH: ", self.cur_targets[:, 23:28])
+        # print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:, self.actuated_dof_indices] - self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] ) ) )
+        
         gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.envs[0], self.goal_viz_T)
 
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
@@ -1230,9 +1292,32 @@ class Mocap(BaseTask):
         """
         self.progress_buf += 1
         self.randomize_buf += 1
-
+        # print("compute_observations")
         self.compute_observations()
+        # print("compute_reward")
         self.compute_reward(self.actions)
+        # print("get img")
+        if (self.num_envs == 1):
+            cam1_img = self.cam_tensors[0].cpu().numpy()
+            cam2_img = self.cam_tensors[1].cpu().numpy()
+
+            # # Convert images to a format suitable for OpenCV
+            header = std_msgs.msg.Header()
+            header.stamp = rospy.Time.now()
+            header.frame_id = 'map'
+
+            cam1_img = cam1_img.reshape(cam1_img.shape[0], -1, 4)[..., :3]
+            cam2_img = cam2_img.reshape(cam2_img.shape[0], -1, 4)[..., :3]
+
+
+            cam1_msg = bridge.cv2_to_imgmsg(cam1_img, encoding="rgb8")
+            cam1_msg.header = header
+
+            cam2_msg = bridge.cv2_to_imgmsg(cam2_img, encoding="rgb8")
+            cam2_msg.header = header
+
+            self.cam1_pub.publish(cam1_msg)
+            self.cam2_pub.publish(cam2_msg)
 
         if self.viewer and self.debug_viz:
             # draw axes on target object
@@ -1446,8 +1531,11 @@ def compute_hand_reward(
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
+    #############################################################################################################
     resets = torch.where(right_hand_finger_dist >= 3, torch.ones_like(reset_buf), reset_buf)
     resets = torch.where(left_hand_finger_dist >= 3, torch.ones_like(resets), resets)
+    #############################################################################################################
+    
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
@@ -1460,7 +1548,7 @@ def compute_hand_reward(
     num_resets = torch.sum(resets)
     finished_cons_successes = torch.sum(successes * resets.float())
 
-    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes)
+    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes).mean()
 
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
