@@ -204,6 +204,7 @@ class Mocap(BaseTask):
 
         self.cam1_pub = rospy.Publisher("cam1", Image, queue_size=100)
         self.cam2_pub = rospy.Publisher("cam2", Image, queue_size=100)
+        self.cam3_pub = rospy.Publisher("cam3", Image, queue_size=100)
 
         self.axes_geom = gymutil.AxesGeometry(0.5)
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
@@ -557,16 +558,19 @@ class Mocap(BaseTask):
         self.cams = []
         # add cameras
         cam_props = gymapi.CameraProperties()
-        cam_props.width = 512
-        cam_props.height = 512
+        cam_props.width = 256
+        cam_props.height = 256
         cam_props.enable_tensors = True
 
         self.cam1_handle  = None
         self.cam2_handle  = None
+        self.cam3_handle  = None
         self.cam1_tensor = None
         self.cam2_tensor = None
+        self.cam3_tensor = None
         self.torch_cam1_tensor = None
         self.torch_cam2_tensor = None
+        self.torch_cam3_tensor = None
         self.cam_tensors = []
 
         for i in range(self.num_envs):
@@ -684,18 +688,23 @@ class Mocap(BaseTask):
             if(self.num_envs == 1):
                 self.cam1_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
+                self.cam3_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.0), gymapi.Vec3(0, 0, 0.5))
                 # set camera 2 location using the cam1's transform
-                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(0.3, 0.5, 1), gymapi.Vec3(0, 0, 0.6))
+                self.gym.set_camera_location(self.cam3_handle , env_ptr, gymapi.Vec3(0.3, -0.5, 1), gymapi.Vec3(0, 0, 0.6))
+
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
                 self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
+                self.cam3_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam3_handle , gymapi.IMAGE_COLOR)
                 self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
                 self.torch_cam2_tensor = gymtorch.wrap_tensor(self.cam2_tensor)
+                self.torch_cam3_tensor = gymtorch.wrap_tensor(self.cam3_tensor)
                 self.cam_tensors.append(self.torch_cam1_tensor)
                 self.cam_tensors.append(self.torch_cam2_tensor)
-
+                self.cam_tensors.append(self.torch_cam3_tensor)
 
         self.object_init_state = to_torch(self.object_init_state, device=self.device, dtype=torch.float).view(self.num_envs, 13)
         self.goal_states = self.object_init_state.clone()
@@ -1286,6 +1295,7 @@ class Mocap(BaseTask):
         if (self.num_envs == 1):
             cam1_img = self.cam_tensors[0].cpu().numpy()
             cam2_img = self.cam_tensors[1].cpu().numpy()
+            cam3_img = self.cam_tensors[2].cpu().numpy()
 
             # # Convert images to a format suitable for OpenCV
             header = std_msgs.msg.Header()
@@ -1294,7 +1304,7 @@ class Mocap(BaseTask):
 
             cam1_img = cam1_img.reshape(cam1_img.shape[0], -1, 4)[..., :3]
             cam2_img = cam2_img.reshape(cam2_img.shape[0], -1, 4)[..., :3]
-
+            cam3_img = cam3_img.reshape(cam3_img.shape[0], -1, 4)[..., :3]
 
             cam1_msg = bridge.cv2_to_imgmsg(cam1_img, encoding="rgb8")
             cam1_msg.header = header
@@ -1302,8 +1312,12 @@ class Mocap(BaseTask):
             cam2_msg = bridge.cv2_to_imgmsg(cam2_img, encoding="rgb8")
             cam2_msg.header = header
 
+            cam3_msg = bridge.cv2_to_imgmsg(cam3_img, encoding="rgb8")
+            cam3_msg.header = header
+
             self.cam1_pub.publish(cam1_msg)
             self.cam2_pub.publish(cam2_msg)
+            self.cam3_pub.publish(cam3_msg)
 
         if self.viewer and self.debug_viz:
             # draw axes on target object
@@ -1528,7 +1542,8 @@ def compute_hand_reward(
     successes = torch.where(successes == 0, 
                     torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > 0.5, torch.ones_like(successes), successes), successes)
 
-    resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+    # resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+    resets = torch.where(progress_buf >= 1000000, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
 
