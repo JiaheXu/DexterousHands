@@ -3,8 +3,8 @@ import torch
 import numpy as np
 
 #env_name = 'Mocap'
-env_name = 'MocapShadowHandDoorOpenInward'
-#env_name = "MocapShadowHandDoorOpenOutward"
+#env_name = 'MocapShadowHandDoorOpenInward'
+env_name = "MocapShadowHandDoorOpenOutward"
 algo = "manual"
 
 # algo = "ppo"
@@ -128,16 +128,13 @@ class isaac():
         #print("action[3:6]: ", action[3:6])
         if action[0] < 0.0:
             action[0] = action[0]*3
-
-        #action[1] = action[2]*3        
-        action[2] = action[2]*3
+        
+        action[2] = action[2]*2
         ################################################################################        
         # below are template
         ################################################################################ 
         
         action = (action - self.middle_bound_np ) / self.scale_np
-
-        action[0:6] = 0
         #
         # input should be scaled to -1.0 ~ 1.0
         #

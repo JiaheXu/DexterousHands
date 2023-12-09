@@ -234,9 +234,6 @@ class MocapShadowHandBottleCap(BaseTask):
 
         # create some wrapper tensors for different slices
         self.shadow_hand_default_dof_pos = torch.zeros(self.num_shadow_hand_dofs, dtype=torch.float, device=self.device)
-        # self.shadow_hand_default_dof_pos = to_torch([0.0, 0.0, -0,  -0,  -0,  -0, -0, -0,
-        #                                     -0,  -0, -0,  -0,  -0,  -0, -0, -0,
-        #                                     -0,  -0, -0,  -1.04,  1.2,  0., 0, -1.57], dtype=torch.float, device=self.device)
 
         self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
         self.shadow_hand_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, :self.num_shadow_hand_dofs]
@@ -1553,8 +1550,8 @@ def compute_hand_reward(
 
     resets = torch.where(bottle_cap_pos[:, 2] <= 0.5, torch.ones_like(reset_buf), reset_buf)
     ##########################################################################################
-    resets = torch.where(right_hand_dist >= 0.5, torch.ones_like(resets), resets)
-    resets = torch.where(left_hand_dist >= 0.2, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_dist >=12.5, torch.ones_like(resets), resets)
+    resets = torch.where(left_hand_dist >= 12.2, torch.ones_like(resets), resets)
     ##########################################################################################
 
     # Find out which envs hit the goal and update successes count

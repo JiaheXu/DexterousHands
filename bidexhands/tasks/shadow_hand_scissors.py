@@ -229,7 +229,7 @@ class ShadowHandScissors(BaseTask):
         self.hand_orientations = self.root_state_tensor[:, 3:7]
         self.hand_linvels = self.root_state_tensor[:, 7:10]
         self.hand_angvels = self.root_state_tensor[:, 10:13]
-        self.saved_root_tensor = self.root_state_tensor.clone() 
+        self.saved_root_tensor = self.root_state_tensor.clone()
 
         self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
         self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
@@ -266,7 +266,6 @@ class ShadowHandScissors(BaseTask):
         """
         Adds ground plane to simulation
         """
-
         plane_params = gymapi.PlaneParams()
         plane_params.normal = gymapi.Vec3(0.0, 0.0, 1.0)
         self.gym.add_ground(self.sim, plane_params)

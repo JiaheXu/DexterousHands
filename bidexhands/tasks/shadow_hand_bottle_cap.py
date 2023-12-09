@@ -489,7 +489,7 @@ class ShadowHandBottleCap(BaseTask):
                 self.pointCloudVisualizer = PointcloudVisualizer()
                 self.pointCloudVisualizerInitialized = False
                 self.o3d_pc = o3d.geometry.PointCloud()
-            else :
+            else:
                 self.pointCloudVisualizer = None
 
         for i in range(self.num_envs):

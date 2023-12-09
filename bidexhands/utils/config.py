@@ -67,7 +67,6 @@ def retrieve_cfg(args, use_rlg_config=False):
                     "MocapShadowHandDoorOpenOutward",
                     "MocapShadowHandDoorCloseInward",
                     "MocapShadowHandDoorCloseOutward",
-
                     "MocapShadowHandBlockStack",
                     "MocapShadowHandSwitch",
                     "MocapShadowHandKettle",

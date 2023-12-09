@@ -137,7 +137,7 @@ class isaac():
         
         action = (action - self.middle_bound_np ) / self.scale_np
 
-        action[0:6] = 0
+        
         #
         # input should be scaled to -1.0 ~ 1.0
         #

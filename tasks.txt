@@ -1,0 +1,32 @@
+# Mocap env
+
+from bidexhands.tasks.mocap_shadow_hand_door_open_outward import MocapShadowHandDoorOpenOutward
+from bidexhands.tasks.mocap_shadow_hand_door_close_inward import MocapShadowHandDoorCloseInward
+from bidexhands.tasks.mocap_shadow_hand_door_close_outward import MocapShadowHandDoorCloseOutward
+
+
+#### tasks that Eureka totally failes less than 40%
+from bidexhands.tasks.mocap_shadow_hand_swing_cup import MocapShadowHandSwingCup
+# from bidexhands.tasks.mocap_shadow_hand_two_catch_underarm import MocapShadowHandTwoCatchUnderarm
+from bidexhands.tasks.mocap_shadow_hand_door_open_inward import MocapShadowHandDoorOpenInward
+from bidexhands.tasks.mocap_shadow_hand_push_block import MocapShadowHandPushBlock # ??? direct learn from PPO?
+from bidexhands.tasks.mocap_shadow_hand_bottle_cap import MocapShadowHandBottleCap
+# from bidexhands.tasks.mocap_shadow_hand_re_orientation import MocapShadowHandReOrientation
+from bidexhands.tasks.mocap_shadow_hand_block_stack import MocapShadowHandBlockStack # ??? must two hands?
+
+#### tasks that Eureka not perform well , 30% ~ 70%
+from bidexhands.tasks.mocap_shadow_hand_switch import MocapShadowHandSwitch
+# from bidexhands.tasks.mocap_shadow_hand_catch_abreast import MocapShadowHandCatchAbreast
+# from bidexhands.tasks.mocap_shadow_hand_pen import MocapShadowHandPen
+from bidexhands.tasks.mocap_shadow_hand_grasp_and_place import MocapShadowHandGraspAndPlace
+
+
+from bidexhands.tasks.mocap_shadow_hand_kettle import MocapShadowHandKettle
+from bidexhands.tasks.mocap_shadow_hand_scissors import MocapShadowHandScissors
+from bidexhands.tasks.mocap_shadow_hand_lift_underarm import MocapShadowHandLiftUnderarm
+
+
+# not ready
+from bidexhands.tasks.mocap_shadow_hand_bottle_cap import MocapShadowHandBottleCap
+from bidexhands.tasks.mocap_shadow_hand_pen import MocapShadowHandPen
+from bidexhands.tasks.mocap_shadow_hand_catch_abreast import MocapShadowHandCatchAbreast

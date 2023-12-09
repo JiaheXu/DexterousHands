@@ -1489,8 +1489,8 @@ def compute_hand_reward(
     reward = 0.2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
     resets = torch.where(object_pos[:, 2] <= 0.3, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(right_hand_dist >= 0.2, torch.ones_like(resets), resets)
-    resets = torch.where(left_hand_dist >= 0.2, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_dist >= 2.2, torch.ones_like(resets), resets)
+    resets = torch.where(left_hand_dist >= 2.2, torch.ones_like(resets), resets)
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 

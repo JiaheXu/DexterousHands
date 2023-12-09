@@ -1404,8 +1404,8 @@ def compute_hand_reward(
     right_hand_base_dist = torch.norm(right_hand_base_pos - torch.tensor([-0.3, -0.55, 0.5], dtype=torch.float, device=device), p=2, dim=-1)
     left_hand_base_dist = torch.norm(left_hand_base_pos - torch.tensor([-0.3, -1.15, 0.5], dtype=torch.float, device=device), p=2, dim=-1)
 
-    resets = torch.where(right_hand_base_dist >= 0.1, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_base_dist >= 0.1, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_base_dist >= 1.1, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_base_dist >= 1.1, torch.ones_like(resets), resets)
 
     resets = torch.where(object_pos[:, 2] <= 0.2, torch.ones_like(resets), resets)
     if max_consecutive_successes > 0:
