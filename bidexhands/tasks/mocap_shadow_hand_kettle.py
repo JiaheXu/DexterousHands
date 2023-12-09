@@ -28,8 +28,7 @@ from cv_bridge import CvBridge
 bridge = CvBridge()
 import std_msgs
 
-class Mocap(BaseTask):
-#class ShadowHandKettle(BaseTask):
+class MocapShadowHandKettle(BaseTask):
     """
     This class corresponds to the PourWater task. This environment involves two hands and a bottle, 
     we need to Hold the kettle with one hand and the bucket with the other hand, and pour the water 
@@ -326,6 +325,8 @@ class Mocap(BaseTask):
         #     asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
+        # load ball asset
+        ball_asset = self.gym.create_sphere(self.sim, 0.005, gymapi.AssetOptions())
         object_asset_file = self.asset_files_dict[self.object_type]
         print("object_asset_file: ", object_asset_file)
         # load shadow hand_ asset

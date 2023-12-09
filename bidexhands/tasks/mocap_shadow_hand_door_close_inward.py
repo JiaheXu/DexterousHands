@@ -4,6 +4,7 @@
 # and any modifications thereto.  Any use, reproduction, disclosure or
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
+
 from unittest import TextTestRunner
 from matplotlib.pyplot import axis
 from PIL import Image as Im
@@ -12,6 +13,7 @@ import numpy as np
 import os
 import random
 import torch
+
 import cv2
 
 from bidexhands.utils.torch_jit_utils import *
@@ -27,12 +29,11 @@ from cv_bridge import CvBridge
 bridge = CvBridge()
 import std_msgs
 
-class Mocap(BaseTask):
-#class ShadowHandLiftUnderarm(BaseTask):
+class MocapShadowHandDoorCloseInward(BaseTask):
     """
-    This class corresponds to the LiftUnderarm task. This environment requires grasping the pot handle 
-    with two hands and lifting the pot to the designated position. This environment is designed to 
-    simulate the scene of lift in daily life and is a practical skill.
+    This class corresponds to the DoorCloseInward task. This environment require a closed door 
+    to be opened and the door can only be pushed outward or initially open inward. Both these two 
+    environments only need to do the push behavior, so it is relatively simple
 
     Args:
         cfg (dict): The configuration file of the environment, which is the parameter defined in the
@@ -71,11 +72,11 @@ class Mocap(BaseTask):
         self.agent_index = agent_index
 
         self.is_multi_agent = is_multi_agent
-
+        # Domain randomization configuration
         self.randomize = self.cfg["task"]["randomize"]
         self.randomization_params = self.cfg["task"]["randomization_params"]
         self.aggregate_mode = self.cfg["env"]["aggregateMode"]
-
+        # Reward configuration
         self.dist_reward_scale = self.cfg["env"]["distRewardScale"]
         self.rot_reward_scale = self.cfg["env"]["rotRewardScale"]
         self.action_penalty_scale = self.cfg["env"]["actionPenaltyScale"]
@@ -85,20 +86,26 @@ class Mocap(BaseTask):
         self.fall_penalty = self.cfg["env"]["fallPenalty"]
         self.rot_eps = self.cfg["env"]["rotEps"]
 
-        self.vel_obs_scale = 0.2  # scale factor of velocity based observations
-        self.force_torque_obs_scale = 10.0  # scale factor of velocity based observations
+        # Scale factor of velocity based observations
+        self.vel_obs_scale = 0.2
+        # Scale factor of velocity based observations
+        self.force_torque_obs_scale = 10.0 
 
+        # The noise of the initial state each time the environment is reset
         self.reset_position_noise = self.cfg["env"]["resetPositionNoise"]
         self.reset_rotation_noise = self.cfg["env"]["resetRotationNoise"]
         self.reset_dof_pos_noise = self.cfg["env"]["resetDofPosRandomInterval"]
         self.reset_dof_vel_noise = self.cfg["env"]["resetDofVelRandomInterval"]
 
+        # The configuration of how to control the ShadowHand (Action in RL)
         self.shadow_hand_dof_speed_scale = self.cfg["env"]["dofSpeedScale"]
         self.use_relative_control = self.cfg["env"]["useRelativeControl"]
         self.act_moving_average = self.cfg["env"]["actionsMovingAverage"]
 
+        # Whether to enable debug mode during visualization
         self.debug_viz = self.cfg["env"]["enableDebugVis"]
 
+        # Success and goal configuration
         self.max_episode_length = self.cfg["env"]["episodeLength"]
         self.reset_time = self.cfg["env"].get("resetTime", -1.0)
         self.print_success_stat = self.cfg["env"]["printNumSuccesses"]
@@ -106,26 +113,30 @@ class Mocap(BaseTask):
         self.av_factor = self.cfg["env"].get("averFactor", 0.01)
         print("Averaging factor: ", self.av_factor)
 
+        # Scale factor of transition and orientation when the base of Shadowhand is not fixed
         self.transition_scale = self.cfg["env"]["transition_scale"]
         self.orientation_scale = self.cfg["env"]["orientation_scale"]
 
+        # The inverser number of the control frequency
         control_freq_inv = self.cfg["env"].get("controlFrequencyInv", 1)
         if self.reset_time > 0.0:
             self.max_episode_length = int(round(self.reset_time/(control_freq_inv * self.sim_params.dt)))
             print("Reset time: ", self.reset_time)
             print("New episode length: ", self.max_episode_length)
 
+        # Specifies the object to be manipulated, which can be an object in the sapien dataset. 
+        # Only useful in certain environments
         self.object_type = self.cfg["env"]["objectType"]
         # assert self.object_type in ["block", "egg", "pen"]
 
         self.ignore_z = (self.object_type == "pen")
 
+        # Specify the path of the asset
         self.asset_files_dict = {
             "block": "urdf/objects/cube_multicolor.urdf",
             "egg": "mjcf/open_ai_assets/hand/egg.xml",
             "pen": "mjcf/open_ai_assets/hand/pen.xml",
-            # "pot": "mjcf/pot.xml",
-            "pot": "mjcf/pot/mobility.urdf"
+            "pot": "mjcf/door/mobility.urdf"
         }
 
         if "asset" in self.cfg["env"]:
@@ -164,6 +175,7 @@ class Mocap(BaseTask):
 
         self.up_axis = 'z'
 
+        # The names of the five fingertips of Shadowhand, which are used to obtain force information later
         self.fingertips = ["robot0:ffdistal", "robot0:mfdistal", "robot0:rfdistal", "robot0:lfdistal", "robot0:thdistal"]
         self.a_fingertips = ["robot1:ffdistal", "robot1:mfdistal", "robot1:rfdistal", "robot1:lfdistal", "robot1:thdistal"]
 
@@ -210,6 +222,7 @@ class Mocap(BaseTask):
 
         super().__init__(cfg=self.cfg)
 
+        # Viewer settings, including the camera's initial position and viewing direction
         if self.viewer != None:
             cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
@@ -225,13 +238,13 @@ class Mocap(BaseTask):
 
         dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
         self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
-
         self.dof_force_tensor = self.dof_force_tensor[:, : 2*self.num_shadow_hand_dofs ]
 
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_dof_state_tensor(self.sim)
         self.gym.refresh_rigid_body_state_tensor(self.sim)
 
+        # create some wrapper tensors for different slices
         self.shadow_hand_default_dof_pos = torch.zeros(self.num_shadow_hand_dofs, dtype=torch.float, device=self.device)
 
         self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
@@ -243,6 +256,14 @@ class Mocap(BaseTask):
         self.shadow_hand_another_dof_pos = self.shadow_hand_another_dof_state[..., 0]
         self.shadow_hand_another_dof_vel = self.shadow_hand_another_dof_state[..., 1]
 
+        self.object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + self.num_object_dofs]
+        self.object_dof_pos = self.object_dof_state[..., 0]
+        self.object_dof_vel = self.object_dof_state[..., 1]
+
+        self.goal_object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2 + self.num_object_dofs:self.num_shadow_hand_dofs*2 + 2*self.num_object_dofs]
+        self.goal_object_dof_pos = self.goal_object_dof_state[..., 0]
+        self.goal_object_dof_vel = self.goal_object_dof_state[..., 1]
+
         self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
         self.num_bodies = self.rigid_body_states.shape[1]
 
@@ -251,7 +272,7 @@ class Mocap(BaseTask):
         self.hand_orientations = self.root_state_tensor[:, 3:7]
         self.hand_linvels = self.root_state_tensor[:, 7:10]
         self.hand_angvels = self.root_state_tensor[:, 10:13]
-        self.saved_root_tensor = self.root_state_tensor.clone()
+        self.saved_root_tensor = self.root_state_tensor.clone() 
 
         self.num_dofs = self.gym.get_sim_dof_count(self.sim) // self.num_envs
         self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
@@ -291,6 +312,7 @@ class Mocap(BaseTask):
         """
         Adds ground plane to simulation
         """
+
         plane_params = gymapi.PlaneParams()
         plane_params.normal = gymapi.Vec3(0.0, 0.0, 1.0)
         self.gym.add_ground(self.sim, plane_params)
@@ -377,7 +399,7 @@ class Mocap(BaseTask):
         #             a_tendon_props[i].damping = t_damping
         # self.gym.set_asset_tendon_properties(shadow_hand_asset, tendon_props)
         # self.gym.set_asset_tendon_properties(shadow_hand_another_asset, a_tendon_props)
-
+        
         actuated_dof_names = [self.gym.get_asset_actuator_joint_name(shadow_hand_asset, i) for i in range(self.num_shadow_hand_actuators)]
         self.actuated_dof_indices = [self.gym.find_asset_dof_index(shadow_hand_asset, name) for name in actuated_dof_names]
 
@@ -406,7 +428,18 @@ class Mocap(BaseTask):
 
         # load manipulated object and goal assets
         object_asset_options = gymapi.AssetOptions()
-        object_asset_options.density = 1000
+        object_asset_options.density = 500
+        object_asset_options.fix_base_link = True
+        object_asset_options.disable_gravity = True
+        object_asset_options.use_mesh_materials = True
+        object_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
+        object_asset_options.override_com = True
+        object_asset_options.override_inertia = True
+        object_asset_options.vhacd_enabled = True
+        object_asset_options.vhacd_params = gymapi.VhacdParams()
+        object_asset_options.vhacd_params.resolution = 100000
+        object_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+
         object_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
 
         object_asset_options.disable_gravity = True
@@ -418,7 +451,7 @@ class Mocap(BaseTask):
         # set object dof properties
         self.num_object_dofs = self.gym.get_asset_dof_count(object_asset)
 
-        print("self.num_object_dofs: ", self.num_object_dofs)
+        print("self.num_object_dofs: ", self.num_object_dofs )
 
         object_dof_props = self.gym.get_asset_dof_properties(object_asset)
 
@@ -433,36 +466,41 @@ class Mocap(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(0.3, 0.3, 0.4)
+        table_dims = gymapi.Vec3(0.3, 0.3, 0.)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
-        asset_options.flip_visual_attachments = False
+        asset_options.flip_visual_attachments = True
         asset_options.collapse_fixed_joints = True
         asset_options.disable_gravity = True
         asset_options.thickness = 0.001
 
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
+        # shadow_hand_start_pose = gymapi.Transform()
+        # shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.6)
+        # shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+
+        # shadow_another_hand_start_pose = gymapi.Transform()
+        # shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.6)
+        # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0, 0.05, 0.45)
-        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.2, 0.3)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0, -1.25, 0.45)
-        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 3.14159)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.25, -0.2, 0.3)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3()
-        pose_dx, pose_dy, pose_dz = -0, -0.65, 0.
-
-        object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
-        object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
-        object_start_pose.p.z = shadow_hand_start_pose.p.z + pose_dz
+        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.7)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 3.14159, 0.0)
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
 
-        self.goal_displacement = gymapi.Vec3(-0., 0.0, 0.4)
+        self.goal_displacement = gymapi.Vec3(-0., 0.0, 5.)
         self.goal_displacement_tensor = to_torch(
             [self.goal_displacement.x, self.goal_displacement.y, self.goal_displacement.z], device=self.device)
         goal_start_pose = gymapi.Transform()
@@ -573,7 +611,7 @@ class Mocap(BaseTask):
             # randomize colors and textures for rigid body
             num_bodies = self.gym.get_actor_rigid_body_count(env_ptr, shadow_hand_actor)
             hand_rigid_body_index = [[6,7,8,9], [10,11,12,13], [14,15,16,17], [18,19,20,21], [22,23,24,25,26], [27,28,29,30,31]]
-            
+
             for n in self.agent_index[0]:
                 colorx = random.uniform(0, 1)
                 colory = random.uniform(0, 1)
@@ -602,6 +640,9 @@ class Mocap(BaseTask):
             self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
+            
+            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
+
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
             self.object_indices.append(object_idx)
 
@@ -610,18 +651,18 @@ class Mocap(BaseTask):
             goal_object_idx = self.gym.get_actor_index(env_ptr, goal_handle, gymapi.DOMAIN_SIM)
             self.goal_object_indices.append(goal_object_idx)
 
-            # add table
-            table_handle = self.gym.create_actor(env_ptr, table_asset, table_pose, "table", i, -1, 0)
-            self.gym.set_rigid_body_texture(env_ptr, table_handle, 0, gymapi.MESH_VISUAL, table_texture_handle)
-            table_idx = self.gym.get_actor_index(env_ptr, table_handle, gymapi.DOMAIN_SIM)
-            self.table_indices.append(table_idx)
+            object_dof_props = self.gym.get_actor_dof_properties(env_ptr, object_handle)
+            for object_dof_prop in object_dof_props:
+                object_dof_prop[4] = 100
+                object_dof_prop[5] = 100
+                object_dof_prop[6] = 5
+                object_dof_prop[7] = 1
+            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
 
             #set friction
-            table_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, table_handle)
             object_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, object_handle)
-            table_shape_props[0].friction = 3
-            object_shape_props[0].friction = 3
-            self.gym.set_actor_rigid_shape_properties(env_ptr, table_handle, table_shape_props)
+            for object_shape_prop in object_shape_props:
+                object_shape_prop.friction = 0.1
             self.gym.set_actor_rigid_shape_properties(env_ptr, object_handle, object_shape_props)
 
             if self.object_type != "block":
@@ -632,7 +673,7 @@ class Mocap(BaseTask):
 
             if self.obs_type in ["point_cloud"]:
                 camera_handle = self.gym.create_camera_sensor(env_ptr, self.camera_props)
-                self.gym.set_camera_location(camera_handle, env_ptr, gymapi.Vec3(0.25, -0.57, 0.75), gymapi.Vec3(-0.24, -0.57, 0.25))
+                self.gym.set_camera_location(camera_handle, env_ptr, gymapi.Vec3(1.0, -0.0, 1.0), gymapi.Vec3(-0.5, -0.0, 0.5))
                 camera_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, env_ptr, camera_handle, gymapi.IMAGE_DEPTH)
                 torch_cam_tensor = gymtorch.wrap_tensor(camera_tensor)
                 cam_vinv = torch.inverse((torch.tensor(self.gym.get_camera_view_matrix(self.sim, env_ptr, camera_handle)))).to(self.device)
@@ -689,8 +730,9 @@ class Mocap(BaseTask):
         """
         Compute the reward of all environment. The core function is compute_hand_reward(
             self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.pot_left_handle_pos, self.pot_right_handle_pos,
-            self.left_hand_pos, self.right_hand_pos,
+            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.door_left_handle_pos, self.door_right_handle_pos, 
+            self.left_hand_pos, self.right_hand_pos, self.right_hand_ff_pos, self.right_hand_mf_pos, self.right_hand_rf_pos, self.right_hand_lf_pos, self.right_hand_th_pos, 
+            self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
             self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
             self.max_consecutive_successes, self.av_factor, (self.object_type == "pen")
@@ -702,8 +744,9 @@ class Mocap(BaseTask):
         """
         self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
             self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.pot_left_handle_pos, self.pot_right_handle_pos,
-            self.left_hand_pos, self.right_hand_pos,
+            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.door_left_handle_pos, self.door_right_handle_pos, 
+            self.left_hand_pos, self.right_hand_pos, self.right_hand_ff_pos, self.right_hand_mf_pos, self.right_hand_rf_pos, self.right_hand_lf_pos, self.right_hand_th_pos, 
+            self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
             self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
             self.max_consecutive_successes, self.av_factor, (self.object_type == "pen")
@@ -747,10 +790,17 @@ class Mocap(BaseTask):
         self.object_linvel = self.root_state_tensor[self.object_indices, 7:10]
         self.object_angvel = self.root_state_tensor[self.object_indices, 10:13]
 
-        self.pot_right_handle_pos = self.object_pos + quat_apply(self.object_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.15)
-        self.pot_right_handle_pos = self.pot_right_handle_pos + quat_apply(self.object_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.06)
-        self.pot_left_handle_pos = self.object_pos + quat_apply(self.object_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.15)
-        self.pot_left_handle_pos = self.pot_left_handle_pos + quat_apply(self.object_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.06)
+        self.door_left_handle_pos = self.rigid_body_states[:,  self.num_shadow_hand_bodies * 2 + 3, 0:3]
+        self.door_left_handle_rot = self.rigid_body_states[:,  self.num_shadow_hand_bodies * 2 + 3, 3:7]
+        self.door_left_handle_pos = self.door_left_handle_pos + quat_apply(self.door_left_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.5)
+        self.door_left_handle_pos = self.door_left_handle_pos + quat_apply(self.door_left_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * -0.39)
+        self.door_left_handle_pos = self.door_left_handle_pos + quat_apply(self.door_left_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.04)
+
+        self.door_right_handle_pos = self.rigid_body_states[:,  self.num_shadow_hand_bodies * 2 + 2, 0:3]
+        self.door_right_handle_rot = self.rigid_body_states[:,  self.num_shadow_hand_bodies * 2 + 2, 3:7]
+        self.door_right_handle_pos = self.door_right_handle_pos + quat_apply(self.door_right_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * -0.5)
+        self.door_right_handle_pos = self.door_right_handle_pos + quat_apply(self.door_right_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.39)
+        self.door_right_handle_pos = self.door_right_handle_pos + quat_apply(self.door_right_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.04)
 
         self.left_hand_pos = self.rigid_body_states[:, self.hand_center_idx +  self.num_shadow_hand_bodies, 0:3]
         self.left_hand_rot = self.rigid_body_states[:, self.hand_center_idx +  self.num_shadow_hand_bodies, 3:7]
@@ -829,6 +879,7 @@ class Mocap(BaseTask):
         167 - 169	right shadow hand base position
         170 - 172	right shadow hand base rotation
         173 - 198	right shadow hand actions
+
         199 - 222	left shadow hand dof position
         223 - 246	left shadow hand dof velocity
         247 - 270	left shadow hand dof force
@@ -837,13 +888,13 @@ class Mocap(BaseTask):
         366 - 368	left shadow hand base position
         369 - 371	left shadow hand base rotation
         372 - 397	left shadow hand actions
+
         398 - 404	object pose
         405 - 407	object linear velocity
         408 - 410	object angle velocity
-        411 - 417	goal pose
-        418 - 421	goal rot - object rot
-        422 - 424	object right handle position
-        425 - 427	object left handle position
+
+        411 - 414	door right handle position
+        415 - 417	door left handle position
         """
 
 
@@ -895,11 +946,8 @@ class Mocap(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.pot_right_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.pot_left_handle_pos
-        # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
-        # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
-        # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
 
     def compute_point_cloud_observation(self, collect_demonstration=False):
         """
@@ -931,9 +979,10 @@ class Mocap(BaseTask):
         408 - 410	object angle velocity
         411 - 417	goal pose
         418 - 421	goal rot - object rot
-        422 - 424	object right handle position
-        425 - 427	object left handle position
+        422 - 424	door right handle position
+        425 - 427	door left handle position
         """
+
         num_ft_states = 13 * int(self.num_fingertips / 2)  # 65
         num_ft_force_torques = 6 * int(self.num_fingertips / 2)  # 30
 
@@ -981,11 +1030,9 @@ class Mocap(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.pot_right_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.pot_left_handle_pos
-        # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
-        # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
-        # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
+
         point_clouds = torch.zeros((self.num_envs, self.pointCloudDownsampleNum, 3), device=self.device)
         
         if self.camera_debug:
@@ -1042,7 +1089,7 @@ class Mocap(BaseTask):
 
         self.goal_states[env_ids, 0:3] = self.goal_init_state[env_ids, 0:3]
         # self.goal_states[env_ids, 1] -= 0.25
-        self.goal_states[env_ids, 2] += 0.4
+        self.goal_states[env_ids, 2] += 10.0
 
         # self.goal_states[env_ids, 3:7] = new_rot
         self.root_state_tensor[self.goal_object_indices[env_ids], 0:3] = self.goal_states[env_ids, 0:3] + self.goal_displacement_tensor
@@ -1108,6 +1155,10 @@ class Mocap(BaseTask):
 
         self.shadow_hand_dof_pos[env_ids, :] = pos
         self.shadow_hand_another_dof_pos[env_ids, :] = pos
+        self.object_dof_pos[env_ids, :] = to_torch([1.57, 1.57], device=self.device)
+        self.goal_object_dof_pos[env_ids, :] = to_torch([1.57, 1.57], device=self.device)
+        self.object_dof_vel[env_ids, :] = to_torch([1.57, 1.57], device=self.device)
+        self.goal_object_dof_vel[env_ids, :] = to_torch([1.57, 1.57], device=self.device)
 
         self.shadow_hand_dof_vel[env_ids, :] = self.shadow_hand_dof_default_vel + \
             self.reset_dof_vel_noise * rand_floats[:, 5+self.num_shadow_hand_dofs:5+self.num_shadow_hand_dofs*2]   
@@ -1121,16 +1172,17 @@ class Mocap(BaseTask):
         self.prev_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
         self.cur_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
 
+        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 2] = to_torch([1.57, 1.57], device=self.device)
+        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 2] = to_torch([1.57, 1.57], device=self.device)
+        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2 + 2:self.num_shadow_hand_dofs*2 + 2*2] = to_torch([1.57, 1.57], device=self.device)
+        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2 + 2:self.num_shadow_hand_dofs*2 + 2*2] = to_torch([1.57, 1.57], device=self.device)
+
         hand_indices = self.hand_indices[env_ids].to(torch.int32)
         another_hand_indices = self.another_hand_indices[env_ids].to(torch.int32)
+
         all_hand_indices = torch.unique(torch.cat([hand_indices,
                                                  another_hand_indices,
                                                  object_indices]).to(torch.int32))
-
-        self.gym.set_dof_position_target_tensor_indexed(self.sim,
-                                                        gymtorch.unwrap_tensor(self.prev_targets),
-                                                        gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))  
-
         
         self.hand_positions[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 0:3]
         self.hand_orientations[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 3:7]
@@ -1138,13 +1190,16 @@ class Mocap(BaseTask):
         self.hand_angvels[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 10:13]
 
         all_indices = torch.unique(torch.cat([all_hand_indices,
-                                              object_indices,
-                                              self.table_indices[env_ids]]).to(torch.int32))
+                                              object_indices]).to(torch.int32))
 
         self.gym.set_dof_state_tensor_indexed(self.sim,
                                               gymtorch.unwrap_tensor(self.dof_state),
                                               gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
                                               
+        self.gym.set_dof_position_target_tensor_indexed(self.sim,
+                                                        gymtorch.unwrap_tensor(self.prev_targets),
+                                                        gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))  
+
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
                                                      gymtorch.unwrap_tensor(all_indices), len(all_indices))
@@ -1165,7 +1220,7 @@ class Mocap(BaseTask):
         23 - 25	right shadow hand base rotation
         26 - 45	left shadow hand actuated joint
         46 - 48	left shadow hand base translation
-        49 - 51	left shadow hand base rotatio
+        49 - 51	left shadow hand base rotation
 
         Args:
             actions (tensor): Actions of agents in the all environment 
@@ -1270,60 +1325,32 @@ class Mocap(BaseTask):
             self.gym.refresh_rigid_body_state_tensor(self.sim)
 
             for i in range(self.num_envs):
-                # targetx = (self.goal_pos[i] + quat_apply(self.goal_rot[i], to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
-                # targety = (self.goal_pos[i] + quat_apply(self.goal_rot[i], to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
-                # targetz = (self.goal_pos[i] + quat_apply(self.goal_rot[i], to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
+                self.add_debug_lines(self.envs[i], self.door_left_handle_pos[i], self.door_left_handle_rot[i])
+                self.add_debug_lines(self.envs[i], self.door_right_handle_pos[i], self.door_right_handle_rot[i])
 
-                # p0 = self.goal_pos[i].cpu().numpy() + self.goal_displacement_tensor.cpu().numpy()
-                # self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], targetx[0], targetx[1], targetx[2]], [0.85, 0.1, 0.1])
-                # self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], targety[0], targety[1], targety[2]], [0.1, 0.85, 0.1])
-                # self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], targetz[0], targetz[1], targetz[2]], [0.1, 0.1, 0.85])
+                self.add_debug_lines(self.envs[i], self.right_hand_ff_pos[i], self.right_hand_ff_rot[i])
+                self.add_debug_lines(self.envs[i], self.right_hand_mf_pos[i], self.right_hand_mf_rot[i])
+                self.add_debug_lines(self.envs[i], self.right_hand_rf_pos[i], self.right_hand_rf_rot[i])
+                self.add_debug_lines(self.envs[i], self.right_hand_lf_pos[i], self.right_hand_lf_rot[i])
+                self.add_debug_lines(self.envs[i], self.right_hand_th_pos[i], self.right_hand_th_rot[i])
 
-                # objectx = (self.object_pos[i] + quat_apply(self.object_rot[i], to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
-                # objecty = (self.object_pos[i] + quat_apply(self.object_rot[i], to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
-                # objectz = (self.object_pos[i] + quat_apply(self.object_rot[i], to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
+                self.add_debug_lines(self.envs[i], self.left_hand_ff_pos[i], self.right_hand_ff_rot[i])
+                self.add_debug_lines(self.envs[i], self.left_hand_mf_pos[i], self.right_hand_mf_rot[i])
+                self.add_debug_lines(self.envs[i], self.left_hand_rf_pos[i], self.right_hand_rf_rot[i])
+                self.add_debug_lines(self.envs[i], self.left_hand_lf_pos[i], self.right_hand_lf_rot[i])
+                self.add_debug_lines(self.envs[i], self.left_hand_th_pos[i], self.right_hand_th_rot[i])
 
-                # p0 = self.object_pos[i].cpu().numpy()
-                # self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], objectx[0], objectx[1], objectx[2]], [0.85, 0.1, 0.1])
-                # self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], objecty[0], objecty[1], objecty[2]], [0.1, 0.85, 0.1])
-                # self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], objectz[0], objectz[1], objectz[2]], [0.1, 0.1, 0.85])
 
-                pot_left_handle_posx = (self.pot_left_handle_pos[i] + quat_apply(self.object_rot[i], to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
-                pot_left_handle_posy = (self.pot_left_handle_pos[i] + quat_apply(self.object_rot[i], to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
-                pot_left_handle_posz = (self.pot_left_handle_pos[i] + quat_apply(self.object_rot[i], to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
+    def add_debug_lines(self, env, pos, rot):
+        posx = (pos + quat_apply(rot, to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
+        posy = (pos + quat_apply(rot, to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
+        posz = (pos + quat_apply(rot, to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
 
-                p0 = self.pot_left_handle_pos[i].cpu().numpy()
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], pot_left_handle_posx[0], pot_left_handle_posx[1], pot_left_handle_posx[2]], [0.85, 0.1, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], pot_left_handle_posy[0], pot_left_handle_posy[1], pot_left_handle_posy[2]], [0.1, 0.85, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], pot_left_handle_posz[0], pot_left_handle_posz[1], pot_left_handle_posz[2]], [0.1, 0.1, 0.85])
-                
-                pot_right_handle_posx = (self.pot_right_handle_pos[i] + quat_apply(self.object_rot[i], to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
-                pot_right_handle_posy = (self.pot_right_handle_pos[i] + quat_apply(self.object_rot[i], to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
-                pot_right_handle_posz = (self.pot_right_handle_pos[i] + quat_apply(self.object_rot[i], to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
+        p0 = pos.cpu().numpy()
+        self.gym.add_lines(self.viewer, env, 1, [p0[0], p0[1], p0[2], posx[0], posx[1], posx[2]], [0.85, 0.1, 0.1])
+        self.gym.add_lines(self.viewer, env, 1, [p0[0], p0[1], p0[2], posy[0], posy[1], posy[2]], [0.1, 0.85, 0.1])
+        self.gym.add_lines(self.viewer, env, 1, [p0[0], p0[1], p0[2], posz[0], posz[1], posz[2]], [0.1, 0.1, 0.85])
 
-                p0 = self.pot_right_handle_pos[i].cpu().numpy()
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], pot_right_handle_posx[0], pot_right_handle_posx[1], pot_right_handle_posx[2]], [0.85, 0.1, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], pot_right_handle_posy[0], pot_right_handle_posy[1], pot_right_handle_posy[2]], [0.1, 0.85, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], pot_right_handle_posz[0], pot_right_handle_posz[1], pot_right_handle_posz[2]], [0.1, 0.1, 0.85])
-
-                left_hand_posx = (self.left_hand_pos[i] + quat_apply(self.left_hand_rot[i], to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
-                left_hand_posy = (self.left_hand_pos[i] + quat_apply(self.left_hand_rot[i], to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
-                left_hand_posz = (self.left_hand_pos[i] + quat_apply(self.left_hand_rot[i], to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
-
-                p0 = self.left_hand_pos[i].cpu().numpy()
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], left_hand_posx[0], left_hand_posx[1], left_hand_posx[2]], [0.85, 0.1, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], left_hand_posy[0], left_hand_posy[1], left_hand_posy[2]], [0.1, 0.85, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], left_hand_posz[0], left_hand_posz[1], left_hand_posz[2]], [0.1, 0.1, 0.85])
-
-                right_hand_posx = (self.right_hand_pos[i] + quat_apply(self.right_hand_rot[i], to_torch([1, 0, 0], device=self.device) * 0.2)).cpu().numpy()
-                right_hand_posy = (self.right_hand_pos[i] + quat_apply(self.right_hand_rot[i], to_torch([0, 1, 0], device=self.device) * 0.2)).cpu().numpy()
-                right_hand_posz = (self.right_hand_pos[i] + quat_apply(self.right_hand_rot[i], to_torch([0, 0, 1], device=self.device) * 0.2)).cpu().numpy()
-
-                p0 = self.right_hand_pos[i].cpu().numpy()
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], right_hand_posx[0], right_hand_posx[1], right_hand_posx[2]], [0.85, 0.1, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], right_hand_posy[0], right_hand_posy[1], right_hand_posy[2]], [0.1, 0.85, 0.1])
-                self.gym.add_lines(self.viewer, self.envs[i], 1, [p0[0], p0[1], p0[2], right_hand_posz[0], right_hand_posz[1], right_hand_posz[2]], [0.1, 0.1, 0.85])
-    
     def rand_row(self, tensor, dim_needed):  
         row_total = tensor.shape[0]
         return tensor[torch.randint(low=0, high=row_total, size=(dim_needed,)),:]
@@ -1356,7 +1383,7 @@ class Mocap(BaseTask):
             camera_image = Im.fromarray(camera_image)
         
         return camera_image
-
+        
 #####################################################################
 ###=========================jit functions=========================###
 #####################################################################
@@ -1399,8 +1426,9 @@ def depth_image_to_point_cloud_GPU(camera_tensor, camera_view_matrix_inv, camera
 @torch.jit.script
 def compute_hand_reward(
     rew_buf, reset_buf, reset_goal_buf, progress_buf, successes, consecutive_successes,
-    max_episode_length: float, object_pos, object_rot, target_pos, target_rot, pot_left_handle_pos, pot_right_handle_pos, 
-    left_hand_pos, right_hand_pos, 
+    max_episode_length: float, object_pos, object_rot, target_pos, target_rot, door_left_handle_pos, door_right_handle_pos,
+    left_hand_pos, right_hand_pos, right_hand_ff_pos, right_hand_mf_pos, right_hand_rf_pos, right_hand_lf_pos, right_hand_th_pos,
+    left_hand_ff_pos, left_hand_mf_pos, left_hand_rf_pos, left_hand_lf_pos, left_hand_th_pos,
     dist_reward_scale: float, rot_reward_scale: float, rot_eps: float,
     actions, action_penalty_scale: float,
     success_tolerance: float, reach_goal_bonus: float, fall_dist: float,
@@ -1432,11 +1460,17 @@ def compute_hand_reward(
 
         target_rot (tensor): The rotate of the target
 
-        pot_left_handle_pos (tensor): The position of the left handle of the pot
+        door_right_handle_pos (tensor): The position of the right door handle
 
-        pot_right_handle_pos (tensor): The position of the right handle of the pot
+        door_left_handle_pos (tensor): The position of the left door handle
 
         left_hand_pos, right_hand_pos (tensor): The position of the bimanual hands
+        
+        right_hand_ff_pos, right_hand_mf_pos, right_hand_rf_pos, right_hand_lf_pos, right_hand_th_pos (tensor): The position of the five fingers 
+            of the right hand
+
+        left_hand_ff_pos, left_hand_mf_pos, left_hand_rf_pos, left_hand_lf_pos, left_hand_th_pos (tensor): The position of the five fingers 
+            of the left hand
 
         dist_reward_scale (float): The scale of the distance reward
 
@@ -1466,14 +1500,22 @@ def compute_hand_reward(
     # Distance from the hand to the object
     goal_dist = torch.norm(target_pos - object_pos, p=2, dim=-1)
     # goal_dist = target_pos[:, 2] - object_pos[:, 2]
-    right_hand_dist = torch.norm(pot_right_handle_pos - right_hand_pos, p=2, dim=-1)
-    left_hand_dist = torch.norm(pot_left_handle_pos - left_hand_pos, p=2, dim=-1)
+
+    right_hand_dist = torch.norm(door_right_handle_pos - right_hand_pos, p=2, dim=-1)
+    left_hand_dist = torch.norm(door_left_handle_pos - left_hand_pos, p=2, dim=-1)
+
+    right_hand_finger_dist = (torch.norm(door_right_handle_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(door_right_handle_pos - right_hand_mf_pos, p=2, dim=-1)
+                            + torch.norm(door_right_handle_pos - right_hand_rf_pos, p=2, dim=-1) + torch.norm(door_right_handle_pos - right_hand_lf_pos, p=2, dim=-1) 
+                            + torch.norm(door_right_handle_pos - right_hand_th_pos, p=2, dim=-1))
+    left_hand_finger_dist = (torch.norm(door_left_handle_pos - left_hand_ff_pos, p=2, dim=-1) + torch.norm(door_left_handle_pos - left_hand_mf_pos, p=2, dim=-1)
+                            + torch.norm(door_left_handle_pos - left_hand_rf_pos, p=2, dim=-1) + torch.norm(door_left_handle_pos - left_hand_lf_pos, p=2, dim=-1) 
+                            + torch.norm(door_left_handle_pos - left_hand_th_pos, p=2, dim=-1))
     # Orientation alignment for the cube in hand and goal cube
     # quat_diff = quat_mul(object_rot, quat_conjugate(target_rot))
     # rot_dist = 2.0 * torch.asin(torch.clamp(torch.norm(quat_diff[:, 0:3], p=2, dim=-1), max=1.0))
 
-    right_hand_dist_rew = right_hand_dist
-    left_hand_dist_rew = left_hand_dist
+    right_hand_dist_rew = right_hand_finger_dist
+    left_hand_dist_rew = left_hand_finger_dist
 
     # rot_rew = 1.0/(torch.abs(rot_dist) + rot_eps) * rot_reward_scale
 
@@ -1482,20 +1524,23 @@ def compute_hand_reward(
     # Total reward is: position distance + orientation alignment + action regularization + success bonus + fall penalty
     # reward = torch.exp(-0.05*(up_rew * dist_reward_scale)) + torch.exp(-0.05*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.05*(left_hand_dist_rew * dist_reward_scale))
     up_rew = torch.zeros_like(right_hand_dist_rew)
-    up_rew = torch.where(right_hand_dist < 0.08,
-                        torch.where(left_hand_dist < 0.08,
-                                        3*(0.385 - goal_dist), up_rew), up_rew)
-    
-    reward = 0.2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
+    up_rew = torch.where(right_hand_finger_dist < 0.5,
+                    torch.where(left_hand_finger_dist < 0.5,
+                                    1 - torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) * 2, up_rew), up_rew)
 
-    resets = torch.where(object_pos[:, 2] <= 0.3, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(right_hand_dist >= 0.2, torch.ones_like(resets), resets)
-    resets = torch.where(left_hand_dist >= 0.2, torch.ones_like(resets), resets)
+    # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
+    reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
+
+    #############################################################################################################
+    resets = torch.where(right_hand_finger_dist >= 3, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 3, torch.ones_like(resets), resets)
+    #############################################################################################################
+    
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
-                    torch.where(goal_dist < 0.05, torch.ones_like(successes), successes), successes)
-
+                    torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) < 0.5, torch.ones_like(successes), successes), successes)
+                    
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)

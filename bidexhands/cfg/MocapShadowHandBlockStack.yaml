@@ -1,8 +1,7 @@
 # if given, will override the device setting in gym. 
 env: 
-  env_name: "shadow_hand_door_open_inward"
-  numEnvs: 128
-  #numEnvs: 1
+  env_name: "shadow_hand_block_stack"
+  numEnvs: 1
   envSpacing: 1.5
   episodeLength: 250
   enableDebugVis: False
@@ -26,8 +25,8 @@ env:
   resetDofVelRandomInterval: 0.0
 
   distRewardScale: 20
-  transition_scale: 0.5
-  orientation_scale: 0.5
+  transition_scale: 0.2
+  orientation_scale: 0.02
   rotRewardScale: 1.0
   rotEps: 0.1
   actionPenaltyScale: -0.0002
@@ -35,7 +34,7 @@ env:
   fallDistance: 0.4
   fallPenalty: 0.0
 
-  objectType: "pot" # can be block, egg or pen
+  objectType: "block" # can be block, egg or pen
   observationType: "full_state" # point_cloud or full_state
   handAgentIndex: "[[0, 1, 2, 3, 4, 5]]"
   asymmetric_observations: False

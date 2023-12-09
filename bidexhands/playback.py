@@ -2,7 +2,7 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-env_name = 'Mocap'
+env_name = 'MocapShadowHandCatchOver2Underarm'
 algo = "manual"
 
 # algo = "ppo"

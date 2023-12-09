@@ -28,6 +28,35 @@ from bidexhands.tasks.shadow_hand_re_orientation import ShadowHandReOrientation
 from bidexhands.tasks.shadow_hand_kettle import ShadowHandKettle
 from bidexhands.tasks.shadow_hand_block_stack import ShadowHandBlockStack
 
+# Mocap env
+from bidexhands.tasks.mocap_shadow_hand_door_open_inward import MocapShadowHandDoorOpenInward
+from bidexhands.tasks.mocap_shadow_hand_door_open_outward import MocapShadowHandDoorOpenOutward
+from bidexhands.tasks.mocap_shadow_hand_door_close_inward import MocapShadowHandDoorCloseInward
+from bidexhands.tasks.mocap_shadow_hand_door_close_outward import MocapShadowHandDoorCloseOutward
+
+from bidexhands.tasks.mocap_shadow_hand_block_stack import MocapShadowHandBlockStack
+from bidexhands.tasks.mocap_shadow_hand_switch import MocapShadowHandSwitch
+from bidexhands.tasks.mocap_shadow_hand_kettle import MocapShadowHandKettle
+
+from bidexhands.tasks.mocap_shadow_hand_swing_cup import MocapShadowHandSwingCup
+from bidexhands.tasks.mocap_shadow_hand_push_block import MocapShadowHandPushBlock
+from bidexhands.tasks.mocap_shadow_hand_grasp_and_place import MocapShadowHandGraspAndPlace
+
+
+# from bidexhands.tasks.mocap_shadow_hand_catch_over2underarm import MocapShadowHandCatchOver2Underarm
+# from bidexhands.tasks.mocap_shadow_hand_lift_underarm import MocapShadowHandLiftUnderarm
+# from bidexhands.tasks.mocap_shadow_hand_catch_underarm import MocapShadowHandCatchUnderarm
+# from bidexhands.tasks.mocap_shadow_hand_over import MocapShadowHandOver
+# not ready
+# from bidexhands.tasks.mocap_shadow_hand_scissors import MocapShadowHandScissors
+
+# from bidexhands.tasks.mocap_shadow_hand_two_catch_underarm import MocapShadowHandTwoCatchUnderarm
+# from bidexhands.tasks.mocap_shadow_hand_pen import MocapShadowHandPen
+# from bidexhands.tasks.mocap_shadow_hand_re_orientation import MocapShadowHandReOrientation
+# from bidexhands.tasks.mocap_shadow_hand_bottle_cap import MocapShadowHandBottleCap
+# from bidexhands.tasks.mocap_shadow_hand_catch_abreast import MocapShadowHandCatchAbreast
+
+
 # Allegro hand
 from bidexhands.tasks.allegro_hand_over import AllegroHandOver
 from bidexhands.tasks.allegro_hand_catch_underarm import AllegroHandCatchUnderarm

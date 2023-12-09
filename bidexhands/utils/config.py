@@ -63,6 +63,32 @@ def retrieve_cfg(args, use_rlg_config=False):
 
     print("task: ", args.task)
     if args.task in ["Mocap",
+                    "MocapShadowHandDoorOpenInward",
+                    "MocapShadowHandDoorOpenOutward",
+                    "MocapShadowHandDoorCloseInward",
+                    "MocapShadowHandDoorCloseOutward",
+
+                    "MocapShadowHandBlockStack",
+                    "MocapShadowHandSwitch",
+                    "MocapShadowHandKettle",
+
+                    "MocapShadowHandSwingCup",
+                    "MocapShadowHandPushBlock",
+                    "MocapShadowHandGraspAndPlace",
+
+                    "MocapShadowHandScissors",
+                    "MocapShadowHandCatchOver2Underarm",
+                    "MocapShadowHandLiftUnderarm",
+                    "MocapShadowHandCatchUnderarm",
+                    "MocapShadowHandOver",
+
+                    # not ready
+                    "MocapShadowHandTwoCatchUnderarm",                    
+                    "MocapShadowHandPen",
+                    "MocapShadowHandReOrientation",
+                    "MocapShadowHandBottleCap",
+                    "MocapShadowHandCatchAbreast",
+
                     "ShadowHandOver", "ShadowHandCatchUnderarm", "ShadowHandTwoCatchUnderarm", "ShadowHandCatchAbreast", "ShadowHandReOrientation",
                     "ShadowHandCatchOver2Underarm", "ShadowHandBottleCap", "ShadowHandDoorCloseInward", "ShadowHandDoorCloseOutward",
                     "ShadowHandDoorOpenInward", "ShadowHandDoorOpenOutward", "ShadowHandKettle", "ShadowHandPen", "ShadowHandSwitch",

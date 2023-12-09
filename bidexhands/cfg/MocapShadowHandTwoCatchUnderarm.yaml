@@ -1,10 +1,9 @@
 # if given, will override the device setting in gym. 
 env: 
-  env_name: "shadow_hand_door_open_inward"
-  numEnvs: 128
-  #numEnvs: 1
-  envSpacing: 1.5
-  episodeLength: 250
+  env_name: "shadow_hand_two_catch_underarm"
+  numEnvs: 1
+  envSpacing: 0.75
+  episodeLength: 75
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True
@@ -17,26 +16,27 @@ env:
   actionsMovingAverage: 1.0
   controlFrequencyInv: 1 # 60 Hz
 
-  startPositionNoise: 0.0
+  startPositionNoise: 0.01
   startRotationNoise: 0.0
 
-  resetPositionNoise: 0.0
+  resetPositionNoise: 0.01
   resetRotationNoise: 0.0
-  resetDofPosRandomInterval: 0.0
+  resetDofPosRandomInterval: 0.2
   resetDofVelRandomInterval: 0.0
 
-  distRewardScale: 20
-  transition_scale: 0.5
+  distRewardScale: 50.0
+  transition_scale: 0.05
   orientation_scale: 0.5
+
   rotRewardScale: 1.0
   rotEps: 0.1
   actionPenaltyScale: -0.0002
   reachGoalBonus: 250
-  fallDistance: 0.4
+  fallDistance: 0.65
   fallPenalty: 0.0
 
-  objectType: "pot" # can be block, egg or pen
-  observationType: "full_state" # point_cloud or full_state
+  objectType: "egg" # can be block, egg or pen
+  observationType: "full_state" # full_state or point_cloud
   handAgentIndex: "[[0, 1, 2, 3, 4, 5]]"
   asymmetric_observations: False
   successTolerance: 0.1

@@ -28,7 +28,7 @@ from cv_bridge import CvBridge
 bridge = CvBridge()
 import std_msgs
 
-class Mocap(BaseTask):
+class MocapShadowHandBlockStack(BaseTask):
     """
     This class corresponds to the Block Stack task. This environment involves dual hands and two blocks, and we need to stack the block
     as a tower.

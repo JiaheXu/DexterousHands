@@ -28,7 +28,7 @@ from cv_bridge import CvBridge
 bridge = CvBridge()
 import std_msgs
 
-class Mocap(BaseTask):
+class MocapShadowHandCatchAbreast(BaseTask):
     """
     This class corresponds to the Catch Abreast task. This environment consists of two shadow hands placed 
     side by side in the same direction and an object that needs to be passed. Compared with the previous 
