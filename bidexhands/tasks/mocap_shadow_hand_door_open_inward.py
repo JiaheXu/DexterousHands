@@ -559,8 +559,8 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         self.cams = []
         # add cameras
         cam_props = gymapi.CameraProperties()
-        cam_props.width = 512
-        cam_props.height = 512
+        cam_props.width = 200
+        cam_props.height = 200
         cam_props.enable_tensors = True
 
         self.cam1_handle  = None

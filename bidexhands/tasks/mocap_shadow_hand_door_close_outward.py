@@ -557,8 +557,8 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         self.cams = []
         # add cameras
         cam_props = gymapi.CameraProperties()
-        cam_props.width = 512
-        cam_props.height = 512
+        cam_props.width = 200
+        cam_props.height = 200
         cam_props.enable_tensors = True
 
         self.cam1_handle  = None
@@ -686,7 +686,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.0), gymapi.Vec3(0, 0, 0.5))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
@@ -1524,7 +1524,7 @@ def compute_hand_reward(
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) < 0.5, torch.ones_like(successes), successes), successes)
-             
+    max_episode_length = 1000000000             
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)

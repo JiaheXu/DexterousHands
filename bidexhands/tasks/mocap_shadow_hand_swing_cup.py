@@ -462,11 +462,15 @@ class MocapShadowHandSwingCup(BaseTask):
 
         shadow_hand_start_pose = gymapi.Transform()
         shadow_hand_start_pose.p = gymapi.Vec3(0.35, 0.2, 0.8)
-        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 1.57, 1.57)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
+
+        # shadow_hand_start_pose = gymapi.Transform()
+        # shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.2, 0.3)
+        # shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_another_hand_start_pose = gymapi.Transform()
         shadow_another_hand_start_pose.p = gymapi.Vec3(0.35, -0.2, 0.8)
-        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, -1.57, 1.57)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, 0., 0.6)
@@ -547,8 +551,8 @@ class MocapShadowHandSwingCup(BaseTask):
         self.cams = []
         # add cameras
         cam_props = gymapi.CameraProperties()
-        cam_props.width = 512
-        cam_props.height = 512
+        cam_props.width = 200
+        cam_props.height = 200
         cam_props.enable_tensors = True
 
         self.cam1_handle  = None
@@ -675,7 +679,7 @@ class MocapShadowHandSwingCup(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.0), gymapi.Vec3(0, 0, 0.5))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)

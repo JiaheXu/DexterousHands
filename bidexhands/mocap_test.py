@@ -2,9 +2,7 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-#env_name = 'Mocap'
-#env_name = 'MocapShadowHandDoorOpenInward'
-env_name = "MocapShadowHandDoorOpenOutward"
+env_name = "MocapShadowHandSwingCup"
 algo = "manual"
 
 # algo = "ppo"
@@ -111,25 +109,33 @@ class isaac():
         root_pos = action[:6].copy()
         print("\n")
         print("new iter root_pose: ", root_pos)
-        
-        #zeros = np.zeros((6,))
+        #action[0] = -1 * action[0]
         action[0] = -1 * action[0]
         action[1] = -1 * action[1]
         action[3] = -1 * action[3]
-        action[4] = -1 * action[4]        
-        action[0:3] = z_rot @ action[0:3]
-
-
-        action[3], action[4] = action[4], action[3]
-        action[3] = -1 * action[3]
-        # action[4] += 0.5
-        action[5] = action[5] + np.pi/2
-        print("action[5]: ", action[5]/np.pi )
-        #print("action[3:6]: ", action[3:6])
+        action[4] = -1 * action[4] 
+        # action[3], action[4] = action[4], action[3]
         if action[0] < 0.0:
             action[0] = action[0]*3
-        
         action[2] = action[2]*2
+                
+        # # door env setting
+        # action[0] = -1 * action[0]
+        # action[1] = -1 * action[1]
+        # action[3] = -1 * action[3]
+        # action[4] = -1 * action[4]        
+        # action[0:3] = z_rot @ action[0:3]
+        # action[3], action[4] = action[4], action[3]
+        # action[3] = -1 * action[3]
+        # action[5] = action[5] + np.pi/2
+        # print("action[5]: ", action[5]/np.pi )
+
+        # if action[0] < 0.0:
+        #     action[0] = action[0]*3
+        # action[2] = action[2]*2
+        # # door env setting
+
+
         ################################################################################        
         # below are template
         ################################################################################ 
@@ -139,8 +145,11 @@ class isaac():
         # input should be scaled to -1.0 ~ 1.0
         #
 
-        action_right = action        
+        #action_right = action - action     
+        action_right = action
         action_left = action_right.copy()
+
+        action_left = action_left - action_left
         #action_left[0:3] = action_left[0:3] - action_left[0:3]
         
         # left hand mirror up right hand 
