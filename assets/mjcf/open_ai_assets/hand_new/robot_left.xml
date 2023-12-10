@@ -164,12 +164,12 @@
                                 <geom name="robot1:V_thhub" type="box" group="1" pos="0 0 0" size="0.001 0.001 0.001"></geom>
                                 <body name="robot1:thmiddle" pos="0 0 0">
                                     <inertial pos="0 0 0.016" quat="1 -0.001 -0.007 0.003" mass="0.016" diaginertia="1e-05 1e-05 1e-05"></inertial>
-                                    <joint name="robot1:THJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.524 0.524" user="1118"></joint>        
+                                    <joint name="robot1:THJ1" type="hinge" pos="0 0 0" axis="0 -1 0" range="-0.524 0.524" user="1118"></joint>        
                                     <geom class="robot1:D_Vizual" name="robot1:V_thmiddle" mesh="robot1:TH2_z"></geom>
                                     <geom class="robot1:DC_Hand" name="robot1:C_thmiddle" type="capsule" pos="0 0 0.016" size="0.011 0.016"></geom>
-                                    <body name="robot1:thdistal" pos="0 0 0.032">
-                                        <inertial pos="0 0 0.016" quat="0.999 -0.005 -0.047 0.005" mass="0.016" diaginertia="1e-05 1e-05 1e-05"></inertial>
-                                        <joint name="robot1:THJ0" type="hinge" pos="0 0 0" axis="0 -1 0" range="-1.571 0" user="1117"></joint>        
+                                    <body name="robot1:thdistal" pos="0 0 0.032" euler="0 0 3.14">
+                                        <inertial pos="0 0 0.016" mass="0.016" diaginertia="1e-05 1e-05 1e-05"></inertial>
+                                        <joint name="robot1:THJ0" type="hinge" pos="0 0 0" axis="0 1 0" range="-1.571 0" user="1117"></joint>        
                                         <geom class="robot1:D_Vizual" name="robot1:V_thdistal" mesh="robot1:TH1_z"></geom>
                                         <geom class="robot1:DC_Hand" name="robot1:C_thdistal" type="capsule" pos="0 0 0.013" size="0.00918 0.013" condim="4"></geom>
                                         <site name="robot1:S_thtip" pos="0 0 0.0275" group="3"></site>

@@ -129,8 +129,8 @@ class isaac():
         if action[0] < 0.0:
             action[0] = action[0]*3
 
-        #action[1] = action[2]*3        
-        action[2] = action[2]*3
+        action[1] = action[1]*2        
+        action[2] = action[2]*2
         ################################################################################        
         # below are template
         ################################################################################ 
@@ -152,8 +152,13 @@ class isaac():
         action_left[5] = -1 * action_left[5]
 
         
+        #action[25] = -1*action[25]
 
         action = np.concatenate( [action_right, action_left] , axis = 0)        
+        # action[23:28] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
+        # action[51:56] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
+        # print("right thumb:", action[23:28])
+        # print("left thumb:", action[51:56])
         #print("action: ", action)
         #action = self.env.action_space.sample()
         action_msg = Float32MultiArray()

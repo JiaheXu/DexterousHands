@@ -2,7 +2,7 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-env_name = 'MocapShadowHandSwingCup'
+env_name = 'MocapShadowHandDoorOpenInward'
 algo = "manual"
 
 # algo = "ppo"
@@ -72,7 +72,10 @@ class isaac():
         self.count = self.count + 1
         
         action = np.array( action_msg.data )
-
+        # action[0:3] = np.array([0,0,0])
+        # action[28:31] = np.array([0,0,0])
+        # action[23:28] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
+        # action[51:56] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
 
