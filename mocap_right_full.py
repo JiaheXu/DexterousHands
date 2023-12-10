@@ -377,13 +377,15 @@ class isaac():
         #zeros = np.zeros((6,))
         action[0] = -1 * action[0]
         action[1] = -1 * action[1]
-        action[3] = -1 * action[3]
+
+        action[3], action[5] = action[5], action[3]
+
+        action[5] = -1 * action[5]
         action[4] = -1 * action[4]        
         
         # action[0:3] = z_rot @ action[0:3]
-        action[3], action[4] = action[4], action[3]
+        # 
         # action[3] = -1 * action[3]
-        # action[4] += 0.2
         # action[5] = action[5] + np.pi/2
 
         print("action[3:6]: ", action[3:6])

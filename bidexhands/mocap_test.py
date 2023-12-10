@@ -78,51 +78,22 @@ class isaac():
         if( self.count == 1): # initialize (x,y,z)
             self.init_pos =  action[0:3].copy()
         action[0:3] = action[0:3] - self.init_pos
-        # if(self.count % 5 != 0 ): # freq control
-        #     return
-        
-        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
-        #   1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
-        #   1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
-        #   0.3093,  0.1722,  0.3505, -0.2404]
-        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000, 
-        #     -0.349,   0.9305,  1.571,   1.571,
-        #     -0.3489,  1.2059,  1.571,   1.5513,
-        #     -0.349,   0.9256,  1.571,   1.571,
-        #     7.8775e-05, -3.4897e-01,  3.4559e-01,  1.5710e+00,  1.5710e+00,
-        #     0.0129,  0.3373,  0.1,     0.4326, -0.4756]
-        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-        #   0.0,  0.0,  0.0,
-        #   0.0,  0.0,  0.0,  
-        #   0.0,  0.0,  0.0,  
-        #   0.0,  0.0,  0.0,  
-        #   0.0,  0.0,  0.0,  0.0,  0.0,
-        #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
-        # action = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
-        #     0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0, 0.0]
-        # action = np.array( action )
         
         root_pos = action[:6].copy()
         print("\n")
         print("new iter root_pose: ", root_pos)
-        #action[0] = -1 * action[0]
         action[0] = -1 * action[0]
         action[1] = -1 * action[1]
-        action[3] = -1 * action[3]
-        action[4] = -1 * action[4] 
-        # action[3], action[4] = action[4], action[3]
-        if action[0] < 0.0:
-            action[0] = action[0]*3
-        action[2] = action[2]*2
-                
+
+        #action[3], action[5] = action[5], action[3]
+
+        # action[5] = -1 * action[5]
+        action[4] = -1 * action[4]  
+        action[3] = -1 * action[3]  
         # # door env setting
         # action[0] = -1 * action[0]
         # action[1] = -1 * action[1]
-        # action[3] = -1 * action[3]
+        
         # action[4] = -1 * action[4]        
         # action[0:3] = z_rot @ action[0:3]
         # action[3], action[4] = action[4], action[3]

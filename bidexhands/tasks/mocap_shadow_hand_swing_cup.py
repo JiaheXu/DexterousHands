@@ -1524,7 +1524,7 @@ def compute_hand_reward(
     successes = torch.where(successes == 0, 
                     torch.where(rot_dist < 0.785, torch.ones_like(successes), successes), successes)
 
-
+    max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)

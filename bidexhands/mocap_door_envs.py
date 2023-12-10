@@ -120,8 +120,8 @@ class isaac():
         action[0:3] = z_rot @ action[0:3]
 
 
-        action[3], action[4] = action[4], action[3]
-        action[3] = -1 * action[3]
+        # action[3], action[4] = action[4], action[3]
+        # action[3] = -1 * action[3]
         # action[4] += 0.5
         action[5] = action[5] + np.pi/2
         print("action[5]: ", action[5]/np.pi )
