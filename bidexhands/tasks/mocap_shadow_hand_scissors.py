@@ -449,7 +449,7 @@ class MocapShadowHandScissors(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(0.5, 1.0, 0.6)
+        table_dims = gymapi.Vec3(0.5, 1.0, 0.45)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = True

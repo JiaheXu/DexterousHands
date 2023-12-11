@@ -450,7 +450,7 @@ class MocapShadowHandGraspAndPlace(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(1.0, 1.0, 0.6)
+        table_dims = gymapi.Vec3(1.0, 1.0, 0.45)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = True
@@ -461,11 +461,11 @@ class MocapShadowHandGraspAndPlace(BaseTask):
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, gymapi.AssetOptions())
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.8)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 1.0)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.8)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 1.0)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
@@ -1093,6 +1093,7 @@ class MocapShadowHandGraspAndPlace(BaseTask):
             goal_env_ids (tensor): The index of the environment that only goals need reset
 
         """
+        #print("reset ids: ", env_ids)
         # randomization can happen only at reset time, since it can reset actor positions on GPU
         if self.randomize:
             self.apply_randomizations(self.randomization_params)
@@ -1501,13 +1502,13 @@ def compute_hand_reward(
     reward = right_hand_dist_rew + left_hand_dist_rew + up_rew
 
     resets = torch.where(right_hand_dist_rew <= 0, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(right_hand_finger_dist >= 1.5, torch.ones_like(resets), resets)
-    resets = torch.where(left_hand_finger_dist >= 1.5, torch.ones_like(resets), resets)
+    #resets = torch.where(right_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
+    #resets = torch.where(left_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(torch.norm(block_right_handle_pos - block_left_handle_pos, p=2, dim=-1) < 0.2, torch.ones_like(successes), successes), successes)
-
+    max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
@@ -1516,7 +1517,7 @@ def compute_hand_reward(
     finished_cons_successes = torch.sum(successes * resets.float())
 
     cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes).mean()
-    
+    #print("reset ids: ", resets)
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
 

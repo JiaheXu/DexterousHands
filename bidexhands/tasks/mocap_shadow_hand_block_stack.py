@@ -450,7 +450,7 @@ class MocapShadowHandBlockStack(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(0.5, 1.0, 0.6)
+        table_dims = gymapi.Vec3(0.5, 1.0, 0.45)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = True
@@ -479,12 +479,12 @@ class MocapShadowHandBlockStack(BaseTask):
 
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.1, 0.625)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.1, 0.475)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         block_start_pose = gymapi.Transform()
-        block_start_pose.p = gymapi.Vec3(0.0, -0.1, 0.625)
+        block_start_pose.p = gymapi.Vec3(0.0, -0.1, 0.475)
         block_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
 
         if self.object_type == "pen":
@@ -1561,8 +1561,8 @@ def compute_hand_reward(
     reward = 1.5 - right_hand_dist_rew - left_hand_dist_rew + up_rew + stack_rew
 
     resets = torch.where(right_hand_dist_rew <= 0, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(right_hand_finger_dist >= 0.75, torch.ones_like(resets), resets)
-    resets = torch.where(left_hand_finger_dist >= 0.75, torch.ones_like(resets), resets)
+    # resets = torch.where(right_hand_finger_dist >= 0.75, torch.ones_like(resets), resets)
+    # resets = torch.where(left_hand_finger_dist >= 0.75, torch.ones_like(resets), resets)
 
     # print(goal_dist1[0])
     # print(goal_dist2[0])
@@ -1574,7 +1574,7 @@ def compute_hand_reward(
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(stack_rew > 1, torch.ones_like(successes), successes), successes)
-
+    max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)

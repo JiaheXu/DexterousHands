@@ -442,7 +442,7 @@ class MocapShadowHandPushBlock(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(1.0, 1.0, 0.6)
+        table_dims = gymapi.Vec3(1.0, 1.0, 0.45)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = True
@@ -461,12 +461,12 @@ class MocapShadowHandPushBlock(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.6)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.475)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         block_start_pose = gymapi.Transform()
-        block_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.6)
+        block_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.475)
         block_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
         # object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
@@ -1507,14 +1507,14 @@ def compute_hand_reward(
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = right_hand_dist_rew + left_hand_dist_rew + up_rew
 
-    resets = torch.where(right_hand_finger_dist >= 1.2, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 1.2, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_finger_dist >= 10.2, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 10.2, torch.ones_like(resets), resets)
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(torch.abs(left_goal_dist) <= 0.1, 
                         torch.where(torch.abs(right_goal_dist) <= 0.1, torch.ones_like(successes), torch.ones_like(successes) * 0.5), successes), successes)
-
+    max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
