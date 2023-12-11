@@ -40,7 +40,6 @@ from bidexhands.tasks.mocap_shadow_hand_swing_cup import MocapShadowHandSwingCup
 # from bidexhands.tasks.mocap_shadow_hand_two_catch_underarm import MocapShadowHandTwoCatchUnderarm
 from bidexhands.tasks.mocap_shadow_hand_door_open_inward import MocapShadowHandDoorOpenInward
 from bidexhands.tasks.mocap_shadow_hand_push_block import MocapShadowHandPushBlock # ??? direct learn from PPO?
-from bidexhands.tasks.mocap_shadow_hand_bottle_cap import MocapShadowHandBottleCap
 # from bidexhands.tasks.mocap_shadow_hand_re_orientation import MocapShadowHandReOrientation
 from bidexhands.tasks.mocap_shadow_hand_block_stack import MocapShadowHandBlockStack # ??? must two hands?
 

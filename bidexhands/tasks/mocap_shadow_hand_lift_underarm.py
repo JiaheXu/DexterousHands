@@ -433,7 +433,7 @@ class MocapShadowHandLiftUnderarm(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(0.3, 0.3, 0.4)
+        table_dims = gymapi.Vec3(0.3, 0.3, 0.6)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = False
@@ -444,20 +444,17 @@ class MocapShadowHandLiftUnderarm(BaseTask):
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0, 0.05, 0.45)
-        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.8)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0, -1.25, 0.45)
-        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 3.14159)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.8)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3()
-        pose_dx, pose_dy, pose_dz = -0, -0.65, 0.
-
-        object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
-        object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
-        object_start_pose.p.z = shadow_hand_start_pose.p.z + pose_dz
+        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.6)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
+        pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
@@ -471,7 +468,7 @@ class MocapShadowHandLiftUnderarm(BaseTask):
         goal_start_pose.p.z -= 0.0
 
         table_pose = gymapi.Transform()
-        table_pose.p = gymapi.Vec3(0.0, -0.6, 0.5 * table_dims.z)
+        table_pose.p = gymapi.Vec3(0.0, 0.0, 0.5 * table_dims.z)
         table_pose.r = gymapi.Quat().from_euler_zyx(-0., 0, 0)
 
         # compute aggregate size

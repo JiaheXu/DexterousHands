@@ -470,12 +470,12 @@ class MocapShadowHandBlockStack(BaseTask):
         # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0, 0)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.2, 0.3)
-        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.2, 0.8)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.25, -0.2, 0.3)
-        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.25, -0.2, 0.8)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
 
         object_start_pose = gymapi.Transform()

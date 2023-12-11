@@ -2,9 +2,26 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-#env_name = "MocapShadowHandSwingCup"
+
+# env_name = "MocapShado
+# wHandDoorOpenInward"
+# env_name = "MocapShadowHandDoorOpenOutward"
+# env_name = "MocapShadowHandDoorCloseInward"
+# env_name = "MocapShadowHandDoorCloseOutward"
+# env_name = "MocapShadowHandSwingCup"
 
 env_name = "MocapShadowHandPushBlock"
+# env_name = "MocapShadowHandBlockStack"
+
+# env_name = "MocapShadowHandGraspAndPlace"
+
+# env_name = "MocapShadowHandKettle"
+# env_name = "MocapShadowHandScissors"
+# env_name = "MocapShadowHandSwitch"
+# env_name = "MocapShadowHandLiftUnderarm"
+# not ready
+# env_name = "MocapShadowHandBottleCap"
+
 algo = "manual"
 
 # algo = "ppo"
