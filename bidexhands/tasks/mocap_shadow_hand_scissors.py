@@ -261,6 +261,9 @@ class MocapShadowHandScissors(BaseTask):
         self.prev_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
         self.cur_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
 
+        self.cur_targets_zeros = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
+        self.cur_targets_ones = torch.ones((self.num_envs, self.num_dofs), dtype=torch.float, device=self.device)
+
         self.global_indices = torch.arange(self.num_envs * 3, dtype=torch.int32, device=self.device).view(self.num_envs, -1)
         self.x_unit_tensor = to_torch([1, 0, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
         self.y_unit_tensor = to_torch([0, 1, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
@@ -1522,6 +1525,7 @@ def compute_hand_reward(
     resets = torch.where(left_hand_finger_dist >= 3.75, torch.ones_like(resets), resets)
 
     # Find out which envs hit the goal and update successes count
+    max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     successes = torch.where(successes == 0, 

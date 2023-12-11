@@ -3,24 +3,23 @@ import torch
 import numpy as np
 
 
-# env_name = "MocapShado
-# wHandDoorOpenInward"
+# env_name = "MocapShadowHandDoorOpenInward"
 # env_name = "MocapShadowHandDoorOpenOutward"
 # env_name = "MocapShadowHandDoorCloseInward"
 # env_name = "MocapShadowHandDoorCloseOutward"
 # env_name = "MocapShadowHandSwingCup"
+# env_name = "MocapShadowHandScissors"
+# env_name = "MocapShadowHandSwitch"
+# env_name = "MocapShadowHandLiftUnderarm"
+# env_name = "MocapShadowHandKettle"
 
-env_name = "MocapShadowHandPushBlock"
+# env_name = "MocapShadowHandPushBlock"# not ready
+
 # env_name = "MocapShadowHandBlockStack"
 
 # env_name = "MocapShadowHandGraspAndPlace"
 
-# env_name = "MocapShadowHandKettle"
-# env_name = "MocapShadowHandScissors"
-# env_name = "MocapShadowHandSwitch"
-# env_name = "MocapShadowHandLiftUnderarm"
-# not ready
-# env_name = "MocapShadowHandBottleCap"
+# env_name = "MocapShadowHandBottleCap" # not ready
 
 algo = "manual"
 
