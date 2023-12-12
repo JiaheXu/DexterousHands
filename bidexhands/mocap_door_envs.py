@@ -74,6 +74,7 @@ class isaac():
     
         # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         self.count = self.count + 1
+        print("sim env current count: ", self.count)
         
         action = np.array( qpos_msg.data )
 
@@ -109,8 +110,8 @@ class isaac():
         # action = np.array( action )
         
         root_pos = action[:6].copy()
-        print("\n")
-        print("new iter root_pose: ", root_pos)
+        #print("\n")
+        #print("new iter root_pose: ", root_pos)
         
         #zeros = np.zeros((6,))
         action[0] = -1 * action[0]
@@ -124,10 +125,10 @@ class isaac():
         # action[3] = -1 * action[3]
         # action[4] += 0.5
         action[5] = action[5] + np.pi/2
-        print("action[5]: ", action[5]/np.pi )
+        #print("action[5]: ", action[5]/np.pi )
         #print("action[3:6]: ", action[3:6])
-        if action[0] < 0.0:
-            action[0] = action[0]*3
+        # if action[0] < 0.0:
+            # action[0] = action[0]*3
 
         action[1] = action[1]*2        
         action[2] = action[2]*2
@@ -147,9 +148,13 @@ class isaac():
         #action_left[0:3] = action_left[0:3] - action_left[0:3]
         
         # left hand mirror up right hand 
-        action_left[1] = -1 * action_left[1]
-        action_left[3] = -1 * action_left[3]
-        action_left[5] = -1 * action_left[5]
+        action_left = action_left - action_left
+        
+        
+        # mirring
+        # action_left[1] = -1 * action_left[1]
+        # action_left[3] = -1 * action_left[3]
+        # action_left[5] = -1 * action_left[5]
 
         
         #action[25] = -1*action[25]

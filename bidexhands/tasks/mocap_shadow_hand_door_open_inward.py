@@ -688,7 +688,7 @@ class MocapShadowHandDoorOpenInward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.0), gymapi.Vec3(0, 0, 0.5))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.2), gymapi.Vec3(0, 0, 0.7))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
@@ -1264,7 +1264,7 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         #     print("RF: ", self.cur_targets[:, 14:18])        
         #     print("LF: ", self.cur_targets[:, 18:23])
         #     print("TH: ", self.cur_targets[:, 23:28])
-        print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:, 6:28] - self.cur_targets[:, 34:56]) ) )
+        #print("right - left action diff: ", Tensor.sum( Tensor.abs( self.cur_targets[:, 6:28] - self.cur_targets[:, 34:56]) ) )
         
         gymutil.draw_lines(self.axes_geom, self.gym, self.viewer, self.envs[0], self.goal_viz_T)
 
@@ -1287,10 +1287,10 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         self.compute_reward(self.actions)
         # print("get img")
 
-        print("real right thumb state:", self.shadow_hand_dof_pos[0][23:28])
-        print("real left thumb state:", self.shadow_hand_another_dof_pos[0][23:28])
-        print("diff: ", self.shadow_hand_dof_pos[0][23:28] - self.shadow_hand_another_dof_pos[0][23:28])
-        print("")
+        #print("real right thumb state:", self.shadow_hand_dof_pos[0][23:28])
+        #print("real left thumb state:", self.shadow_hand_another_dof_pos[0][23:28])
+        #print("diff: ", self.shadow_hand_dof_pos[0][23:28] - self.shadow_hand_another_dof_pos[0][23:28])
+        #print("")
         if (self.num_envs == 1):
             cam1_img = self.cam_tensors[0].cpu().numpy()
             cam2_img = self.cam_tensors[1].cpu().numpy()
@@ -1528,15 +1528,15 @@ def compute_hand_reward(
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
     #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 3, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 3, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_finger_dist >= 30, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 30, torch.ones_like(resets), resets)
     #############################################################################################################
     
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > 0.5, torch.ones_like(successes), successes), successes)
-    max_episode_length = 1000000000
-    resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+    #max_episode_length = 1000000000
+    #resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
 

@@ -12,13 +12,13 @@ import numpy as np
 # env_name = "MocapShadowHandScissors"
 # env_name = "MocapShadowHandSwitch"
 # env_name = "MocapShadowHandLiftUnderarm"
-# env_name = "MocapShadowHandKettle"
-# env_name = "MocapShadowHandGraspAndPlace"
+
+env_name = "MocapShadowHandGraspAndPlace"
 # env_name = "MocapShadowHandBlockStack"
-env_name = "MocapShadowHandPushBlock"
+# env_name = "MocapShadowHandPushBlock"
 
 # env_name = "MocapShadowHandBottleCap" # not ready
-
+# env_name = "MocapShadowHandKettle" #not easy
 algo = "manual"
 
 # algo = "ppo"
@@ -137,12 +137,13 @@ class isaac():
         action_left = action_right.copy()
 
         action_left = action_left - action_left
+        
         #action_left[0:3] = action_left[0:3] - action_left[0:3]
         
         # left hand mirror up right hand 
-        action_left[1] = -1 * action_left[1]
-        action_left[3] = -1 * action_left[3]
-        action_left[5] = -1 * action_left[5]
+        # action_left[1] = -1 * action_left[1]
+        # action_left[3] = -1 * action_left[3]
+        # action_left[5] = -1 * action_left[5]
 
         
 
