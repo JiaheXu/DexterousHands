@@ -743,7 +743,8 @@ class MocapShadowHandDoorOpenInward(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
-
+        if(self.num_envs == 1): # mocap
+            self.extras['progress_buf'] = self.progress_buf
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
             direct_average_successes = self.total_successes + self.successes.sum()
@@ -1513,7 +1514,7 @@ def compute_hand_reward(
 
     # rot_rew = 1.0/(torch.abs(rot_dist) + rot_eps) * rot_reward_scale
 
-    action_penalty = torch.sum(actions ** 2, dim=-1)
+    action_penalty = torch.sum(actions ** 2, dim=-1) # set to relative action
 
     # Total reward is: position distance + orientation alignment + action regularization + success bonus + fall penalty
     # reward = torch.exp(-0.05*(up_rew * dist_reward_scale)) + torch.exp(-0.05*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.05*(left_hand_dist_rew * dist_reward_scale))
@@ -1527,24 +1528,34 @@ def compute_hand_reward(
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
-    #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 30, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 30, torch.ones_like(resets), resets)
-    #############################################################################################################
-    
     # Find out which envs hit the goal and update successes count
-    successes = torch.where(successes == 0, 
-                    torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > 0.5, torch.ones_like(successes), successes), successes)
-    #max_episode_length = 1000000000
-    #resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+    dist_threshold = 0.25
 
-    goal_resets = torch.zeros_like(resets)
 
+    # Find out which envs hit the goal and update successes count
+    goal_resets = torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > dist_threshold, torch.ones_like(reset_goal_buf), reset_goal_buf)
+    successes = successes + goal_resets
+    
+    #############################################################################################################
+    resets = torch.where(right_hand_finger_dist >= 3.5, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
+    #############################################################################################################
+    # print("max_consecutive_successes: ", max_consecutive_successes)
+    # if max_consecutive_successes > 0:
+    
+    resets = torch.where(successes > max(max_consecutive_successes, 1 ), torch.ones_like(resets), resets)
+
+    # max_episode_length = 30*60 #( 30hz * 60s)
+    resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+    
     num_resets = torch.sum(resets)
     finished_cons_successes = torch.sum(successes * resets.float())
 
-    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes).mean()
+    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes)
 
+    #print("distance: ", torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]))
+    #print("successes: ",successes)
+    #print("progress_buf: ", progress_buf)
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
 

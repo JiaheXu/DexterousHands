@@ -9,7 +9,7 @@ import numpy as np
 # env_name = "MocapShadowHandSwingCup"
 # env_name = "MocapShadowHandLiftUnderarm"
 # env_name = "MocapShadowHandPushBlock"
-# env_name = "MocapShadowHandBlockStack"
+env_name = "MocapShadowHandBlockStack"
 
 
 

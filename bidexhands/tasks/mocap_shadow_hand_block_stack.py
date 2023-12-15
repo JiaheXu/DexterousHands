@@ -1581,7 +1581,7 @@ def compute_hand_reward(
     goal_resets = torch.zeros_like(resets)
 
     cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes)
-
+    #print("success: ", successes)
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
 

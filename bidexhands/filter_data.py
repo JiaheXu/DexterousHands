@@ -3,7 +3,6 @@ import torch
 import numpy as np
 
 env_name = 'MocapShadowHandDoorOpenInward'
-# env_name = "MocapShadowHandBlockStack"
 algo = "manual"
 
 # algo = "ppo"
@@ -13,7 +12,12 @@ from cv_bridge import CvBridge
 import numpy as np
 bridge = CvBridge()
 import time
+
 from std_msgs.msg import Float32MultiArray
+from sensor_msgs.msg import JointState
+
+from datetime import datetime
+import rosbag
 
 z_rot = np.array([
     [0.0, -1.0, 0.0],
@@ -66,6 +70,10 @@ class isaac():
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
         self.count = 0
         self.init_pos = np.array([0.0, 0.0, 0.0])
+        now = datetime.now()
+        dt_string = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"
+        # print("dt_string:", dt_string)
+        self.bagOut = rosbag.Bag(dt_string, "w")
 
 
     def callback(self, action_msg):
@@ -73,17 +81,19 @@ class isaac():
         self.count = self.count + 1
         
         action = np.array( action_msg.data )
-        # action[0:3] = np.array([0,0,0])
-        # action[28:31] = np.array([0,0,0])
-        # action[23:28] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
-        # action[51:56] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
+
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
 
         obs, reward, done, info = self.env.step(act)
+
+        self.bagOut.write("/action", action, action.header.stamp)
+
+        if(info["successes"][0] == 1):
+            self.bagOut.close()
         # print("done: ",done)
         # print("info: ", info)
-        return
+        #return
 
     def run(self):
         rospy.spin()  

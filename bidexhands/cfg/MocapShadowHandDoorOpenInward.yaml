@@ -4,7 +4,7 @@ env:
   #numEnvs: 128
   numEnvs: 1
   envSpacing: 1.5
-  episodeLength: 250
+  episodeLength: 3600
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True

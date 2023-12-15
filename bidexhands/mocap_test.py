@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 
-# env_name = "MocapShadowHandDoorOpenInward"
+env_name = "MocapShadowHandDoorOpenInward"
 # env_name = "MocapShadowHandDoorOpenOutward"
 # env_name = "MocapShadowHandDoorCloseInward"
 # env_name = "MocapShadowHandDoorCloseOutward"
@@ -13,7 +13,7 @@ import numpy as np
 # env_name = "MocapShadowHandSwitch"
 # env_name = "MocapShadowHandLiftUnderarm"
 
-env_name = "MocapShadowHandGraspAndPlace"
+# env_name = "MocapShadowHandGraspAndPlace"
 # env_name = "MocapShadowHandBlockStack"
 # env_name = "MocapShadowHandPushBlock"
 
