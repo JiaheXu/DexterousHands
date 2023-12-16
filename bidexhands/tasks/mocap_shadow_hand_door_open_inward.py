@@ -744,7 +744,9 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
         if(self.num_envs == 1): # mocap
-            self.extras['progress_buf'] = self.progress_buf
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset
+        
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
             direct_average_successes = self.total_successes + self.successes.sum()

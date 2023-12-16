@@ -483,7 +483,7 @@ class MocapShadowHandDoorOpenOutward(BaseTask):
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, 0., 0.9)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 3.14159, 0.0)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0.0, 0.0)
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
@@ -687,7 +687,7 @@ class MocapShadowHandDoorOpenOutward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.0), gymapi.Vec3(0, 0, 0.5))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.2), gymapi.Vec3(0, 0, 0.7))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
@@ -742,6 +742,9 @@ class MocapShadowHandDoorOpenOutward(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
+        if(self.num_envs == 1): # mocap
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset
 
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
@@ -1522,15 +1525,21 @@ def compute_hand_reward(
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
+
+
+    dist_threshold = 0.25
+    # Find out which envs hit the goal and update successes count
+    goal_resets = torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > dist_threshold, torch.ones_like(reset_goal_buf), reset_goal_buf)
+    successes = successes + goal_resets
+
+
     #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 3, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 3, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_finger_dist >= 3.5, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
     #############################################################################################################
     
-    # Find out which envs hit the goal and update successes count
-    successes = torch.where(successes == 0, 
-                    torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > 0.5, torch.ones_like(successes), successes), successes)
-    max_episode_length = 1000000000
+    resets = torch.where(successes > max(max_consecutive_successes, 1 ), torch.ones_like(resets), resets)
+
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
@@ -1538,7 +1547,7 @@ def compute_hand_reward(
     num_resets = torch.sum(resets)
     finished_cons_successes = torch.sum(successes * resets.float())
 
-    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes).mean()
+    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes)
 
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 

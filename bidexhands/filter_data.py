@@ -43,7 +43,7 @@ class isaac():
         self.env = bi.make(env_name, algo)
         self.obs = self.env.reset()
         self.terminated = False
-        self.action_sub = rospy.Subscriber("/action", Float32MultiArray, self.callback)
+        self.action_sub = rospy.Subscriber("/action", JointState, self.callback)
         self.count = 0
         self.lower_bound_np = np.array([
             -5.0, -5.0, -5.0, -3.14159, -3.14159, -3.14159,
@@ -70,11 +70,13 @@ class isaac():
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
         self.count = 0
         self.init_pos = np.array([0.0, 0.0, 0.0])
-        now = datetime.now()
-        dt_string = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"
-        # print("dt_string:", dt_string)
-        self.bagOut = rosbag.Bag(dt_string, "w")
+        self.action_buffer = []
 
+    def make_rosbag():
+        now = datetime.now()
+        self.bag_name = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"        
+        self.bagOut = rosbag.Bag(self.bag_name, "w")
+        self.bagOut.close()
 
     def callback(self, action_msg):
     
@@ -87,13 +89,13 @@ class isaac():
 
         obs, reward, done, info = self.env.step(act)
 
-        self.bagOut.write("/action", action, action.header.stamp)
+        self.action_buffer.append(act.copy())
 
         if(info["successes"][0] == 1):
-            self.bagOut.close()
-        # print("done: ",done)
-        # print("info: ", info)
-        #return
+            make_rosbag()
+        if(info["reset"][0] == 1):
+            self.action_buffer.clear()
+
 
     def run(self):
         rospy.spin()  

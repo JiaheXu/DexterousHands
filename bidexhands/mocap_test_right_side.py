@@ -3,20 +3,21 @@ import torch
 import numpy as np
 
 # env_name = "MocapShadowHandDoorOpenInward"
-# env_name = "MocapShadowHandDoorOpenOutward"
+
+
+env_name = "MocapShadowHandDoorOpenOutward"
 # env_name = "MocapShadowHandDoorCloseInward"
 # env_name = "MocapShadowHandDoorCloseOutward"
 # env_name = "MocapShadowHandSwingCup"
 # env_name = "MocapShadowHandLiftUnderarm"
 # env_name = "MocapShadowHandPushBlock"
-env_name = "MocapShadowHandBlockStack"
+
+
+# env_name = "MocapShadowHandBlockStack"
 
 
 
 # env_name = "MocapShadowHandGraspAndPlace"
-
-
-
 # env_name = "MocapShadowHandScissors"# not easy
 
 algo = "manual"
@@ -29,6 +30,10 @@ import numpy as np
 bridge = CvBridge()
 import time
 from std_msgs.msg import Float32MultiArray
+from sensor_msgs.msg import JointState
+
+from datetime import datetime
+import rosbag
 
 z_rot = np.array([
     [0.0, -1.0, 0.0],
@@ -54,7 +59,7 @@ class isaac():
         self.env = bi.make(env_name, algo)
         self.obs = self.env.reset()
         self.terminated = False
-        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Right", JointState, self.callback)
         self.count = 0
         self.lower_bound_np = np.array([
             -5.0, -5.0, -5.0, -3.14159, -3.14159, -3.14159,
@@ -82,7 +87,16 @@ class isaac():
         self.count = 0
         self.init_pos = np.array([0.0, 0.0, 0.0])
 
-        self.hand_action_pub = rospy.Publisher("/action", Float32MultiArray, queue_size=1000)
+        self.hand_action_pub = rospy.Publisher("/action", JointState, queue_size=1000)
+        self.action_buffer = []
+    
+    def make_rosbag(self):
+        now = datetime.now()
+        self.bag_name = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"        
+        self.bagOut = rosbag.Bag(self.bag_name, "w")
+        for msg in self.action_buffer:
+            self.bagOut.write("/action", msg, msg.header.stamp)
+        self.bagOut.close()
 
     def callback(self, qpos_msg):
     
@@ -90,59 +104,21 @@ class isaac():
         self.count = self.count + 1
         print("sim env current count: ", self.count)
         
-        action = np.array( qpos_msg.data )
+        action = np.array( qpos_msg.position )
 
         if( self.count == 1): # initialize (x,y,z)
             self.init_pos =  action[0:3].copy()
         action[0:3] = action[0:3] - self.init_pos
-        # if(self.count % 5 != 0 ): # freq control
-        #     return
-        
-        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0495,  1.5710,
-        #   1.5710,  1.1574, -0.1480,  1.5710,  1.5710,  1.0553, -0.2646,  1.5710,
-        #   1.5710,  1.1953,  0.0624, -0.2138,  1.5710,  1.5587,  1.3762,  0.3513,
-        #   0.3093,  0.1722,  0.3505, -0.2404]
-        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000, 
-        #     -0.349,   0.9305,  1.571,   1.571,
-        #     -0.3489,  1.2059,  1.571,   1.5513,
-        #     -0.349,   0.9256,  1.571,   1.571,
-        #     7.8775e-05, -3.4897e-01,  3.4559e-01,  1.5710e+00,  1.5710e+00,
-        #     0.0129,  0.3373,  0.1,     0.4326, -0.4756]
-        # action = [ 0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,
-        #   0.0,  0.0,  0.0,
-        #   0.0,  0.0,  0.0,  
-        #   0.0,  0.0,  0.0,  
-        #   0.0,  0.0,  0.0,  
-        #   0.0,  0.0,  0.0,  0.0,  0.0,
-        #   0.3513, 0.3093,  0.1722,  0.3505, -0.2404]
-        # action = [ 0.0000,  1.0000,  0.0000,  0.0000,  0.0000,  0.0000,        
-        #     0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0, 0.0]
-        # action = np.array( action )
         
         root_pos = action[:6].copy()
-        #print("\n")
-        #print("new iter root_pose: ", root_pos)
         
-        #zeros = np.zeros((6,))
         action[0] = -1 * action[0]
         action[1] = -1 * action[1]
         action[3] = -1 * action[3]
         action[4] = -1 * action[4]        
         action[0:3] = z_rot @ action[0:3]
 
-
-        # action[3], action[4] = action[4], action[3]
-        # action[3] = -1 * action[3]
-        # action[4] += 0.5
         action[5] = action[5] + np.pi/2
-        #print("action[5]: ", action[5]/np.pi )
-        #print("action[3:6]: ", action[3:6])
-        # if action[0] < 0.0:
-            # action[0] = action[0]*3
 
         action[1] = action[1]*2        
         action[2] = action[2]*2
@@ -151,8 +127,6 @@ class isaac():
         ################################################################################ 
         
         action = (action - self.middle_bound_np ) / self.scale_np
-
-        
         #
         # input should be scaled to -1.0 ~ 1.0
         #
@@ -174,26 +148,23 @@ class isaac():
         #action[25] = -1*action[25]
 
         action = np.concatenate( [action_right, action_left] , axis = 0)        
-        # action[23:28] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
-        # action[51:56] = np.array([0.33, -0.34,  1.,   -0.51,  0.97])
-        # print("right thumb:", action[23:28])
-        # print("left thumb:", action[51:56])
-        #print("action: ", action)
+
         #action = self.env.action_space.sample()
-        action_msg = Float32MultiArray()
-        #print("published")
-        action_msg.data = action
+        action_msg = JointState()
+        action_msg.position = action
+        action_msg.header = qpos_msg.header
+
         self.hand_action_pub.publish(action_msg)
-
-
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
-        #act = act.to("cuda:0")
-        #print("act: ", act)
-        #print("act.dtype: ", act.dtype)
         obs, reward, done, info = self.env.step(act)
-        #print("after act: ", act)
+
+        self.action_buffer.append(action_msg)
+
+        if(info["successes"][0] == 1):
+            self.make_rosbag()
+
         return
 
     def run(self):

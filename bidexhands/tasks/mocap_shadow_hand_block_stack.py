@@ -765,6 +765,9 @@ class MocapShadowHandBlockStack(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
+        if(self.num_envs == 1): # mocap
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset
 
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
@@ -1143,11 +1146,15 @@ class MocapShadowHandBlockStack(BaseTask):
 
         # reset object
         self.root_state_tensor[self.object_indices[env_ids]] = self.object_init_state[env_ids].clone()
-        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] + \
-            self.reset_position_noise * rand_floats[:, 0:2]
-        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + \
-            self.reset_position_noise * rand_floats[:, self.up_axis_idx]
-
+    
+        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] + self.reset_position_noise * rand_floats[:, 0:2]
+        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + self.reset_position_noise * rand_floats[:, self.up_axis_idx]
+        
+        if(self.num_envs == 1):
+            self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2]
+            self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx]
+        
+        
         new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
         if self.object_type == "pen":
             rand_angle_y = torch.tensor(0.3)
@@ -1573,8 +1580,23 @@ def compute_hand_reward(
     # print("block_rew: ", stack_rew[0])
 
     # Find out which envs hit the goal and update successes count
-    successes = torch.where(successes == 0, 
-                    torch.where(stack_rew > 1, torch.ones_like(successes), successes), successes)
+    #successes = torch.where(successes == 0, torch.where(stack_rew > 1, torch.ones_like(successes), successes), successes)
+
+    block_right_handle_pos
+
+
+    #  (block_right_handle_pos[:,:2] - block_left_handle_pos[:,:2])**2
+    block_dist = torch.norm(block_right_handle_pos[:,:2] - block_left_handle_pos[:,:2], p=2, dim=-1)
+    hight_diff = torch.abs(block_right_handle_pos[:,2] - block_left_handle_pos[:,2])
+    condition = torch.where(block_dist < 0.01, torch.ones_like(successes), successes)
+    
+    condition = torch.where(condition == 1, torch.where(hight_diff < 0.001,torch.ones_like(successes), successes), successes)
+
+    successes = torch.where( condition, torch.ones_like(successes), successes)
+    
+    # print("block_dist: ", block_dist)
+    # print("hight_diff: ", hight_diff)
+    print("successes: ", successes)
     max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
