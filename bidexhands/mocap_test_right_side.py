@@ -5,7 +5,7 @@ import numpy as np
 # env_name = "MocapShadowHandDoorOpenInward"
 
 
-env_name = "MocapShadowHandDoorOpenOutward"
+# env_name = "MocapShadowHandDoorOpenOutward"
 # env_name = "MocapShadowHandDoorCloseInward"
 # env_name = "MocapShadowHandDoorCloseOutward"
 # env_name = "MocapShadowHandSwingCup"
@@ -19,6 +19,10 @@ env_name = "MocapShadowHandDoorOpenOutward"
 
 # env_name = "MocapShadowHandGraspAndPlace"
 # env_name = "MocapShadowHandScissors"# not easy
+
+env_name = "MocapShadowHandPen"
+
+# env_name = "MocapShadowHandKettle" #not easy
 
 algo = "manual"
 

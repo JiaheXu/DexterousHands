@@ -4,9 +4,12 @@ import numpy as np
 
 # env_name = 'MocapShadowHandDoorOpenInward'
 
-env_name = 'MocapShadowHandDoorOpenOutward'
+# env_name = 'MocapShadowHandDoorOpenOutward'
 
 # env_name = "MocapShadowHandBlockStack"
+# env_name = "MocapShadowHandKettle" #not easy
+
+env_name = "MocapShadowHandPen"
 algo = "manual"
 
 # algo = "ppo"

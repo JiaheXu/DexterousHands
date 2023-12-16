@@ -34,8 +34,8 @@
 
         <body name="robot1:forearm" pos="0 0 0" euler="0 0 -1.57">
             <inertial pos="0.001 -0.002 0.034" quat="0.982 -0.016 0 -0.188" mass="0.1" diaginertia="0.01 0.01 0.0075"></inertial>
-            <geom class="robot1:D_Vizual" pos="0 0.01 -0.216" name="robot1:V_forearm" mesh="robot1:forearm" euler="0 0 1.57"></geom>
-            <geom class="robot1:DC_Hand" name="robot1:C_forearm" type="mesh" mesh="robot1:forearm_cvx" pos="0 0.01 -0.216" euler="0 0 1.57" rgba="0.4 0.5 0.6 0.7"></geom>
+            <!-- <geom class="robot1:D_Vizual" pos="0 0.01 -0.216" name="robot1:V_forearm" mesh="robot1:forearm" euler="0 0 1.57"></geom> -->
+            <!-- <geom class="robot1:DC_Hand" name="robot1:C_forearm" type="mesh" mesh="robot1:forearm_cvx" pos="0 0.01 -0.216" euler="0 0 1.57" rgba="0.4 0.5 0.6 0.7"></geom> -->
             <body name="robot1:wrist" pos="0 0 0">
                 <inertial pos="0.003 0 0.016" quat="0.504 0.496 0.495 0.504" mass="0.3" diaginertia="0.001 0.001 0.001"></inertial>
                 <!-- <joint name="robot1:WRJ1" type="hinge" pos="0 0 0" axis="0 1 0" range="-0.489 0.14" damping="0.5" armature="0.005" user="1123"></joint>       -->

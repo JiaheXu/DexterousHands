@@ -14,11 +14,13 @@ from sensor_msgs.msg import JointState
 # env_name = "MocapShadowHandLiftUnderarm"
 
 # env_name = "MocapShadowHandGraspAndPlace"
-env_name = "MocapShadowHandBlockStack"
+
+# env_name = "MocapShadowHandBlockStack"
+
 # env_name = "MocapShadowHandPushBlock"
 
 # env_name = "MocapShadowHandBottleCap" # not ready
-# env_name = "MocapShadowHandKettle" #not easy
+env_name = "MocapShadowHandKettle" #not easy
 algo = "manual"
 
 # algo = "ppo"

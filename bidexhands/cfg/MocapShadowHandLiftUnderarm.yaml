@@ -3,7 +3,7 @@ env:
   env_name: "shadow_hand_lift_underarm"
   numEnvs: 1
   envSpacing: 0.75
-  episodeLength: 500
+  episodeLength: 900
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True

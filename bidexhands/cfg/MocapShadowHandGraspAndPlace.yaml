@@ -3,7 +3,7 @@ env:
   env_name: "shadow_hand_grasp_and_place"
   numEnvs: 1
   envSpacing: 1.5
-  episodeLength: 500
+  episodeLength: 3600
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True

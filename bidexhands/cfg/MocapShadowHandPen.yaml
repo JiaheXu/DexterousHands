@@ -3,7 +3,7 @@ env:
   env_name: "shadow_hand_pen"
   numEnvs: 1
   envSpacing: 1.5
-  episodeLength: 125
+  episodeLength: 1800
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True

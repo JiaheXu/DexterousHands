@@ -481,7 +481,7 @@ class MocapShadowHandKettle(BaseTask):
         bucket_asset = self.gym.load_asset(self.sim, asset_root, bucket_asset_file, bucket_asset_options)
         bucket_pose = gymapi.Transform()
         bucket_pose.p = gymapi.Vec3(0.0, -0.3, 0.5)
-        bucket_pose.r = gymapi.Quat().from_euler_zyx(-0., 0, 0)
+        bucket_pose.r = gymapi.Quat().from_euler_zyx(0., 0, 0)
 
         self.num_bucket_bodies = self.gym.get_asset_rigid_body_count(bucket_asset)
         self.num_bucket_shapes = self.gym.get_asset_rigid_shape_count(bucket_asset)
@@ -496,7 +496,7 @@ class MocapShadowHandKettle(BaseTask):
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, 0., 0.5)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0.0, 1.57)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
 
@@ -1179,10 +1179,8 @@ class MocapShadowHandKettle(BaseTask):
 
         # reset object
         self.root_state_tensor[self.object_indices[env_ids]] = self.object_init_state[env_ids].clone()
-        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] + \
-            self.reset_position_noise * rand_floats[:, 0:2]
-        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + \
-            self.reset_position_noise * rand_floats[:, self.up_axis_idx]
+        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] #+ self.reset_position_noise * rand_floats[:, 0:2]
+        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + self.reset_position_noise * rand_floats[:, self.up_axis_idx]
 
         new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
         if self.object_type == "pen":

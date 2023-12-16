@@ -3,7 +3,7 @@ env:
   env_name: "shadow_hand_catch_underarm"
   numEnvs: 1
   envSpacing: 0.75
-  episodeLength: 75
+  episodeLength: 1800
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True
