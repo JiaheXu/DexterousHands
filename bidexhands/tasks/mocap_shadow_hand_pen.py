@@ -457,15 +457,15 @@ class MocapShadowHandPen(BaseTask):
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, gymapi.AssetOptions())
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.8)
-        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0, 1.57)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.2, 0.45)
+        shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.8)
-        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0, 1.57)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.25, -0.2, 0.45)
+        shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.6)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.6)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
@@ -548,8 +548,8 @@ class MocapShadowHandPen(BaseTask):
         self.cams = []
         # add cameras
         cam_props = gymapi.CameraProperties()
-        cam_props.width = 512
-        cam_props.height = 512
+        cam_props.width = 200
+        cam_props.height = 200
         cam_props.enable_tensors = True
 
         self.cam1_handle  = None
@@ -685,9 +685,10 @@ class MocapShadowHandPen(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 0.8), gymapi.Vec3(0, 0, 0.4))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
+
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
                 self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
                 self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
@@ -742,6 +743,9 @@ class MocapShadowHandPen(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
+        if(self.num_envs == 1): # mocap
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset
 
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
@@ -1116,10 +1120,8 @@ class MocapShadowHandPen(BaseTask):
 
         # reset object
         self.root_state_tensor[self.object_indices[env_ids]] = self.object_init_state[env_ids].clone()
-        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] + \
-            self.reset_position_noise * rand_floats[:, 0:2]
-        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + \
-            self.reset_position_noise * rand_floats[:, self.up_axis_idx]
+        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] #+ self.reset_position_noise * rand_floats[:, 0:2]
+        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] #+ self.reset_position_noise * rand_floats[:, self.up_axis_idx]
 
         new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
         if self.object_type == "pen":

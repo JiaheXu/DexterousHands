@@ -2,9 +2,24 @@ import bidexhands as bi
 import torch
 import numpy as np
 
-#env_name = 'Mocap'
-env_name = 'MocapShadowHandDoorOpenInward'
-#env_name = "MocapShadowHandDoorOpenOutward"
+# easy
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+# env_name = "MocapShadowHandDoorOpenOutward" # right view
+# env_name = "MocapShadowHandDoorCloseInward" # right view
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandSwingCup" # right view
+# env_name = "MocapShadowHandLiftUnderarm" # right view
+# env_name = "MocapShadowHandSwitch" # front view
+
+# medium
+# env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
+# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+# env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
+
+# hard
+# env_name = "MocapShadowHandScissors"# not easy need two hands front view
+# env_name = "MocapShadowHandPen"# need two hands need two hands front view
+# env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
 algo = "manual"
 
 # algo = "ppo"

@@ -529,8 +529,8 @@ class MocapShadowHandLiftUnderarm(BaseTask):
         self.cams = []
         # add cameras
         cam_props = gymapi.CameraProperties()
-        cam_props.width = 512
-        cam_props.height = 512
+        cam_props.width = 200
+        cam_props.height = 200
         cam_props.enable_tensors = True
 
         self.cam1_handle  = None
@@ -654,10 +654,11 @@ class MocapShadowHandLiftUnderarm(BaseTask):
                 self.cam1_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
+                # set camera 1 location
                 self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 0.8), gymapi.Vec3(0, 0, 0.4))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
-   
+
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
                 self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
                 self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
@@ -708,6 +709,9 @@ class MocapShadowHandLiftUnderarm(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
+        if(self.num_envs == 1): # mocap
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset
 
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
@@ -1075,10 +1079,8 @@ class MocapShadowHandLiftUnderarm(BaseTask):
 
         # reset object
         self.root_state_tensor[self.object_indices[env_ids]] = self.object_init_state[env_ids].clone()
-        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] + \
-            self.reset_position_noise * rand_floats[:, 0:2]
-        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + \
-            self.reset_position_noise * rand_floats[:, self.up_axis_idx]
+        self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] #+ self.reset_position_noise * rand_floats[:, 0:2]
+        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] #+ self.reset_position_noise * rand_floats[:, self.up_axis_idx]
 
         new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
         if self.object_type == "pen":
@@ -1492,7 +1494,7 @@ def compute_hand_reward(
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(goal_dist < 0.05, torch.ones_like(successes), successes), successes)
-    max_episode_length = 1000000000
+    #max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
@@ -1501,7 +1503,8 @@ def compute_hand_reward(
     finished_cons_successes = torch.sum(successes * resets.float())
 
     cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes).mean()
-
+    print("goal_dist: ", goal_dist)
+    print("successes: ", successes)
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
 

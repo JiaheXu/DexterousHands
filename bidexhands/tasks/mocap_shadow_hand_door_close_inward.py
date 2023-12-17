@@ -357,7 +357,7 @@ class MocapShadowHandDoorCloseInward(BaseTask):
 
         if self.physics_engine == gymapi.SIM_PHYSX:
             asset_options.use_physx_armature = True
-        asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+        asset_options.default_dof_drive_mode = gymapi.DOF_MODE_POS
         print("shadow_hand_asset_file: ", shadow_hand_asset_file)
         print("shadow_hand_asset_file: ", shadow_hand_asset_file)
         print("shadow_hand_asset_file: ", shadow_hand_asset_file)
@@ -485,11 +485,11 @@ class MocapShadowHandDoorCloseInward(BaseTask):
         # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.45, 0.2, 0.8)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.65, 0.7, 0.8)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.45, -0.2, 0.8)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.65, -0.7, 0.8)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
 
@@ -699,9 +699,10 @@ class MocapShadowHandDoorCloseInward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.0), gymapi.Vec3(0, 0, 0.5))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.7, 0.5, 1.2), gymapi.Vec3(0.5, 0.5, 0.8))
                 # set camera 2 location using the cam1's transform
-                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(0.7, -0.5, 1.2), gymapi.Vec3(0.5, -0.5, 0.8))
+                
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
                 self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
                 self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
@@ -754,7 +755,10 @@ class MocapShadowHandDoorCloseInward(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
-
+        if(self.num_envs == 1): # mocap
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset
+        
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
             direct_average_successes = self.total_successes + self.successes.sum()
@@ -1531,25 +1535,34 @@ def compute_hand_reward(
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
-    #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 3, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 3, torch.ones_like(resets), resets)
-    #############################################################################################################
-    
+    # Find out which envs hit the goal and update successes count
+    dist_threshold = 0.52
+
 
     # Find out which envs hit the goal and update successes count
-    successes = torch.where(successes == 0, 
-                    torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) < 0.5, torch.ones_like(successes), successes), successes)
-    max_episode_length = 1000000000
+    goal_resets = torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) < dist_threshold, torch.ones_like(reset_goal_buf), reset_goal_buf)
+    successes = successes + goal_resets
+    
+    #############################################################################################################
+    resets = torch.where(right_hand_finger_dist >= 3.5, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
+    #############################################################################################################
+    # print("max_consecutive_successes: ", max_consecutive_successes)
+    # if max_consecutive_successes > 0:
+    
+    resets = torch.where(successes > max(max_consecutive_successes, 1 ), torch.ones_like(resets), resets)
+
+    # max_episode_length = 30*60 #( 30hz * 60s)
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
-
-    goal_resets = torch.zeros_like(resets)
-
+    
     num_resets = torch.sum(resets)
     finished_cons_successes = torch.sum(successes * resets.float())
 
-    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes).mean()
+    cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes)
 
+    #print("distance: ", torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]))
+    #print("successes: ",successes)
+    #print("progress_buf: ", progress_buf)
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
 
