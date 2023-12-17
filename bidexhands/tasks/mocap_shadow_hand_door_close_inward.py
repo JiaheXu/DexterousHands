@@ -699,7 +699,7 @@ class MocapShadowHandDoorCloseInward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.7, 0.5, 1.2), gymapi.Vec3(0.5, 0.5, 0.8))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.7, 0.6, 1.2), gymapi.Vec3(0.5, 0.5, 0.8))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(0.7, -0.5, 1.2), gymapi.Vec3(0.5, -0.5, 0.8))
                 
@@ -757,7 +757,7 @@ class MocapShadowHandDoorCloseInward(BaseTask):
         self.extras['consecutive_successes'] = self.consecutive_successes
         if(self.num_envs == 1): # mocap
             self.extras['progress'] = self.progress_buf
-            self.extras['reset'] = self.reset
+            self.extras['reset'] = self.reset_buf
         
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()

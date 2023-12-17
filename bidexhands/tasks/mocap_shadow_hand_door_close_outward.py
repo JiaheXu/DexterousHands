@@ -744,7 +744,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         self.extras['consecutive_successes'] = self.consecutive_successes
         if(self.num_envs == 1): # mocap
             self.extras['progress'] = self.progress_buf
-            self.extras['reset'] = self.reset
+            self.extras['reset'] = self.reset_buf
         
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
@@ -1531,8 +1531,8 @@ def compute_hand_reward(
     successes = successes + goal_resets
     
     #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 13.5, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 13.5, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_finger_dist >= 4.5, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 4.5, torch.ones_like(resets), resets)
     #############################################################################################################
     # print("max_consecutive_successes: ", max_consecutive_successes)
     # if max_consecutive_successes > 0:
