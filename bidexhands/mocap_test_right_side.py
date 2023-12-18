@@ -10,12 +10,13 @@ import numpy as np
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 
 # env_name = "MocapShadowHandLiftUnderarm" # right view
+
 # env_name = "MocapShadowHandSwitch" # front view
 # env_name = "MocapShadowHandSwingCup" # right view
 
 # medium
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
-# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 
 # hard

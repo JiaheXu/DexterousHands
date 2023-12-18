@@ -736,13 +736,45 @@ class MocapShadowHandDoorOpenInward(BaseTask):
             actions (tensor): Actions of agents in the all environment 
         """
         self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
-            self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.door_left_handle_pos, self.door_right_handle_pos, 
-            self.left_hand_pos, self.right_hand_pos, self.right_hand_ff_pos, self.right_hand_mf_pos, self.right_hand_rf_pos, self.right_hand_lf_pos, self.right_hand_th_pos, 
-            self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
-            self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
-            self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
-            self.max_consecutive_successes, self.av_factor, (self.object_type == "pen")
+            self.rew_buf,
+            self.reset_buf,
+            self.reset_goal_buf,
+            self.progress_buf,
+            self.successes,
+            self.consecutive_successes,
+            self.max_episode_length,
+            self.object_pos,
+            self.object_rot,
+            self.goal_pos,
+            self.goal_rot,
+            self.door_left_handle_pos,
+            self.door_right_handle_pos, 
+            self.left_hand_pos,
+            self.right_hand_pos,
+            
+            self.right_hand_ff_pos,
+            self.right_hand_mf_pos,
+            self.right_hand_rf_pos,
+            self.right_hand_lf_pos,
+            self.right_hand_th_pos, 
+            self.left_hand_ff_pos,
+            self.left_hand_mf_pos,
+            self.left_hand_rf_pos,
+            self.left_hand_lf_pos,
+            self.left_hand_th_pos, 
+            
+            self.dist_reward_scale,
+            self.rot_reward_scale,
+            self.rot_eps,
+            self.actions,
+            self.action_penalty_scale,
+            self.success_tolerance,
+            self.reach_goal_bonus,
+            self.fall_dist,
+            self.fall_penalty,
+            self.max_consecutive_successes,
+            self.av_factor,
+            (self.object_type == "pen")
         )
 
         self.extras['successes'] = self.successes

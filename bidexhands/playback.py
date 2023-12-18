@@ -13,16 +13,15 @@ import numpy as np
 # env_name = "MocapShadowHandSwingCup" # right view
 
 # medium
+env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
-# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
-# env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 
 # hard
+# env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 # env_name = "MocapShadowHandScissors"# not easy need two hands front view
 # env_name = "MocapShadowHandPen"# need two hands need two hands front view
 # env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
 
-# env_name = "MocapShadowHandPen"
 algo = "manual"
 
 # algo = "ppo"
@@ -88,7 +87,7 @@ class isaac():
         self.init_pos = np.array([0.0, 0.0, 0.0])
 
 
-    def step(self, action_msg):
+    def callback(self, action_msg):
     
         self.count = self.count + 1
         
@@ -101,7 +100,8 @@ class isaac():
         # print("done: ",done)
         # print("info: ", info)
         return
- 
+    def run(self):
+        rospy.spin()  
 
 def main():
     rospy.init_node("isaac_playback_node")

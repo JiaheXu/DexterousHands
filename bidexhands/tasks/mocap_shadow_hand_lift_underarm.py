@@ -699,12 +699,34 @@ class MocapShadowHandLiftUnderarm(BaseTask):
             actions (tensor): Actions of agents in the all environment 
         """
         self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
-            self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.pot_left_handle_pos, self.pot_right_handle_pos,
-            self.left_hand_pos, self.right_hand_pos,
-            self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
-            self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
-            self.max_consecutive_successes, self.av_factor, (self.object_type == "pen")
+            self.rew_buf,
+            self.reset_buf,
+            self.reset_goal_buf,
+            self.progress_buf,
+            self.successes,
+            self.consecutive_successes,
+            self.max_episode_length,
+            self.object_pos,
+            self.object_rot,
+            self.goal_pos,
+            self.goal_rot, 
+            self.pot_left_handle_pos, 
+            self.pot_right_handle_pos,
+            self.left_hand_pos,
+            self.right_hand_pos,
+
+            self.dist_reward_scale,
+            self.rot_reward_scale,
+            self.rot_eps,
+            self.actions,
+            self.action_penalty_scale,
+            self.success_tolerance,
+            self.reach_goal_bonus,
+            self.fall_dist,
+            self.fall_penalty,
+            self.max_consecutive_successes,
+            self.av_factor,
+            (self.object_type == "pen")
         )
 
         self.extras['successes'] = self.successes
@@ -1462,9 +1484,10 @@ def compute_hand_reward(
         ignore_z_rot (bool): Is it necessary to ignore the rot of the z-axis, which is usually used 
             for some specific objects (e.g. pen)
     """
-    # Distance from the hand to the object
+
     goal_dist = torch.norm(target_pos - object_pos, p=2, dim=-1)
-    # goal_dist = target_pos[:, 2] - object_pos[:, 2]
+    
+    # Distance from the hand to the object
     right_hand_dist = torch.norm(pot_right_handle_pos - right_hand_pos, p=2, dim=-1)
     left_hand_dist = torch.norm(pot_left_handle_pos - left_hand_pos, p=2, dim=-1)
     # Orientation alignment for the cube in hand and goal cube
@@ -1487,9 +1510,11 @@ def compute_hand_reward(
     
     reward = 0.2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
+    # fall to the ground
     resets = torch.where(object_pos[:, 2] <= 0.3, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(right_hand_dist >= 2.2, torch.ones_like(resets), resets)
-    resets = torch.where(left_hand_dist >= 2.2, torch.ones_like(resets), resets)
+    
+    resets = torch.where(right_hand_dist >= 1.2, torch.ones_like(resets), resets)
+    resets = torch.where(left_hand_dist >= 1.2, torch.ones_like(resets), resets)
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 

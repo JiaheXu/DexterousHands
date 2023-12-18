@@ -1588,16 +1588,19 @@ def compute_hand_reward(
     #  (block_right_handle_pos[:,:2] - block_left_handle_pos[:,:2])**2
     block_dist = torch.norm(block_right_handle_pos[:,:2] - block_left_handle_pos[:,:2], p=2, dim=-1)
     hight_diff = torch.abs(block_right_handle_pos[:,2] - block_left_handle_pos[:,2])
-    condition = torch.where(block_dist < 0.01, torch.ones_like(successes), successes)
-    
-    condition = torch.where(condition == 1, torch.where(hight_diff < 0.001,torch.ones_like(successes), successes), successes)
+
+    dist_threshold = 0.01
+    height_threshold = 0.055
+    condition = torch.where(block_dist < dist_threshold , torch.ones_like(successes), successes)
+    condition = torch.where(condition == 1, torch.where(hight_diff < height_threshold,torch.ones_like(successes), successes), successes)
+    #condition = torch.where(condition == 1, torch.where(hight_diff < height_threshold,torch.ones_like(successes), successes), successes)
 
     successes = torch.where( condition, torch.ones_like(successes), successes)
     
-    # print("block_dist: ", block_dist)
-    # print("hight_diff: ", hight_diff)
+    print("block_dist: ", block_dist)
+    print("hight_diff: ", hight_diff)
     print("successes: ", successes)
-    max_episode_length = 1000000000
+    # max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)
