@@ -6,10 +6,11 @@ import numpy as np
 # env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
-env_name = "MocapShadowHandDoorCloseOutward" # right view
-# env_name = "MocapShadowHandSwingCup" # right view
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
+
 # env_name = "MocapShadowHandLiftUnderarm" # right view
 # env_name = "MocapShadowHandSwitch" # front view
+# env_name = "MocapShadowHandSwingCup" # right view
 
 # medium
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
@@ -87,7 +88,7 @@ class isaac():
         self.init_pos = np.array([0.0, 0.0, 0.0])
 
 
-    def callback(self, action_msg):
+    def step(self, action_msg):
     
         self.count = self.count + 1
         
@@ -100,9 +101,7 @@ class isaac():
         # print("done: ",done)
         # print("info: ", info)
         return
-
-    def run(self):
-        rospy.spin()  
+ 
 
 def main():
     rospy.init_node("isaac_playback_node")

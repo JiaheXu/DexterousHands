@@ -156,6 +156,10 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         self.num_point_cloud_feature_dim = 768
         self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 19
 
+        print("full_state_num: ", self.full_state_num)
+        print("full_state_num: ", self.full_state_num)
+        print("full_state_num: ", self.full_state_num)
+        
         self.num_obs_dict = {
             "point_cloud": self.full_state_num + self.num_point_cloud_feature_dim * 3,
             "point_cloud_for_distill": self.full_state_num + self.num_point_cloud_feature_dim * 3,
