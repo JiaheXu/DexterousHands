@@ -23,6 +23,7 @@ import numpy as np
 bridge = CvBridge()
 import time
 from std_msgs.msg import Float32MultiArray
+from sensor_msgs.msg import JointState
 
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
@@ -42,7 +43,8 @@ asset_descriptors = [
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
-    AssetDesc("mjcf/open_ai_assets/hand/shadow_left_full.xml", False), 
+    # AssetDesc("mjcf/open_ai_assets/hand/shadow_left_full.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_left.xml", False), 
 ]
 
 
@@ -243,14 +245,14 @@ class isaac():
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
-                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
+                          gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,# gymapi.DOF_MODE_POS, gymapi.DOF_MODE_POS,
                           )
             props["stiffness"] =  ( 
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
-                            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0, 1.0,# 1.0, 1.0,
 
                           )                          
             
@@ -262,7 +264,7 @@ class isaac():
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+                        0.1, 0.1, 0.1, 0.1,# 0.1, 0.1
             )
             
             self.gym.set_actor_dof_properties(env, actor_handle, props)
@@ -278,58 +280,45 @@ class isaac():
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         self.count = 0
-        self.qpos_sub = rospy.Subscriber("/qpos/Left", Float32MultiArray, self.callback)
-        #codeself.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Left", JointState, self.callback)
+
     def callback(self, qpos_msg):
-        # action =  torch.from_numpy( np.array(qpos_msg.data))
-        # act = torch.tensor(action).repeat((self.env.num_envs, 1))
-        print("got a pos msg")
-        action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
 
-        action = np.array(action)
-        pose = action[0:6].copy()
-        #print("pose: ", pose)
-        #action[6] = -1.0 * action[6]
-        #action[10] = -1.0 * action[10]
+        self.count = self.count + 1
+        print("got a pos msg: ", self.count)
+        action =  np.array( qpos_msg.position )
 
+        if( self.count == 1): # initialize (x,y,z)
+            self.init_pos =  action[0:3].copy()
+        action[0:3] = action[0:3] - self.init_pos
+        # print("action[0:3] = ", action[0:3])
+        #zeros = np.zeros((6,))
+        action[0] = -1 * action[0]
+        action[1] = -1 * action[1]
 
+        action[3], action[5] = action[5], action[3]
 
-        print("thumb act: ", action[23:28])
-        #action[23] = -1.0 * action[23]
-        #action[24] = -1.0 * action[24]
-        #action[25] = -1.0 * action[25]
-        #action[26] = -1.0 * action[26]
-
-        #action[27] = -1.0 * action[27]
-
-        action = action[4:] # 24 dim
-        action[0:2] = 0.0
-        #pose = np.array([0.0, 0.0, 0.0,    0.0, 0.0, 0.0])
+        action[5] = -1 * action[5]
+        action[4] = -1 * action[4]        
         
-        pose = pose.reshape(-1,1)
-        action = action.reshape(-1,1)
-        pose_test = pose.copy()
+        # action[0:3] = z_rot @ action[0:3]
+        # 
+        # action[3] = -1 * action[3]
+        # action[5] = action[5] + np.pi/2
 
-        pose_test = pose_test - pose_test
-        #pose_test[0] = - 0.2
-        #pose_test[1] = - 0.003
-        #pose_test[2] = 0.17
+        print("action[3:6]: ", action[3:6])
+        # if action[0] < 0.0:
+        #     action[0] = action[0]*2
+        #action[1] = action[1]-0.3
 
-        #pose_test[3:6] = 0.0
-
-        # swith pitch yaw
-        #pose_test[4] = (self.count % 100 ) * 0.01
-        #pose_test[4] = -1 * pose[5]
-        #pose_test[5] = -1 * pose[4]
-        
-        action = np.concatenate( [pose_test, action] , axis = 0)
-        
+        ################################################################################        
+        # below are template
+        ################################################################################  
         action = action.tolist()
-        #print("count: ", self.count)
-        self.count += 1   
+
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
-        #print("pose: ", action[0:6])
+
         for i in range(self.num_envs):
 
             self.gym.set_actor_dof_position_targets(self.envs[i], self.actor_handles[i], action)
@@ -342,8 +331,7 @@ class isaac():
 
             self.gym.step_graphics(self.sim)
             self.gym.draw_viewer(self.viewer, self.sim, True)
-            # Wait for dt to elapse in real time.
-            # This synchronizes the physics simulation with the rendering rate.
+
             self.gym.sync_frame_time(self.sim)
         
         return
