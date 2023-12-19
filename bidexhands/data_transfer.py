@@ -5,10 +5,10 @@ import glob, os, sys, argparse
 import rosbag
 import rospy
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
-env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
 # env_name = "MocapShadowHandSwitch" # front view
@@ -110,18 +110,27 @@ def make_npy_files(dataset_directory, file):
     isaac_node.env.reset()
     obs_buffer = []
     action_buffer = []
+    
+    print("runing: ", file, " !!!!!!!!!!")
+    print("runing: ", file, " !!!!!!!!!!")
+    print("runing: ", file, " !!!!!!!!!!")
+
     for topic, msg, t in bagIn.read_messages(topics=["/action"]):
         count = count +1
+        
+        # if( count < 45):
+        #     continue
+        
         action_buffer.append(msg.position)
 
         obs = isaac_node.step(msg).cpu().detach().numpy()
         obs = np.squeeze(obs)
         obs_buffer.append( obs )
+    
     print("file: ", file)
-    # print("obs_buffer", len(obs_buffer) )
-    # print("obs_buffer", len(action_buffer) )
     print("count: ", count)
     print("")
+
     if(len(action_buffer) != len(obs_buffer) or len(obs_buffer) != count):
         print("msg number error on ", file)
 
@@ -133,15 +142,13 @@ def make_npy_files(dataset_directory, file):
     action_all.append(action_buffer)
 
 def main():
-    
-
     #
     # parser.add_argument("-b", "--bags_dir", help="Input ROS bag name.")
     # dataset_directory = args.bags_dir
     
-    # dataset_directory = "../data/test"
+    dataset_directory = "../data/test"
 
-    dataset_directory = "../data/" + env_name
+    # dataset_directory = "../data/" + env_name
 
     file_path = os.path.join( dataset_directory, '*.bag')
     filelist = sorted( glob.glob( file_path) )
@@ -154,7 +161,12 @@ def main():
     print("action_all: ", len(action_all))
     np.save(os.path.join(dataset_directory, "obs.npy"), obs_all)
     np.save(os.path.join(dataset_directory, "action.npy"), action_all)
+    demo_data = {}
+    demo_data["actions"] = action_all
+    demo_data["observations"] = obs_all
+
+    np.save(os.path.join(dataset_directory, env_name + ".npy"), demo_data)
+
 
 if __name__ == "__main__":
-    
     main()

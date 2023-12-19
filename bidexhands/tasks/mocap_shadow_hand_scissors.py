@@ -742,6 +742,9 @@ class MocapShadowHandScissors(BaseTask):
 
         self.extras['successes'] = self.successes
         self.extras['consecutive_successes'] = self.consecutive_successes
+        if(self.num_envs == 1): # mocap
+            self.extras['progress'] = self.progress_buf
+            self.extras['reset'] = self.reset_buf
 
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()

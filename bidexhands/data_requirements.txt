@@ -1,0 +1,12 @@
+set = np.load(v, allow_pickle=True)
+set: a dict
+item: {"run name"}
+
+
+dict_keys(['model_data', 'observations', 'rewards', 'actions', 'sim_data'])
+
+for item in set:
+	datapoint = set[item]['observations']
+	
+	
+1 6 10 17 20
