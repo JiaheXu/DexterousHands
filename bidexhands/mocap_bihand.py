@@ -4,27 +4,23 @@ import numpy as np
 
 
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
-
-# env_name = "MocapShadowHandLiftUnderarm" # right view
-
-# env_name = "MocapShadowHandSwitch" # front view
 # env_name = "MocapShadowHandSwingCup" # right view
+# env_name = "MocapShadowHandLiftUnderarm" # right view
+# env_name = "MocapShadowHandSwitch" # front view
 
 # medium
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
-env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 
 # hard
 # env_name = "MocapShadowHandScissors"# not easy need two hands front view
 # env_name = "MocapShadowHandPen"# need two hands need two hands front view
 # env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
-
-# env_name = "MocapShadowHandPen"
 
 algo = "manual"
 
@@ -37,7 +33,7 @@ bridge = CvBridge()
 import time
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
-
+import message_filters
 from datetime import datetime
 import rosbag
 
@@ -65,7 +61,15 @@ class isaac():
         self.env = bi.make(env_name, algo)
         self.obs = self.env.reset()
         self.terminated = False
-        self.qpos_sub = rospy.Subscriber("/qpos/Right", JointState, self.callback)
+
+        self.right_sub = message_filters.Subscriber("/qpos/Right", JointState)
+        self.left_sub = message_filters.Subscriber("/qpos/Left", JointState)
+        
+        self.ts = message_filters.ApproximateTimeSynchronizer([self.right_sub, self.left_sub], 10, 1, allow_headerless=True)
+        self.ts.registerCallback(self.callback)
+
+        # self.qpos_sub = rospy.Subscriber("/qpos/Right", JointState, self.callback)
+        self.count = 0
         self.lower_bound_np = np.array([
             -5.0, -5.0, -5.0, -3.14159, -3.14159, -3.14159,
 
@@ -89,8 +93,12 @@ class isaac():
         self.middle_bound_np = ( self.upper_bound_np + self.lower_bound_np ) / 2.0
         
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
-        self.count = -2
+        self.count = 0
+        self.count_left = -2
+        self.count_right = -2
         self.init_pos = np.array([0.0, 0.0, 0.0])
+        self.init_pos_right = np.array([0.0, 0.0, 0.0])
+        self.init_pos_left = np.array([0.0, 0.0, 0.0])
 
         self.hand_action_pub = rospy.Publisher("/action", JointState, queue_size=1000)
         self.action_buffer = []
@@ -103,65 +111,61 @@ class isaac():
             self.bagOut.write("/action", msg, msg.header.stamp)
         self.bagOut.close()
 
-    def callback(self, qpos_msg):
+    def callback(self, right_qpos_msg, left_qpos_msg):
     
-        # idx = [ 6,7,8,  10,11,12,  14,15,16, 18,19,20,21,  23,24,25,26,27]
         self.count = self.count + 1
+        self.count_left = self.count_left + 1
+        self.count_right = self.count_right + 1
+
         print("sim env current count: ", self.count)
         
-        action = np.array( qpos_msg.position )
+        action_right = np.array( right_qpos_msg.position )
+        action_left = np.array( left_qpos_msg.position )
 
-        if( self.count == -1): # initialize (x,y,z)
-            self.init_pos =  action[0:3].copy()
-        action[0:3] = action[0:3] - self.init_pos
-        
+        if( self.count_right == -1): # initialize (x,y,z)
+            self.init_pos_right =  action_right[0:3].copy()
+
+        if( self.count_left == -1): # initialize (x,y,z)
+            self.init_pos_left =  action_left[0:3].copy()
 
         if(self.count < 60):
             return
 
-        root_pos = action[:6].copy()
-        
-        action[0] = -1 * action[0]
-        action[1] = -1 * action[1]
-        action[3] = -1 * action[3]
-        action[4] = -1 * action[4]        
-        action[0:3] = z_rot @ action[0:3]
+        action_right[0:3] = action_right[0:3] - self.init_pos_right 
+        action_right[0] = -1 * action_right[0]
+        action_right[1] = -1 * action_right[1]
+        action_right[3] = -1 * action_right[3]
+        action_right[4] = -1 * action_right[4]        
 
-        action[5] = action[5] + np.pi/2
+        action_right[1] = action_right[1]*2        
+        action_right[2] = action_right[2]*2
 
-        action[1] = action[1]*2        
-        action[2] = action[2]*2
+
+        action_left[0:3] = action_left[0:3] - self.init_pos_left
+        action_left[0] = -1 * action_left[0]
+        action_left[1] = -1 * action_left[1]
+        action_left[3] = -1 * action_left[3]
+        action_left[4] = -1 * action_left[4]        
+
+        action_left[1] = action_left[1]*2        
+        action_left[2] = action_left[2]*2
+
         ################################################################################        
         # below are template
         ################################################################################ 
         
-        action = (action - self.middle_bound_np ) / self.scale_np
+        action_right = (action_right - self.middle_bound_np ) / self.scale_np
+        action_left = (action_left - self.middle_bound_np ) / self.scale_np
         #
         # input should be scaled to -1.0 ~ 1.0
         #
-
-        action_right = action        
-        action_left = action_right.copy()
-        #action_left[0:3] = action_left[0:3] - action_left[0:3]
-        
-        # left hand mirror up right hand 
-        action_left = action_left - action_left
-        
-        
-        # mirring
-        # action_left[1] = -1 * action_left[1]
-        # action_left[3] = -1 * action_left[3]
-        # action_left[5] = -1 * action_left[5]
-
-        
-        #action[25] = -1*action[25]
 
         action = np.concatenate( [action_right, action_left] , axis = 0)        
 
         #action = self.env.action_space.sample()
         action_msg = JointState()
         action_msg.position = action
-        action_msg.header = qpos_msg.header
+        action_msg.header = left_qpos_msg.header
 
         self.hand_action_pub.publish(action_msg)
 
