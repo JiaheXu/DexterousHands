@@ -24,6 +24,8 @@ bridge = CvBridge()
 import time
 from std_msgs.msg import Float32MultiArray
 
+from sensor_msgs.msg import JointState
+
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
 
@@ -42,7 +44,8 @@ asset_descriptors = [
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand.xml", False),  
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
-    AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_left.xml", False), 
+    # AssetDesc("mjcf/open_ai_assets/hand_test/shadow_test.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml", False), 
 ]
 
 
@@ -85,6 +88,84 @@ def quat2expcoord(q):
     w = (1. / np.sin(theta/2.0)) * q[:-1]
 
     return w * theta
+
+def rot2eul(R):
+    #print("R:", R)
+    
+    beta = -np.arcsin(R[2,0])
+    alpha = np.arctan2(R[2,1]/np.cos(beta),R[2,2]/np.cos(beta))
+    gamma = np.arctan2(R[1,0]/np.cos(beta),R[0,0]/np.cos(beta))
+    
+    return np.array((alpha, beta, gamma))
+
+def eul2quat(roll, pitch, yaw):
+    
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    
+    return np.array([qx, qy, qz, qw])
+
+
+def quat2rot(Q):
+    """
+    Covert a quaternion into a full three-dimensional rotation matrix.
+ 
+    Input
+    :param Q: A 4 element array representing the quaternion (q0,q1,q2,q3) (w,x,y,z)
+ 
+    Output
+    :return: A 3x3 element matrix representing the full 3D rotation matrix. 
+             This rotation matrix converts a point in the local reference 
+             frame to a point in the global reference frame.
+    """
+    # Extract the values from Q
+    q0 = Q[3]
+
+    q1 = Q[0]
+    q2 = Q[1]
+    q3 = Q[2]
+     
+    # First row of the rotation matrix
+    r00 = 2 * (q0 * q0 + q1 * q1) - 1
+    r01 = 2 * (q1 * q2 - q0 * q3)
+    r02 = 2 * (q1 * q3 + q0 * q2)
+     
+    # Second row of the rotation matrix
+    r10 = 2 * (q1 * q2 + q0 * q3)
+    r11 = 2 * (q0 * q0 + q2 * q2) - 1
+    r12 = 2 * (q2 * q3 - q0 * q1)
+     
+    # Third row of the rotation matrix
+    r20 = 2 * (q1 * q3 - q0 * q2)
+    r21 = 2 * (q2 * q3 + q0 * q1)
+    r22 = 2 * (q0 * q0 + q3 * q3) - 1
+     
+    # 3x3 rotation matrix
+    rot_matrix = np.array([[r00, r01, r02],
+                           [r10, r11, r12],
+                           [r20, r21, r22]])
+                            
+    return rot_matrix
+
+z_rot = np.array([
+    [0.0, -1.0, 0.0],
+    [1.0,  0.0, 0.0],
+    [0.0,  0.0, 1.0]
+])
+
+x_rot = np.array([
+    [1.0, 0.0, 0.0],
+    [0.0, 0.0, -1.0],
+    [0.0, 1.0, 0.0]
+]) 
+
+y_rot = np.array([
+    [0.0, 0.0, 1.0],
+    [0.0, 1.0, 0.0],
+    [-1.0, 0.0, 0.0]
+]) 
 
 class isaac():
     def __init__(self):
@@ -214,7 +295,7 @@ class isaac():
         self.env_upper = gymapi.Vec3(self.spacing, self.spacing, self.spacing)
 
         # position the camera
-        self.cam_pos = gymapi.Vec3(0.440, 0.256 , 0.629)
+        self.cam_pos = gymapi.Vec3(-0.7, 0.2 , 0.8)
         self.cam_target = gymapi.Vec3(0.0, 0.0, 0.0)
         
         self.gym.viewer_camera_look_at(self.viewer, None, self.cam_pos, self.cam_target)
@@ -278,21 +359,50 @@ class isaac():
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         self.count = 0
-        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Left", JointState, self.callback)
+        #self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
         # action =  torch.from_numpy( np.array(qpos_msg.data))
         # act = torch.tensor(action).repeat((self.env.num_envs, 1))
-        print("got a pos msg")
-        action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
+        
+        self.count = self.count + 1
+        print("got a pos msg: ", self.count)
+        action =  list(qpos_msg.position) #28 dim 6 + 24 - 2
 
         action = np.array(action)
+
+        if( self.count == 1): # initialize (x,y,z)
+            self.init_pos =  action[0:3].copy()
+        action[0:3] = action[0:3] - self.init_pos
+        # print("action[0:3] = ", action[0:3])
+        #zeros = np.zeros((6,))
+        # action[0] = -1 * action[0]
+        # action[1] = -1 * action[1]
+
+        action[3], action[5] = action[5], action[3]
+
+        # action[5] = -1 * action[5]
+        # action[4] = -1 * action[4]        
+        
+        # action[0:3] = z_rot @ action[0:3]
+        # 
+        # action[3] = -1 * action[3]
+        # action[5] = action[5] + np.pi/2
+
+        print("action[3:6]: ", action[3:6])
+        # if action[0] < 0.0:
+        #     action[0] = action[0]*2
+        #action[1] = action[1]-0.3
+
+        ################################################################################        
+        # below are template
+        ################################################################################  
         action = action.tolist()
-        #print("count: ", self.count)
-        self.count += 1   
+
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
-        #print("pose: ", action[0:6])
+
         for i in range(self.num_envs):
 
             self.gym.set_actor_dof_position_targets(self.envs[i], self.actor_handles[i], action)
@@ -305,8 +415,7 @@ class isaac():
 
             self.gym.step_graphics(self.sim)
             self.gym.draw_viewer(self.viewer, self.sim, True)
-            # Wait for dt to elapse in real time.
-            # This synchronizes the physics simulation with the rendering rate.
+
             self.gym.sync_frame_time(self.sim)
         
         return
@@ -316,7 +425,7 @@ class isaac():
 
 
 def main():
-    rospy.init_node("isaac_mocap_left_test")
+    rospy.init_node("isaac_mocap_right")
     isaac_node = isaac()
     isaac_node.run()
 

@@ -4,7 +4,7 @@ import numpy as np
 
 
 # easy
-env_name = "MocapShadowHandDoorOpenInward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
@@ -112,15 +112,10 @@ class isaac():
             self.init_pos =  action[0:3].copy()
         action[0:3] = action[0:3] - self.init_pos
         
-        root_pos = action[:6].copy()
-        
-        action[0] = -1 * action[0]
-        action[1] = -1 * action[1]
-        action[3] = -1 * action[3]
-        action[4] = -1 * action[4]        
-
+        action[0] = action[0]*2
         action[1] = action[1]*2        
-        action[2] = action[2]*2
+
+
         ################################################################################        
         # below are template
         ################################################################################ 
@@ -143,12 +138,8 @@ class isaac():
         # action_left[3] = -1 * action_left[3]
         # action_left[5] = -1 * action_left[5]
 
-        
-        #action[25] = -1*action[25]
 
         action = np.concatenate( [action_right, action_left] , axis = 0)        
-
-        #action = self.env.action_space.sample()
         action_msg = JointState()
         action_msg.position = action
         action_msg.header = qpos_msg.header

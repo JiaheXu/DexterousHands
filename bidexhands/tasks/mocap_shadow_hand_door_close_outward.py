@@ -212,7 +212,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -319,8 +319,8 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -472,17 +472,17 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.8)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.8)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.8)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.8)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.9)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 3.14159, 0.0)
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02

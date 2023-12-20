@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
@@ -13,7 +13,7 @@ import numpy as np
 # env_name = "MocapShadowHandSwingCup" # right view
 
 # medium
-env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
 
 # hard

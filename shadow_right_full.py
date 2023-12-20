@@ -44,7 +44,8 @@ asset_descriptors = [
     # AssetDesc("urdf/shadow_hand_description/shadow_hand_right.urdf", False) #Nope
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     #AssetDesc("mjcf/open_ai_assets/hand/shadow_test.xml", False),
-    AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_right.xml", False),
+    # AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_right.xml", False),
+    AssetDesc("mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml", False),
 ]
 
 args = gymutil.parse_arguments(

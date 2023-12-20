@@ -24,6 +24,8 @@ bridge = CvBridge()
 import time
 from std_msgs.msg import Float32MultiArray
 
+from sensor_msgs.msg import JointState
+
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
 
@@ -43,7 +45,7 @@ asset_descriptors = [
     # AssetDesc("urdf/shadow_hand_description/shadowhand_with_fingertips.urdf", False),  # okay to use
     # AssetDesc("mjcf/open_ai_assets/hand/shadow_hand_only.xml", False)
     # AssetDesc("mjcf/open_ai_assets/hand_test/shadow_test.xml", False), 
-    AssetDesc("mjcf/open_ai_assets/hand_new/shadow_hand_right.xml", False), 
+    AssetDesc("mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml", False), 
 ]
 
 
@@ -293,7 +295,7 @@ class isaac():
         self.env_upper = gymapi.Vec3(self.spacing, self.spacing, self.spacing)
 
         # position the camera
-        self.cam_pos = gymapi.Vec3(0.0, 1.0 , 0.629)
+        self.cam_pos = gymapi.Vec3(-0.7, 0.2 , 0.8)
         self.cam_target = gymapi.Vec3(0.0, 0.0, 0.0)
         
         self.gym.viewer_camera_look_at(self.viewer, None, self.cam_pos, self.cam_target)
@@ -357,7 +359,7 @@ class isaac():
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
 
         self.count = 0
-        self.qpos_sub = rospy.Subscriber("/qpos/Right", Float32MultiArray, self.callback)
+        self.qpos_sub = rospy.Subscriber("/qpos/Right", JointState, self.callback)
         #self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
@@ -366,7 +368,7 @@ class isaac():
         
         self.count = self.count + 1
         print("got a pos msg: ", self.count)
-        action =  list(qpos_msg.data) #28 dim 6 + 24 - 2
+        action =  list(qpos_msg.position) #28 dim 6 + 24 - 2
 
         action = np.array(action)
 
@@ -375,13 +377,13 @@ class isaac():
         action[0:3] = action[0:3] - self.init_pos
         # print("action[0:3] = ", action[0:3])
         #zeros = np.zeros((6,))
-        action[0] = -1 * action[0]
-        action[1] = -1 * action[1]
+        # action[0] = -1 * action[0]
+        # action[1] = -1 * action[1]
 
         action[3], action[5] = action[5], action[3]
 
-        action[5] = -1 * action[5]
-        action[4] = -1 * action[4]        
+        # action[5] = -1 * action[5]
+        # action[4] = -1 * action[4]        
         
         # action[0:3] = z_rot @ action[0:3]
         # 

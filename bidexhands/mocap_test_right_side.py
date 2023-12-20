@@ -4,7 +4,7 @@ import numpy as np
 
 
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
@@ -16,7 +16,7 @@ import numpy as np
 
 # medium
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
-env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 
 # hard
@@ -120,11 +120,7 @@ class isaac():
             return
 
         root_pos = action[:6].copy()
-        
-        action[0] = -1 * action[0]
-        action[1] = -1 * action[1]
-        action[3] = -1 * action[3]
-        action[4] = -1 * action[4]        
+              
         action[0:3] = z_rot @ action[0:3]
 
         action[5] = action[5] + np.pi/2

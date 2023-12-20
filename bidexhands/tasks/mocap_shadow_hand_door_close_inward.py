@@ -224,7 +224,7 @@ class MocapShadowHandDoorCloseInward(BaseTask):
 
         # Viewer settings, including the camera's initial position and viewing direction
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -332,8 +332,8 @@ class MocapShadowHandDoorCloseInward(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -485,17 +485,17 @@ class MocapShadowHandDoorCloseInward(BaseTask):
         # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.65, 0.7, 0.8)
+        shadow_hand_start_pose.p = gymapi.Vec3(-0.65, -0.7, 0.8)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.65, -0.7, 0.8)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(-0.65, 0.7, 0.8)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.9)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 3.14159, 0.0)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.9)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0.0, 0.0)
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
@@ -510,7 +510,7 @@ class MocapShadowHandDoorCloseInward(BaseTask):
 
         table_pose = gymapi.Transform()
         table_pose.p = gymapi.Vec3(0.0, -0.6, 0.5 * table_dims.z)
-        table_pose.r = gymapi.Quat().from_euler_zyx(-0., 0, 0)
+        table_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         # compute aggregate size
         max_agg_bodies = self.num_shadow_hand_bodies * 2 + 2 * self.num_object_bodies + 1
@@ -699,9 +699,9 @@ class MocapShadowHandDoorCloseInward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.7, 0.6, 1.2), gymapi.Vec3(0.5, 0.5, 0.8))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(-0.7, -0.6, 1.2), gymapi.Vec3(-0.5, -0.5, 0.8))
                 # set camera 2 location using the cam1's transform
-                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(0.7, -0.5, 1.2), gymapi.Vec3(0.5, -0.5, 0.8))
+                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(-0.7, 0.6, 1.2), gymapi.Vec3(-0.5, 0.5, 0.8))
                 
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
                 self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)

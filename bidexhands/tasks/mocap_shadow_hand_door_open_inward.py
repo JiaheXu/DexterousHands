@@ -217,7 +217,7 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -324,8 +324,8 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -478,22 +478,22 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         # shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.45, 0.2, 0.8)
+        shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.2, 0.8)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.45, -0.2, 0.8)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(-0.35, 0.2, 0.8)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.9)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 3.14159, 0.0)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.9)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 0.0, 0.0)
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
 
-        self.goal_displacement = gymapi.Vec3(-0., 0.0, 5.)
+        self.goal_displacement = gymapi.Vec3(0.0, 0.0, 5.)
         self.goal_displacement_tensor = to_torch(
             [self.goal_displacement.x, self.goal_displacement.y, self.goal_displacement.z], device=self.device)
         goal_start_pose = gymapi.Transform()
@@ -692,7 +692,7 @@ class MocapShadowHandDoorOpenInward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 1.2), gymapi.Vec3(0, 0, 0.7))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(-0.2, 0.0, 1.2), gymapi.Vec3(0, 0, 0.7))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
@@ -899,30 +899,31 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         observational space as shown in below:
 
         Index       Description
-        0 - 23	    right shadow hand dof position
-        24 - 47	    right shadow hand dof velocity
-        48 - 71	    right shadow hand dof force
-        72 - 136	right shadow hand fingertip pose, linear velocity, angle velocity (5 x 13)
-        137 - 166	right shadow hand fingertip force, torque (5 x 6)
-        167 - 169	right shadow hand base position
-        170 - 172	right shadow hand base rotation
-        173 - 198	right shadow hand actions
+        0 - 27	    right shadow hand dof position
+        28 - 55	    right shadow hand dof velocity
+        56 - 83	    right shadow hand dof force
 
-        199 - 222	left shadow hand dof position
-        223 - 246	left shadow hand dof velocity
-        247 - 270	left shadow hand dof force
-        271 - 335	left shadow hand fingertip pose, linear velocity, angle velocity (5 x 13)
-        336 - 365	left shadow hand fingertip force, torque (5 x 6)
-        366 - 368	left shadow hand base position
-        369 - 371	left shadow hand base rotation
-        372 - 397	left shadow hand actions
+        84 - 148	right shadow hand fingertip pose, linear velocity, angle velocity (5 x 13)
+        149 - 178	right shadow hand fingertip force, torque (5 x 6)
+        179 - 181	right shadow hand base position
+        182 - 184	right shadow hand base rotation
+        185 - 212	right shadow hand actions
 
-        398 - 404	object pose
-        405 - 407	object linear velocity
-        408 - 410	object angle velocity
+        213 - 240	left shadow hand dof position
+        241 - 268	left shadow hand dof velocity
+        269 - 296	left shadow hand dof force
+        297 - 361	left shadow hand fingertip pose, linear velocity, angle velocity (5 x 13)
+        362 - 391	left shadow hand fingertip force, torque (5 x 6)
+        392 - 394	left shadow hand base position
+        395 - 397	left shadow hand base rotation
+        398 - 425	left shadow hand actions
 
-        411 - 414	door right handle position
-        415 - 417	door left handle position
+        426 - 432	object pose
+        433 - 435	object linear velocity
+        436 - 438	object angle velocity
+
+        439 - 441	door right handle position
+        442 - 444	door left handle position
         """
 
 
@@ -1575,8 +1576,8 @@ def compute_hand_reward(
     successes = successes + goal_resets
     
     #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 3.5, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_finger_dist >= 13.5, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_finger_dist >= 13.5, torch.ones_like(resets), resets)
     #############################################################################################################
     # print("max_consecutive_successes: ", max_consecutive_successes)
     # if max_consecutive_successes > 0:
