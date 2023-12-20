@@ -446,7 +446,7 @@ class MocapShadowHandPen(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(0.5, 1.0, 0.6)
+        table_dims = gymapi.Vec3(0.5, 1.0, 0.4)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = True
@@ -465,8 +465,8 @@ class MocapShadowHandPen(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.6)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.45)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(1.571, 1.571, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx

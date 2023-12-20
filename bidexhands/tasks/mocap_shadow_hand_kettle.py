@@ -480,22 +480,22 @@ class MocapShadowHandKettle(BaseTask):
         bucket_asset_file = "mjcf/bucket/100454/mobility.urdf"
         bucket_asset = self.gym.load_asset(self.sim, asset_root, bucket_asset_file, bucket_asset_options)
         bucket_pose = gymapi.Transform()
-        bucket_pose.p = gymapi.Vec3(0.0, -0.3, 0.5)
+        bucket_pose.p = gymapi.Vec3(0.0, 0.15, 0.5)
         bucket_pose.r = gymapi.Quat().from_euler_zyx(0., 0, 0)
 
         self.num_bucket_bodies = self.gym.get_asset_rigid_body_count(bucket_asset)
         self.num_bucket_shapes = self.gym.get_asset_rigid_shape_count(bucket_asset)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.35, 0.2, 0.45)
+        shadow_hand_start_pose.p = gymapi.Vec3(0.35, 0.2, 0.6)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.35, -0.2, 0.45)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(0.35, -0.2, 0.6)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.5)
+        object_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.5)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
