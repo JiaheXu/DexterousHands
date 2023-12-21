@@ -759,7 +759,7 @@ class MocapShadowHandKettle(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.0, -0.2, 0.53), gymapi.Vec3(0.0, -0.4, 0.53))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(-0.2, 0.0, 0.8), gymapi.Vec3(0, 0, 0.4))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
 
