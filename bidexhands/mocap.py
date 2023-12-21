@@ -13,7 +13,7 @@ import numpy as np
 
 # medium
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
-env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 
 # hard

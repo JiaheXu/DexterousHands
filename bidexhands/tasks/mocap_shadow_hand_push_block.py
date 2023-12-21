@@ -213,7 +213,7 @@ class MocapShadowHandPushBlock(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -315,8 +315,8 @@ class MocapShadowHandPushBlock(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -453,20 +453,20 @@ class MocapShadowHandPushBlock(BaseTask):
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, gymapi.AssetOptions())
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.55, 0.2, 0.8)
+        shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.2, 0.55)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.55, -0.2, 0.8)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(-0.35, 0.2, 0.55)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.475)
+        object_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.475)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         block_start_pose = gymapi.Transform()
-        block_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.475)
+        block_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.475)
         block_start_pose.r = gymapi.Quat().from_euler_zyx(1.57, 1.57, 0)
         # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
         # object_start_pose.p.y = shadow_hand_start_pose.p.y + pose_dy
@@ -676,7 +676,7 @@ class MocapShadowHandPushBlock(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(1, 1, 1), gymapi.Vec3(0, 0, 0))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0, 1), gymapi.Vec3(0, 0, 0.6))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)

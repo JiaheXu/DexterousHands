@@ -212,7 +212,7 @@ class MocapShadowHandKettle(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -316,8 +316,8 @@ class MocapShadowHandKettle(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -326,7 +326,7 @@ class MocapShadowHandKettle(BaseTask):
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
         # load ball asset
-        ball_asset = self.gym.create_sphere(self.sim, 0.005, gymapi.AssetOptions())
+        ball_asset = self.gym.create_sphere(self.sim, 0.003, gymapi.AssetOptions())
         object_asset_file = self.asset_files_dict[self.object_type]
         print("object_asset_file: ", object_asset_file)
         # load shadow hand_ asset
@@ -480,24 +480,23 @@ class MocapShadowHandKettle(BaseTask):
         bucket_asset_file = "mjcf/bucket/100454/mobility.urdf"
         bucket_asset = self.gym.load_asset(self.sim, asset_root, bucket_asset_file, bucket_asset_options)
         bucket_pose = gymapi.Transform()
-        bucket_pose.p = gymapi.Vec3(0.0, 0.15, 0.5)
-        bucket_pose.r = gymapi.Quat().from_euler_zyx(0., 0, 0)
+        bucket_pose.p = gymapi.Vec3(0.0, 0.2, 0.5)
+        bucket_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         self.num_bucket_bodies = self.gym.get_asset_rigid_body_count(bucket_asset)
         self.num_bucket_shapes = self.gym.get_asset_rigid_shape_count(bucket_asset)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.35, 0.2, 0.6)
+        shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.2, 0.55)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.35, -0.2, 0.6)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(-0.35, 0.2, 0.55)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
         object_start_pose.p = gymapi.Vec3(0.0, -0.2, 0.5)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
-        pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 3.141592)
 
 
         if self.object_type == "pen":
@@ -683,16 +682,36 @@ class MocapShadowHandKettle(BaseTask):
             pose = gymapi.Transform()
             pose.r = gymapi.Quat(0, 0, 0, 1)
             n = 4
-            radius = 0.005
+            radius = 0.003
             ball_spacing = 1 * radius
+            
             min_coord = -0.5 * (n - 1) * ball_spacing
+
             y = min_coord
+            # for nn in range(n):
+            #     z = min_coord
+            #     for j in range(n):
+            #         x = min_coord
+            #         for k in range(n):
+            #             pose.p = gymapi.Vec3(x, y - 0.2, z + 0.5)
+
+            #             ball_handle = self.gym.create_actor(env_ptr, ball_asset, pose, "ball", i, 0, 0)
+            #             self.gym.set_rigid_body_color(env_ptr, ball_handle, 0, gymapi.MESH_VISUAL_AND_COLLISION, color)
+            #             ball_idx = self.gym.get_actor_index(env_ptr, ball_handle, gymapi.DOMAIN_SIM)
+            #             ball_indices.append(ball_idx)
+
+            #             x += ball_spacing
+            #         z += ball_spacing
+            #     y += ball_spacing
+            #     # n -= 1
+            #     min_coord = -0.5 * (n - 1) * ball_spacing
+
             while n > 0:
                 z = min_coord
                 for j in range(n):
                     x = min_coord
                     for k in range(n):
-                        pose.p = gymapi.Vec3(x, y, z + 0.54)
+                        pose.p = gymapi.Vec3(x, y - 0.2, z + 0.8)
 
                         ball_handle = self.gym.create_actor(env_ptr, ball_asset, pose, "ball", i, 0, 0)
                         self.gym.set_rigid_body_color(env_ptr, ball_handle, 0, gymapi.MESH_VISUAL_AND_COLLISION, color)
@@ -740,7 +759,7 @@ class MocapShadowHandKettle(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.0, 0.2, 0.8), gymapi.Vec3(0, 0, 0.4))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.0, -0.2, 0.53), gymapi.Vec3(0.0, -0.4, 0.53))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
 
@@ -1591,7 +1610,7 @@ def compute_hand_reward(
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
                     torch.where(torch.norm(bucket_handle_pos - kettle_spout_pos, p=2, dim=-1) < 0.05, torch.ones_like(successes), successes), successes)
-    max_episode_length = 1000000000
+    # max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
     goal_resets = torch.zeros_like(resets)

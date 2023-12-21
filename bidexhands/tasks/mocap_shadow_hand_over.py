@@ -210,7 +210,7 @@ class MocapShadowHandOver(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 

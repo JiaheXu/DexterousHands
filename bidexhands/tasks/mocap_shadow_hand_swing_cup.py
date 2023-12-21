@@ -211,7 +211,7 @@ class MocapShadowHandSwingCup(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -318,8 +318,8 @@ class MocapShadowHandSwingCup(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -461,7 +461,7 @@ class MocapShadowHandSwingCup(BaseTask):
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.35, 0.2, 0.45)
+        shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.2, 0.45)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         # shadow_hand_start_pose = gymapi.Transform()
@@ -469,12 +469,12 @@ class MocapShadowHandSwingCup(BaseTask):
         # shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(3.14159, 3.14159, 3.14159)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.35, -0.2, 0.45)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(-0.35, 0.2, 0.45)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0., 0.6)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 1.57)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.6)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 1.79)
 
         if self.object_type == "pen":
             object_start_pose.p.z = shadow_hand_start_pose.p.z + 0.02
@@ -679,7 +679,7 @@ class MocapShadowHandSwingCup(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.2, 0.0, 0.8), gymapi.Vec3(0, 0, 0.4))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(-0.2, 0.0, 0.8), gymapi.Vec3(0, 0, 0.4))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(1, 1, 3), gymapi.Vec3(0, 0, 0))
 

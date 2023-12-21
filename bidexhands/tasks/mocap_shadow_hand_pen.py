@@ -212,7 +212,7 @@ class MocapShadowHandPen(BaseTask):
         super().__init__(cfg=self.cfg)
 
         if self.viewer != None:
-            cam_pos = gymapi.Vec3(2.0, 0.0, 1.5)
+            cam_pos = gymapi.Vec3(-2.0, 0.0, 1.5)
             cam_target = gymapi.Vec3(0.0, 0.0, 1.0)
             self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
@@ -316,8 +316,8 @@ class MocapShadowHandPen(BaseTask):
         upper = gymapi.Vec3(spacing, spacing, spacing)
 
         asset_root = "../assets"
-        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_right.xml"
-        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new/shadow_hand_left.xml"
+        shadow_hand_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_right.xml"
+        shadow_hand_another_asset_file = "mjcf/open_ai_assets/hand_new2/shadow_hand_left.xml"
         table_texture_files = "../assets/textures/texture_stone_stone_texture_0.jpg"
         table_texture_handle = self.gym.create_texture_from_file(self.sim, table_texture_files)
 
@@ -446,7 +446,7 @@ class MocapShadowHandPen(BaseTask):
         self.object_dof_upper_limits = to_torch(self.object_dof_upper_limits, device=self.device)
 
         # create table asset
-        table_dims = gymapi.Vec3(0.5, 1.0, 0.4)
+        table_dims = gymapi.Vec3(0.5, 0.5, 0.45)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         asset_options.flip_visual_attachments = True
@@ -457,16 +457,16 @@ class MocapShadowHandPen(BaseTask):
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, gymapi.AssetOptions())
 
         shadow_hand_start_pose = gymapi.Transform()
-        shadow_hand_start_pose.p = gymapi.Vec3(0.25, 0.2, 0.45)
+        shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.2, 0.5)
         shadow_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         shadow_another_hand_start_pose = gymapi.Transform()
-        shadow_another_hand_start_pose.p = gymapi.Vec3(0.25, -0.2, 0.45)
+        shadow_another_hand_start_pose.p = gymapi.Vec3(-0.35, 0.2, 0.5)
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.45)
-        object_start_pose.r = gymapi.Quat().from_euler_zyx(1.571, 1.571, 0)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.475)
+        object_start_pose.r = gymapi.Quat().from_euler_zyx(-1.571, 1.571, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
         # object_start_pose.p.x = shadow_hand_start_pose.p.x + pose_dx
