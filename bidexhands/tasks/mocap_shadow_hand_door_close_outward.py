@@ -27,6 +27,7 @@ import rospy
 from cv_bridge import CvBridge
 bridge = CvBridge()
 import std_msgs
+from sensor_msgs.msg import JointState
 
 class MocapShadowHandDoorCloseOutward(BaseTask):
     """
@@ -205,6 +206,8 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         self.cam1_pub = rospy.Publisher("cam1", Image, queue_size=100)
         self.cam2_pub = rospy.Publisher("cam2", Image, queue_size=100)
 
+        self.color_sub = rospy.Subscriber("/hand_color", JointState, self.mocap_set_color)
+
         self.axes_geom = gymutil.AxesGeometry(0.5)
         self.goal_quat = np.array([0.0, 0.0, 0.0, 1.0])
         self.goal_viz_T = gymapi.Transform(r=gymapi.Quat(*self.goal_quat))
@@ -283,6 +286,19 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
 
         self.total_successes = 0
         self.total_resets = 0
+
+    def mocap_set_color(self, color_msg):
+        r, g, b = color_msg.position[0], color_msg.position[1], color_msg.position[2]
+        colorVec = gymapi.Vec3(r, g, b)
+        for n in self.agent_index[0]:
+            for m in n:
+                for o in self.hand_rigid_body_index[m]:
+                    self.gym.set_rigid_body_color(self.envs[0], self.shadow_hand_actors[0], o, gymapi.MESH_VISUAL, colorVec)
+    
+        for n in self.agent_index[1]:                
+            for m in n:
+                for o in self.hand_rigid_body_index[m]:
+                    self.gym.set_rigid_body_color(self.envs[0], self.shadow_hand_another_actors[0], o, gymapi.MESH_VISUAL, colorVec)
 
     def create_sim(self):
         """
@@ -569,6 +585,9 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         self.torch_cam2_tensor = None
         self.cam_tensors = []
 
+        self.shadow_hand_actors = []
+        self.shadow_hand_another_actors = []
+
         for i in range(self.num_envs):
             # create env instance
             env_ptr = self.gym.create_env(
@@ -582,6 +601,9 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
             # add hand - collision filter = -1 to use asset collision filters set in mjcf loader
             shadow_hand_actor = self.gym.create_actor(env_ptr, shadow_hand_asset, shadow_hand_start_pose, "hand", i, 0, 0)
             shadow_hand_another_actor = self.gym.create_actor(env_ptr, shadow_hand_another_asset, shadow_another_hand_start_pose, "another_hand", i, 0, 0)
+
+            self.shadow_hand_actors.append(shadow_hand_actor)
+            self.shadow_hand_another_actors.append(shadow_hand_another_actor)
             
             self.hand_start_states.append([shadow_hand_start_pose.p.x, shadow_hand_start_pose.p.y, shadow_hand_start_pose.p.z,
                                            shadow_hand_start_pose.r.x, shadow_hand_start_pose.r.y, shadow_hand_start_pose.r.z, shadow_hand_start_pose.r.w,
@@ -597,14 +619,14 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
 
             # randomize colors and textures for rigid body
             num_bodies = self.gym.get_actor_rigid_body_count(env_ptr, shadow_hand_actor)
-            hand_rigid_body_index = [[6,7,8,9], [10,11,12,13], [14,15,16,17], [18,19,20,21], [22,23,24,25,26], [27,28,29,30,31]]
+            self.hand_rigid_body_index = [[6,7,8,9], [10,11,12,13], [14,15,16,17], [18,19,20,21], [22,23,24,25,26], [27,28,29,30,31]]
 
             for n in self.agent_index[0]:
                 colorx = random.uniform(0, 1)
                 colory = random.uniform(0, 1)
                 colorz = random.uniform(0, 1)
                 for m in n:
-                    for o in hand_rigid_body_index[m]:
+                    for o in self.hand_rigid_body_index[m]:
                         self.gym.set_rigid_body_color(env_ptr, shadow_hand_actor, o, gymapi.MESH_VISUAL,
                                                 gymapi.Vec3(colorx, colory, colorz))
             for n in self.agent_index[1]:                
@@ -612,7 +634,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
                 colory = random.uniform(0, 1)
                 colorz = random.uniform(0, 1)
                 for m in n:
-                    for o in hand_rigid_body_index[m]:
+                    for o in self.hand_rigid_body_index[m]:
                         self.gym.set_rigid_body_color(env_ptr, shadow_hand_another_actor, o, gymapi.MESH_VISUAL,
                                                 gymapi.Vec3(colorx, colory, colorz))
                 # gym.set_rigid_body_texture(env, actor_handles[-1], n, gymapi.MESH_VISUAL,

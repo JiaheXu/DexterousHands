@@ -4,10 +4,10 @@ import numpy as np
 
 
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
-env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
@@ -87,7 +87,7 @@ class isaac():
         self.middle_bound_np = ( self.upper_bound_np + self.lower_bound_np ) / 2.0
         
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
-        self.count = 0
+        self.count = -2
         self.init_pos = np.array([0.0, 0.0, 0.0])
 
         self.hand_action_pub = rospy.Publisher("/action", JointState, queue_size=1000)
@@ -109,9 +109,13 @@ class isaac():
         
         action = np.array( qpos_msg.position )
 
-        if( self.count == 1): # initialize (x,y,z)
+        if( self.count == -1): # initialize (x,y,z)
             self.init_pos =  action[0:3].copy()
         action[0:3] = action[0:3] - self.init_pos
+        
+        if(self.count < 60):
+            return
+
         
         action[0] = action[0]*2
         action[1] = action[1]*2        

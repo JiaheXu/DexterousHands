@@ -1,7 +1,8 @@
 import bidexhands as bi
 import torch
 import numpy as np
-
+import random
+from isaacgym import gymapi
 # easy
 # env_name = "MocapShadowHandDoorOpenInward" # right view
 env_name = "MocapShadowHandDoorOpenOutward" # right view
@@ -59,6 +60,9 @@ class isaac():
         self.obs = self.env.reset()
         self.terminated = False
         self.action_sub = rospy.Subscriber("/action", JointState, self.callback)
+
+        self.color_pub = rospy.Publisher("/hand_color", JointState, queue_size=1)
+
         self.count = 0
         self.lower_bound_np = np.array([
             -5.0, -5.0, -5.0, -3.14159, -3.14159, -3.14159,
@@ -92,6 +96,14 @@ class isaac():
         self.count = self.count + 1
         
         action = np.array( action_msg.position )
+        
+        if(self.count % 30 == 0):
+            vec_msg = JointState()
+            r = random.uniform(0, 1)
+            g = random.uniform(0, 1)
+            b = random.uniform(0, 1)
+            vec_msg.position = np.array([r,g,b])
+            self.color_pub.publish(vec_msg)
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)

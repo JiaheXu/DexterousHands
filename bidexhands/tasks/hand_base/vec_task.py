@@ -63,7 +63,6 @@ class VecTask():
     def num_obs(self):
         return self.num_observations
 
-
 # C++ CPU Class
 class VecTaskCPU(VecTask):
     def __init__(self, task, rl_device, sync_frame_time=False, clip_observations=5.0, clip_actions=1.0):
