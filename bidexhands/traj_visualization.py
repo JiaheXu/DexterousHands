@@ -7,8 +7,8 @@ import rospy
 # easy
 # env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
-# env_name = "MocapShadowHandDoorCloseInward" # right view
-env_name = "MocapShadowHandDoorCloseOutward" # right view
+env_name = "MocapShadowHandDoorCloseInward" # right view
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
