@@ -958,8 +958,9 @@ class MocapShadowHandDoorOpenOutward(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
+        # need to change left and right
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_right_handle_pos
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_left_handle_pos
 
     def compute_point_cloud_observation(self, collect_demonstration=False):
         """
@@ -1041,8 +1042,10 @@ class MocapShadowHandDoorOpenOutward(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
+
+        # need to change
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_right_handle_pos 
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_left_handle_pos
 
         point_clouds = torch.zeros((self.num_envs, self.pointCloudDownsampleNum, 3), device=self.device)
         
@@ -1512,8 +1515,8 @@ def compute_hand_reward(
     goal_dist = torch.norm(target_pos - object_pos, p=2, dim=-1)
     # goal_dist = target_pos[:, 2] - object_pos[:, 2]
 
-    right_hand_dist = torch.norm(door_right_handle_pos - right_hand_pos, p=2, dim=-1)
-    left_hand_dist = torch.norm(door_left_handle_pos - left_hand_pos, p=2, dim=-1)
+    right_hand_dist = torch.norm(door_left_handle_pos - right_hand_pos, p=2, dim=-1)
+    left_hand_dist = torch.norm(door_right_handle_pos - left_hand_pos, p=2, dim=-1)
 
     right_hand_finger_dist = (torch.norm(door_right_handle_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(door_right_handle_pos - right_hand_mf_pos, p=2, dim=-1)
                             + torch.norm(door_right_handle_pos - right_hand_rf_pos, p=2, dim=-1) + torch.norm(door_right_handle_pos - right_hand_lf_pos, p=2, dim=-1) 
@@ -1551,25 +1554,27 @@ def compute_hand_reward(
     dist_threshold = 0.25
     # Find out which envs hit the goal and update successes count
     goal_resets = torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > dist_threshold, torch.ones_like(reset_goal_buf), reset_goal_buf)
+    # print("right - left: ", door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1])
+    # print("right_hand_finger_dist: ", right_hand_dist)
+    # print("left_hand_finger_dist: " , left_hand_dist)
     successes = successes + goal_resets
 
 
     #############################################################################################################
-    resets = torch.where(right_hand_finger_dist >= 3.5, torch.ones_like(reset_buf), reset_buf)
-    resets = torch.where(left_hand_finger_dist >= 3.5, torch.ones_like(resets), resets)
+    resets = torch.where(right_hand_dist >= 3.5, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(left_hand_dist >= 3.5, torch.ones_like(resets), resets)
     #############################################################################################################
     
     resets = torch.where(successes > max(max_consecutive_successes, 1 ), torch.ones_like(resets), resets)
 
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
-    goal_resets = torch.zeros_like(resets)
-
     num_resets = torch.sum(resets)
     finished_cons_successes = torch.sum(successes * resets.float())
 
     cons_successes = torch.where(resets > 0, successes * resets, consecutive_successes)
-
+    # print("successes: ", successes)
+    # print("resets: ", resets)
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
 
 

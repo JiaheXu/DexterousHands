@@ -4,8 +4,8 @@ import numpy as np
 
 
 # easy
-env_name = "MocapShadowHandDoorOpenInward" # right view
-# env_name = "MocapShadowHandDoorOpenOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 
@@ -158,8 +158,13 @@ class isaac():
         self.action_buffer.append(action_msg)
 
         if(info["successes"][0] == 1):
+            print("successes !!!")
+            print("successes !!!")
+            print("successes !!!")
             self.make_rosbag()
-
+        if(info["reset"][0] == 1):
+            self.action_buffer.clear()
+            self.count = 0
         return
 
     def run(self):

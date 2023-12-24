@@ -109,8 +109,15 @@ class isaac():
         act = act.to(torch.float32)
 
         obs, reward, done, info = self.env.step(act)
-        # print("done: ",done)
-        # print("info: ", info)
+        if(info["successes"][0] == 1):
+            print("successes !!!")
+            print("successes !!!")
+            print("successes !!!")
+
+        if(info["reset"][0] == 1):
+            print("reset !!!")
+            print("reset !!!")
+            print("reset !!!")
         return
     def run(self):
         rospy.spin()  

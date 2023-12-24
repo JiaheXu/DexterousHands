@@ -708,7 +708,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
                 self.cam2_handle  = self.gym.create_camera_sensor(env_ptr, cam_props)
 
                 # set camera 1 location
-                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(-0.3, 0.2, 1.2), gymapi.Vec3(-0.5, 0.3, 0.8))
+                self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(0.3, -0.2, 1.2), gymapi.Vec3(0.5, -0.3, 0.8))
                 # set camera 2 location using the cam1's transform
                 self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(-0.7, -0.4, 1.2), gymapi.Vec3(-0.5, -0.4, 0.8))
 
@@ -959,9 +959,11 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
-
+        # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
+        # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
+        # need to change left and right
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_right_handle_pos
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_left_handle_pos
     def compute_point_cloud_observation(self, collect_demonstration=False):
         """
         Compute the observations of all environment. The observation is composed of three parts: 

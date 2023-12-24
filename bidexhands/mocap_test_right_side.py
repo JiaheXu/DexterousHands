@@ -4,8 +4,8 @@ import numpy as np
 
 
 # easy
-env_name = "MocapShadowHandDoorOpenInward" # right view
-# env_name = "MocapShadowHandDoorOpenOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 

@@ -5,10 +5,11 @@ import glob, os, sys, argparse
 import rosbag
 import rospy
 # easy
-env_name = "MocapShadowHandDoorOpenInward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
-# env_name = "MocapShadowHandDoorCloseOutward" # right view
+env_name = "MocapShadowHandDoorCloseOutward" # right view
+
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
 # env_name = "MocapShadowHandSwitch" # front view
@@ -118,7 +119,7 @@ def make_npy_files(dataset_directory, file):
     for topic, msg, t in bagIn.read_messages(topics=["/action"]):
         count = count +1
         
-        # if( count < 45):
+        # if( count < 15):
         #     continue
         
         action_buffer.append(msg.position)
@@ -146,9 +147,9 @@ def main():
     # parser.add_argument("-b", "--bags_dir", help="Input ROS bag name.")
     # dataset_directory = args.bags_dir
     
-    dataset_directory = "../data/test"
+    # dataset_directory = "../data/test"
 
-    # dataset_directory = "../data/" + env_name
+    dataset_directory = "../data/" + env_name
 
     file_path = os.path.join( dataset_directory, '*.bag')
     filelist = sorted( glob.glob( file_path) )

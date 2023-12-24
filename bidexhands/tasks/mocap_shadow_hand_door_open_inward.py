@@ -996,6 +996,7 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
+
         self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
         self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
 
