@@ -102,8 +102,9 @@ def main():
             hand2_pub.publish(hand2_msg)
 
             rate.sleep()
-            print(j, " / ", length)
-
+            #print(j, " / ", length)
+        print("start pose: ", datapoints[i][0][439], datapoints[i][0][440], datapoints[i][0][441])
+        print("start pos2: ", datapoints[i][0][442], datapoints[i][0][443], datapoints[i][0][444])
 
 if __name__ == "__main__":
     main()

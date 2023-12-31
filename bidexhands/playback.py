@@ -4,10 +4,11 @@ import numpy as np
 import random
 from isaacgym import gymapi
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
-env_name = "MocapShadowHandDoorOpenOutward" # right view
-# env_name = "MocapShadowHandDoorCloseInward" # right view
+env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
+
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+# env_name = "MocapShadowHandDoorOpenOutward" # right view
 
 # env_name = "MocapShadowHandLiftUnderarm" # right view
 # env_name = "MocapShadowHandSwitch" # front view
@@ -89,14 +90,23 @@ class isaac():
         self.scale_np = ( self.upper_bound_np - self.lower_bound_np ) / 2.0
         self.count = 0
         self.init_pos = np.array([0.0, 0.0, 0.0])
-
+        self.last_action = None
 
     def callback(self, action_msg):
-    
+        
+        if(self.count == 0 ):
+            self.env.reset()
+
         self.count = self.count + 1
         
+        print("current count: ", self.count)
+
         action = np.array( action_msg.position )
-        
+        if(self.count % 30 != 1):
+            action = self.last_action
+        else:
+            self.last_action = action
+
         if(self.count % 30 == 0):
             vec_msg = JointState()
             r = random.uniform(0, 1)
@@ -113,6 +123,7 @@ class isaac():
             print("successes !!!")
             print("successes !!!")
             print("successes !!!")
+            self.count = 0
 
         if(info["reset"][0] == 1):
             print("reset !!!")

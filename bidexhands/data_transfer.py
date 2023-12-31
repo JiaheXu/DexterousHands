@@ -5,10 +5,10 @@ import glob, os, sys, argparse
 import rosbag
 import rospy
 # easy
+env_name = "MocapShadowHandDoorCloseInward" # right view
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
 # env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
-# env_name = "MocapShadowHandDoorCloseInward" # right view
-env_name = "MocapShadowHandDoorCloseOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
@@ -88,15 +88,29 @@ class isaac():
     def step(self, action_msg):
     
         self.count = self.count + 1
+        if(self.count % 10 == 0):
+            print("current count: ", self.count)
         
         action = np.array( action_msg.position )
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
 
-        obs, reward, done, info = self.env.step(act)
+        obs, reward, _, info = self.env.step(act)
+        done = False
+        if(info["successes"][0] == 1):
+            print("successes !!!")
+            print("successes !!!")
+            print("successes !!!")
+            self.count = 0
+            done = True
 
-        return obs
+        if(info["reset"][0] == 1):
+            print("reset !!!")
+            print("reset !!!")
+            print("reset !!!")
+            self.env.reset()
+        return obs, done
 
 rospy.init_node("isaac_playback_node")
 isaac_node = isaac()
@@ -119,20 +133,25 @@ def make_npy_files(dataset_directory, file):
     for topic, msg, t in bagIn.read_messages(topics=["/action"]):
         count = count +1
         
-        # if( count < 15):
+        # if( count < 30):
         #     continue
         
         action_buffer.append(msg.position)
 
-        obs = isaac_node.step(msg).cpu().detach().numpy()
+        obs, done = isaac_node.step(msg)
+        obs = obs.cpu().detach().numpy()
         obs = np.squeeze(obs)
         obs_buffer.append( obs )
+        
+        if(done):
+            count = 0
+            break
     
     print("file: ", file)
     print("count: ", count)
     print("")
 
-    if(len(action_buffer) != len(obs_buffer) or len(obs_buffer) != count):
+    if(len(action_buffer) != len(obs_buffer)):
         print("msg number error on ", file)
 
     obs_buffer = np.array(obs_buffer).copy()
@@ -141,6 +160,8 @@ def make_npy_files(dataset_directory, file):
     print("action_buffer: ", action_buffer.shape)
     obs_all.append(obs_buffer)
     action_all.append(action_buffer)
+
+    bagIn.close()
 
 def main():
     #
