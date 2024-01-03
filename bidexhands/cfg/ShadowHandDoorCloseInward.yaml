@@ -1,9 +1,9 @@
 # if given, will override the device setting in gym. 
 env: 
   env_name: "shadow_hand_door_close_inward"
-  numEnvs: 256
+  numEnvs: 1
   envSpacing: 1.5
-  episodeLength: 250
+  episodeLength: 1800
   enableDebugVis: False
   cameraDebug: True
   pointCloudDebug: True

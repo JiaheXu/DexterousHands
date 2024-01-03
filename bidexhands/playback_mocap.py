@@ -3,15 +3,8 @@ import torch
 import numpy as np
 import random
 from isaacgym import gymapi
-
-
-# env_name = "ShadowHandDoorCloseInward" # right view
-# env_name = "ShadowHandDoorCloseOutward" # right view
-# env_name = "ShadowHandDoorOpenInward" # right view
-env_name = "ShadowHandDoorOpenOutward" # right view
-
 # easy
-# env_name = "MocapShadowHandDoorCloseInward" # right view
+env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 
 # env_name = "MocapShadowHandDoorOpenInward" # right view
@@ -109,6 +102,18 @@ class isaac():
         print("current count: ", self.count)
 
         action = np.array( action_msg.position )
+        if(self.count % 30 != 1):
+            action = self.last_action
+        else:
+            self.last_action = action
+
+        if(self.count % 30 == 0):
+            vec_msg = JointState()
+            r = random.uniform(0, 1)
+            g = random.uniform(0, 1)
+            b = random.uniform(0, 1)
+            vec_msg.position = np.array([r,g,b])
+            self.color_pub.publish(vec_msg)
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
