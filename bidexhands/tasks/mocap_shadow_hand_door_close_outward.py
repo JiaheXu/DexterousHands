@@ -154,7 +154,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         self.num_shadow_hand_dofs = 28
 
         self.num_point_cloud_feature_dim = 768
-        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 19
+        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 14
 
         self.num_obs_dict = {
             "point_cloud": self.full_state_num + self.num_point_cloud_feature_dim * 3,
@@ -962,8 +962,14 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
         # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
         # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
         # need to change left and right
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_right_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_left_handle_pos
+        # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_right_handle_pos
+        # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_left_handle_pos
+
+        self.obs_buf[:, obj_obs_start :obj_obs_start + 3] = self.door_left_handle_pos #object1
+        self.obs_buf[:, obj_obs_start + 3 :obj_obs_start + 7] = self.door_left_handle_rot
+        self.obs_buf[:, obj_obs_start + 7 :obj_obs_start + 10] = self.door_right_handle_pos #object2
+        self.obs_buf[:, obj_obs_start + 10 :obj_obs_start + 14] = self.door_right_handle_rot
+
     def compute_point_cloud_observation(self, collect_demonstration=False):
         """
         Compute the observations of all environment. The observation is composed of three parts: 

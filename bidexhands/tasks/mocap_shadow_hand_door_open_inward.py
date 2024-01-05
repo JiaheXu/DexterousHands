@@ -155,7 +155,7 @@ class MocapShadowHandDoorOpenInward(BaseTask):
         self.num_shadow_hand_dofs = 28
 
         self.num_point_cloud_feature_dim = 768
-        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 19
+        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 14
 
         print("full_state_num: ", self.full_state_num)
         print("full_state_num: ", self.full_state_num)
@@ -993,13 +993,16 @@ class MocapShadowHandDoorOpenInward(BaseTask):
 
         obj_obs_start = action_another_obs_start + self.action_dim
 
-        self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
-        self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
-        self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
+        # self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
+        # self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
+        # self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
+        # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
+        # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
 
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.door_left_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.door_right_handle_pos
-
+        self.obs_buf[:, obj_obs_start :obj_obs_start + 3] = self.door_right_handle_pos #object1
+        self.obs_buf[:, obj_obs_start + 3 :obj_obs_start + 7] = self.door_right_handle_rot
+        self.obs_buf[:, obj_obs_start + 7 :obj_obs_start + 10] = self.door_left_handle_pos #object2
+        self.obs_buf[:, obj_obs_start + 10 :obj_obs_start + 14] = self.door_left_handle_rot
     def compute_point_cloud_observation(self, collect_demonstration=False):
         """
         Compute the observations of all environment. The observation is composed of three parts: 

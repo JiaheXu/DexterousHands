@@ -5,9 +5,9 @@ import glob, os, sys, argparse
 import rosbag
 import rospy
 # easy
-env_name = "MocapShadowHandDoorCloseInward" # right view
+# env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
-# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
@@ -104,6 +104,7 @@ class isaac():
             print("successes !!!")
             self.count = 0
             done = True
+            self.env.reset()
 
         if(info["reset"][0] == 1):
             print("reset !!!")
@@ -133,8 +134,8 @@ def make_npy_files(dataset_directory, file):
     for topic, msg, t in bagIn.read_messages(topics=["/action"]):
         count = count +1
         
-        # if( count < 30):
-        #     continue
+        if( count < 30):
+            continue
         
         action_buffer.append(msg.position)
 
@@ -158,36 +159,21 @@ def make_npy_files(dataset_directory, file):
     action_buffer= np.array(action_buffer).copy()
     print("obs_buffer: ", obs_buffer.shape)
     print("action_buffer: ", action_buffer.shape)
-    obs_all.append(obs_buffer)
-    action_all.append(action_buffer)
+    demo_data={}
+    demo_data["observation"] = obs_buffer
+    demo_data["action"] = action_buffer
+
+    np.save( file[0:-4] + ".npy", demo_data)
 
     bagIn.close()
 
 def main():
-    #
-    # parser.add_argument("-b", "--bags_dir", help="Input ROS bag name.")
-    # dataset_directory = args.bags_dir
-    
-    # dataset_directory = "../data/test"
+
 
     dataset_directory = "../data/" + env_name
+    file_path = os.path.join( dataset_directory, '32.bag')
+    make_npy_files(dataset_directory , file_path)
 
-    file_path = os.path.join( dataset_directory, '*.bag')
-    filelist = sorted( glob.glob( file_path) )
-    # print("filelist:\n", filelist)
-    
-    for file in filelist:
-        make_npy_files(dataset_directory , file)
-
-    print("obs_all: ", len(obs_all))
-    print("action_all: ", len(action_all))
-    np.save(os.path.join(dataset_directory, "obs.npy"), obs_all)
-    np.save(os.path.join(dataset_directory, "action.npy"), action_all)
-    demo_data = {}
-    demo_data["actions"] = action_all
-    demo_data["observations"] = obs_all
-
-    np.save(os.path.join(dataset_directory, env_name + ".npy"), demo_data)
 
 
 if __name__ == "__main__":

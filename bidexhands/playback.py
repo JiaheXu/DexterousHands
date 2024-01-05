@@ -8,10 +8,10 @@ from isaacgym import gymapi
 # env_name = "ShadowHandDoorCloseInward" # right view
 # env_name = "ShadowHandDoorCloseOutward" # right view
 # env_name = "ShadowHandDoorOpenInward" # right view
-env_name = "ShadowHandDoorOpenOutward" # right view
+# env_name = "ShadowHandDoorOpenOutward" # right view
 
 # easy
-# env_name = "MocapShadowHandDoorCloseInward" # right view
+env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 
 # env_name = "MocapShadowHandDoorOpenInward" # right view

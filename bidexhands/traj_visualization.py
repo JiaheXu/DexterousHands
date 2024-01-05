@@ -5,10 +5,11 @@ import glob, os, sys, argparse
 import rosbag
 import rospy
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
-# env_name = "MocapShadowHandDoorOpenOutward" # right view
-env_name = "MocapShadowHandDoorCloseInward" # right view
+# env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenOutward" # right view
+
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
@@ -89,8 +90,8 @@ def main():
             hand1_msg.header = header
             hand2_msg.header = header
 
-            obj1_msg.pose.pose.position = Point( datapoints[i][j][439], datapoints[i][j][440], datapoints[i][j][441])
-            obj2_msg.pose.pose.position = Point( datapoints[i][j][442], datapoints[i][j][443], datapoints[i][j][444])
+            obj1_msg.pose.pose.position = Point( datapoints[i][j][426], datapoints[i][j][427], datapoints[i][j][428])  #29 30 31 32
+            obj2_msg.pose.pose.position = Point( datapoints[i][j][433], datapoints[i][j][434], datapoints[i][j][435])
 
             hand1_msg.pose.pose.position = Point( datapoints[i][j][179], datapoints[i][j][180], datapoints[i][j][181])
             hand2_msg.pose.pose.position = Point( datapoints[i][j][392], datapoints[i][j][393], datapoints[i][j][394])
@@ -103,8 +104,8 @@ def main():
 
             rate.sleep()
             #print(j, " / ", length)
-        print("start pose: ", datapoints[i][0][439], datapoints[i][0][440], datapoints[i][0][441])
-        print("start pos2: ", datapoints[i][0][442], datapoints[i][0][443], datapoints[i][0][444])
+        # print("start pose: ", datapoints[i][0][439], datapoints[i][0][440], datapoints[i][0][441])
+        # print("start pos2: ", datapoints[i][0][442], datapoints[i][0][443], datapoints[i][0][444])
 
 if __name__ == "__main__":
     main()
