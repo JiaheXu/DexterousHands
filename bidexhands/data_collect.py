@@ -6,8 +6,8 @@ import rosbag
 import rospy
 # easy
 # env_name = "MocapShadowHandDoorCloseInward" # right view
-# env_name = "MocapShadowHandDoorCloseOutward" # right view
-env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
 # env_name = "MocapShadowHandDoorOpenOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
@@ -37,15 +37,17 @@ from sensor_msgs.msg import JointState
 
 obs_all = []
 action_all = []
+import copy
 
-def get_data()
+def get_data(dataset_directory, file_pth):
+    obs = np.load(file_pth, allow_pickle=True).flat[0].get("observation")
+    action = np.load(file_pth, allow_pickle=True).flat[0].get("action")
+    obs_all.append( copy.deepcopy(obs) )
+    action_all.append( copy.deepcopy(action) )
+    # print("obs: ", obs.shape)
+    # print("action: ", action.shape)
 
 def main():
-    #
-    # parser.add_argument("-b", "--bags_dir", help="Input ROS bag name.")
-    # dataset_directory = args.bags_dir
-    
-    # dataset_directory = "../data/test"
 
     dataset_directory = "../data/" + env_name
 
@@ -57,8 +59,8 @@ def main():
 
     print("obs_all: ", len(obs_all))
     print("action_all: ", len(action_all))
-    np.save(os.path.join(dataset_directory, "obs.npy"), obs_all)
-    np.save(os.path.join(dataset_directory, "action.npy"), action_all)
+    np.save(os.path.join(dataset_directory, env_name + "_obs.npy"), obs_all)
+    np.save(os.path.join(dataset_directory, env_name + "_action.npy"), action_all)
     demo_data = {}
     demo_data["actions"] = action_all
     demo_data["observations"] = obs_all
