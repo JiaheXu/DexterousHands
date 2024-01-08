@@ -722,8 +722,9 @@ class MocapShadowHandDoorCloseInward(BaseTask):
                 # set camera 1 location
                 self.gym.set_camera_location(self.cam1_handle , env_ptr, gymapi.Vec3(-0.7, -0.6, 1.2), gymapi.Vec3(-0.5, -0.5, 0.8))
                 # set camera 2 location using the cam1's transform
-                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(-0.7, 0.6, 1.2), gymapi.Vec3(-0.5, 0.5, 0.8))
-                
+                # self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(-0.7, 0.6, 1.2), gymapi.Vec3(-0.5, 0.5, 0.8))
+                self.gym.set_camera_location(self.cam2_handle , env_ptr, gymapi.Vec3(-0.4, -0.8, 1.2), gymapi.Vec3(-0.5, 0.5, 0.8))
+
                 self.cam1_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam1_handle , gymapi.IMAGE_COLOR)
                 self.cam2_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, self.envs[0], self.cam2_handle , gymapi.IMAGE_COLOR)
                 self.torch_cam1_tensor = gymtorch.wrap_tensor(self.cam1_tensor)
@@ -1562,7 +1563,7 @@ def compute_hand_reward(
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
     # Find out which envs hit the goal and update successes count
-    dist_threshold = 0.52
+    dist_threshold = 0.6
 
 
     # Find out which envs hit the goal and update successes count

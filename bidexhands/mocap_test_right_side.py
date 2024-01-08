@@ -4,10 +4,11 @@ import numpy as np
 
 
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
-env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenOutward" # right view
+
 
 # env_name = "MocapShadowHandLiftUnderarm" # right view
 
@@ -96,12 +97,17 @@ class isaac():
         self.action_buffer = []
     
     def make_rosbag(self):
+        if( len(self.action_buffer) < 100 ):
+            self.action_buffer.clear()
+            return
+
         now = datetime.now()
         self.bag_name = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"        
         self.bagOut = rosbag.Bag(self.bag_name, "w")
         for msg in self.action_buffer:
             self.bagOut.write("/action", msg, msg.header.stamp)
         self.bagOut.close()
+        self.action_buffer.clear()
 
     def callback(self, qpos_msg):
     
@@ -125,6 +131,7 @@ class isaac():
 
         action[5] = action[5] + np.pi/2
 
+        action[0] = action[0]*2
         action[1] = action[1]*2        
         action[2] = action[2]*2
         ################################################################################        
@@ -169,10 +176,20 @@ class isaac():
 
         if(info["successes"][0] == 1):
             self.make_rosbag()
+            self.action_buffer.clear()
+            print("successes !!!")
+            print("successes !!!")
+            print("successes !!!")
+            self.count = 0
+            self.env.reset()
+
         if(info["reset"][0] == 1):
             self.action_buffer.clear()
             self.count = 0
-    
+            print("reset !!!")
+            print("reset !!!")
+            print("reset !!!")
+            self.env.reset()
         return
 
     def run(self):

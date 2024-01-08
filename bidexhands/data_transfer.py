@@ -7,8 +7,8 @@ import rospy
 # easy
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
-env_name = "MocapShadowHandDoorOpenInward" # right view
-# env_name = "MocapShadowHandDoorOpenOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandDoorOpenOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
@@ -133,13 +133,12 @@ def make_npy_files(dataset_directory, file):
 
     for topic, msg, t in bagIn.read_messages(topics=["/action"]):
         count = count +1
-        
-        if( count < 30):
-            continue
-        
-        action_buffer.append(msg.position)
 
         obs, done = isaac_node.step(msg)
+
+        # if( count < 30):
+        #     continue        
+        action_buffer.append(msg.position)
         obs = obs.cpu().detach().numpy()
         obs = np.squeeze(obs)
         obs_buffer.append( obs )
@@ -171,7 +170,7 @@ def main():
 
 
     dataset_directory = "../data/" + env_name
-    file_path = os.path.join( dataset_directory, '32.bag')
+    file_path = os.path.join( dataset_directory, '08.bag')
     make_npy_files(dataset_directory , file_path)
 
 
