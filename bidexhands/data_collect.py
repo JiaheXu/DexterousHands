@@ -1,4 +1,4 @@
-import bidexhands as bi
+# import bidexhands as bi
 import torch
 import numpy as np
 import glob, os, sys, argparse
@@ -7,8 +7,8 @@ import rospy
 # easy
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
-# env_name = "MocapShadowHandDoorOpenInward" # right view
-env_name = "MocapShadowHandDoorOpenOutward" # right view
+env_name = "MocapShadowHandDoorOpenInward" # right view
+# env_name = "MocapShadowHandDoorOpenOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view

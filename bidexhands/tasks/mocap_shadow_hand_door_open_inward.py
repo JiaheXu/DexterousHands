@@ -1593,8 +1593,8 @@ def compute_hand_reward(
     reward = 2 - right_hand_dist_rew - left_hand_dist_rew + up_rew
 
     # Find out which envs hit the goal and update successes count
-    dist_threshold = 0.25
-
+    dist_threshold = 0.6
+    # dist_threshold = 0.25 single hand
 
     # Find out which envs hit the goal and update successes count
     goal_resets = torch.where(torch.abs(door_right_handle_pos[:, 1] - door_left_handle_pos[:, 1]) > dist_threshold, torch.ones_like(reset_goal_buf), reset_goal_buf)

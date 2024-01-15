@@ -711,7 +711,7 @@ class MocapShadowHandKettle(BaseTask):
                 for j in range(n):
                     x = min_coord
                     for k in range(n):
-                        pose.p = gymapi.Vec3(x, y - 0.2, z + 0.8)
+                        pose.p = gymapi.Vec3(x, y - 0.2, z + 0.2)
 
                         ball_handle = self.gym.create_actor(env_ptr, ball_asset, pose, "ball", i, 0, 0)
                         self.gym.set_rigid_body_color(env_ptr, ball_handle, 0, gymapi.MESH_VISUAL_AND_COLLISION, color)

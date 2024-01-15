@@ -4,23 +4,25 @@ import numpy as np
 
 
 # easy
-# env_name = "MocapShadowHandDoorOpenInward" # right view
-# env_name = "MocapShadowHandDoorOpenOutward" # right view
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
+
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+# env_name = "MocapShadowHandDoorOpenOutward" # right view
+
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
 # env_name = "MocapShadowHandSwitch" # front view
 
 # medium
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
-# env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
+env_name = "MocapShadowHandBlockStack" # left & right view left and right hand?
 # env_name = "MocapShadowHandGraspAndPlace" # left & right view left and right hand?
 
 # hard
 # env_name = "MocapShadowHandScissors"# not easy need two hands front view
 # env_name = "MocapShadowHandPen"# need two hands need two hands front view
-env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
+# env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
 
 algo = "manual"
 
@@ -104,12 +106,17 @@ class isaac():
         self.action_buffer = []
     
     def make_rosbag(self):
+        if( len(self.action_buffer) < 100 ):
+            self.action_buffer.clear()
+            return
+
         now = datetime.now()
         self.bag_name = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"        
         self.bagOut = rosbag.Bag(self.bag_name, "w")
         for msg in self.action_buffer:
             self.bagOut.write("/action", msg, msg.header.stamp)
         self.bagOut.close()
+        self.action_buffer.clear()
 
     def callback(self, right_qpos_msg, left_qpos_msg):
     
@@ -132,21 +139,14 @@ class isaac():
             return
 
         action_right[0:3] = action_right[0:3] - self.init_pos_right 
-        action_right[0] = -1 * action_right[0]
-        action_right[1] = -1 * action_right[1]
-        action_right[3] = -1 * action_right[3]
-        action_right[4] = -1 * action_right[4]        
-
+    
+        action_right[0] = action_right[0]*2  
         action_right[1] = action_right[1]*2        
         action_right[2] = action_right[2]*2
 
-
         action_left[0:3] = action_left[0:3] - self.init_pos_left
-        action_left[0] = -1 * action_left[0]
-        action_left[1] = -1 * action_left[1]
-        action_left[3] = -1 * action_left[3]
-        action_left[4] = -1 * action_left[4]        
-
+      
+        action_left[0] = action_left[0]*2 
         action_left[1] = action_left[1]*2        
         action_left[2] = action_left[2]*2
 
@@ -177,9 +177,20 @@ class isaac():
 
         if(info["successes"][0] == 1):
             self.make_rosbag()
+            self.action_buffer.clear()
+            print("successes !!!")
+            print("successes !!!")
+            print("successes !!!")
+            self.count = 0
+            self.env.reset()
+
         if(info["reset"][0] == 1):
             self.action_buffer.clear()
             self.count = 0
+            print("reset !!!")
+            print("reset !!!")
+            print("reset !!!")
+            self.env.reset()
     
         return
 
