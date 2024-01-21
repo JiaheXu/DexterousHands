@@ -15,13 +15,13 @@
 
     <body name="robot0:rot_z" pos="0 0 0" euler="0 0 0">
         <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
-        <joint name="robot0:rot_z" pos="0 0 0" axis="0 0 1" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="robot0:rot_z" pos="0 0 0" axis="0 0 1" range="-6.28304 6.28304" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
     <body name="robot0:rot_y" pos="0 0 0" euler="0 0 0">
         <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
-        <joint name="robot0:rot_y" pos="0 0 0" axis="0 1 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="robot0:rot_y" pos="0 0 0" axis="0 1 0" range="-6.28304 6.28304" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
      <body name="robot0:rot_x" pos="0 0 0" euler="0 0 0">
         <inertial mass="0.1" pos="0 0 0" diaginertia="0.001 0.001 0.001"></inertial>
-        <joint name="robot0:rot_x" pos="0 0 0" axis="1 0 0" range="-3.1415 3.1415" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
+        <joint name="robot0:rot_x" pos="0 0 0" axis="1 0 0" range="-6.28304 6.28304" damping="0.1" limited="true" margin="0.01" armature="0.001" frictionloss="0.001"/>
 
         <body name="robot0:forearm" pos="0 0 0" euler="0 0 1.57">
             <inertial pos="0.001 -0.002 0.034" quat="0.982 -0.016 0 -0.188" mass="0.1" diaginertia="0.01 0.01 0.0075"></inertial>

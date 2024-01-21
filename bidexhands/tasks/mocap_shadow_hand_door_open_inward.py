@@ -1310,8 +1310,9 @@ class MocapShadowHandDoorOpenInward(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             #print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
+
+            #################################################################################### left hand
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim: self.action_dim*2],
-            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             #print("left after 1st step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
             
@@ -1634,3 +1635,41 @@ def randomize_rotation_pen(rand0, rand1, max_angle, x_unit_tensor, y_unit_tensor
     rot = quat_mul(quat_from_angle_axis(0.5 * np.pi + rand0 * max_angle, x_unit_tensor),
                    quat_from_angle_axis(rand0 * np.pi, z_unit_tensor))
     return rot
+
+@torch.jit.script
+def rot_correction( current_target ):
+    new_target = current_target
+
+    d_raw = current_target[3] - self.last_orient[0]
+    d_pitch = current_target[4] - self.last_orient[1]
+    d_yaw = current_target[5] - self.last_orient[2]
+
+    if(d_raw > 4.0):
+                d_raw = d_raw - 2*np.pi 
+                print("d_raw1: ", d_raw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch > 4.0):
+                d_pitch = d_pitch - 2*np.pi 
+                print("d_pitch1: ", d_pitch)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_yaw > 4.0):
+                d_yaw = d_yaw - 2*np.pi 
+                print("d_yaw1: ", d_yaw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+
+
+
+            if(d_raw < -4.0):
+                d_raw = d_raw + 2*np.pi 
+                print("d_raw1: ", d_raw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch < -4.0):
+                d_pitch = d_pitch + 2*np.pi 
+                print("d_pitch1: ", d_pitch)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
+            if(d_yaw < -4.0):
+                d_yaw = d_yaw + 2*np.pi 
+                print("d_yaw1: ", d_yaw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")   
+
+    return new_target

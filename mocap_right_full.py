@@ -25,6 +25,7 @@ import time
 from std_msgs.msg import Float32MultiArray
 
 from sensor_msgs.msg import JointState
+import copy
 
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
@@ -335,7 +336,7 @@ class isaac():
 
                           )                          
             
-            Tval = 1.0
+            Tval = 0.5
             Rval = 0.5
 
             props["damping"] = (
@@ -360,6 +361,10 @@ class isaac():
 
         self.count = 0
         self.qpos_sub = rospy.Subscriber("/qpos/Right", JointState, self.callback)
+
+        self.last_orient = None
+        # self.last_orient_action = None      
+        self.last_action = None  
         #self.qpos_sub = rospy.Subscriber("/qpos", Float32MultiArray, self.callback)
 
     def callback(self, qpos_msg):
@@ -369,7 +374,7 @@ class isaac():
         self.count = self.count + 1
         print("got a pos msg: ", self.count)
         action =  list(qpos_msg.position) #28 dim 6 + 24 - 2
-
+        
         action = np.array(action)
 
         if( self.count == 1): # initialize (x,y,z)
@@ -382,6 +387,8 @@ class isaac():
 
         action[3], action[5] = action[5], action[3]
 
+
+
         # action[5] = -1 * action[5]
         # action[4] = -1 * action[4]        
         
@@ -390,19 +397,69 @@ class isaac():
         # action[3] = -1 * action[3]
         # action[5] = action[5] + np.pi/2
 
-        print("action[3:6]: ", action[3:6])
-        # if action[0] < 0.0:
-        #     action[0] = action[0]*2
-        #action[1] = action[1]-0.3
 
+        action_np = copy.deepcopy(action)
+        print("  previous : ",  self.last_orient)
+        print("action[3:6]: ", action[3:6])
+        
+        if(self.last_orient is not None):
+            d_raw = action[3] - self.last_orient[0]
+            d_pitch = action[4] - self.last_orient[1]
+            d_yaw = action[5] - self.last_orient[2]
+
+            if(d_raw > 4.0):
+                d_raw = d_raw - 2*np.pi 
+                print("d_raw1: ", d_raw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch > 4.0):
+                d_pitch = d_pitch - 2*np.pi 
+                print("d_pitch1: ", d_pitch)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_yaw > 4.0):
+                d_yaw = d_yaw - 2*np.pi 
+                print("d_yaw1: ", d_yaw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+
+
+
+            if(d_raw < -4.0):
+                d_raw = d_raw + 2*np.pi 
+                print("d_raw1: ", d_raw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch < -4.0):
+                d_pitch = d_pitch + 2*np.pi 
+                print("d_pitch1: ", d_pitch)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
+            if(d_yaw < -4.0):
+                d_yaw = d_yaw + 2*np.pi 
+                print("d_yaw1: ", d_yaw)
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")   
+
+            print("d_raw: ", d_raw)
+            print("d_pitch: ", d_pitch)
+            print("d_yaw: ", d_yaw)
+
+            action[3] = self.last_action[3] + d_raw 
+            action[4] = self.last_action[4] + d_pitch 
+            action[5] = self.last_action[5] + d_yaw   
+            # print("last_action, d_yaw:", self.last_action[5] , " ", d_yaw)
+        print("final action[3:6]: ", action[3:6])
+        
+        print("")
+
+        self.last_orient = copy.deepcopy(action_np[3:6])
+        self.last_action = copy.deepcopy(action)
         ################################################################################        
         # below are template
         ################################################################################  
+        
         action = action.tolist()
 
         self.gym.simulate(self.sim)
         self.gym.fetch_results(self.sim, True)
 
+        
+        
         for i in range(self.num_envs):
 
             self.gym.set_actor_dof_position_targets(self.envs[i], self.actor_handles[i], action)
