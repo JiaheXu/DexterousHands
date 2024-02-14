@@ -1,14 +1,20 @@
 import bidexhands as bi
 import torch
 import numpy as np
+import copy
 
+# env_name = "MocapShadowHandDoorCloseOutward" # right view
+# env_name = "MocapShadowHandDoorOpenInward" # right view
+env_name = "MocapShadowHandGraspAndPlace"
+# env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
+# env_name = "MocapShadowHandPen"# need two hands need two hands front view
+# env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
 
 # easy
-
 # env_name = "MocapShadowHandDoorCloseInward" # right view
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 # env_name = "MocapShadowHandDoorOpenInward" # right view
-env_name = "MocapShadowHandDoorOpenOutward" # right view
+# env_name = "MocapShadowHandDoorOpenOutward" # right view
 
 # env_name = "MocapShadowHandSwingCup" # right view
 # env_name = "MocapShadowHandLiftUnderarm" # right view
@@ -66,7 +72,7 @@ class isaac():
         self.qpos_sub = rospy.Subscriber("/qpos/Right", JointState, self.callback)
         self.count = 0
         self.lower_bound_np = np.array([
-            -5.0, -5.0, -5.0, -3.14159, -3.14159, -3.14159,
+            -5.0, -5.0, -5.0, -2*3.14159, -2*3.14159, -2*3.14159,
 
             -0.3490,  0.0000,  0.0000,  0.0000,
             -0.3490,  0.0000,  0.0000,  0.0000,
@@ -75,7 +81,7 @@ class isaac():
             -1.0470,  0.0000, -0.2090, -0.5240, -1.5710])
 
         self.upper_bound_np = np.array([
-            5.0, 5.0, 5.0, 3.14159, 3.14159, 3.14159,
+            5.0, 5.0, 5.0, 2*3.14159, 2*3.14159, 2*3.14159,
             
             0.3490, 1.5710, 1.5710, 1.5710,
             0.3490, 1.5710, 1.5710, 1.5710, 
@@ -93,14 +99,20 @@ class isaac():
 
         self.hand_action_pub = rospy.Publisher("/action", JointState, queue_size=1000)
         self.action_buffer = []
+        self.last_orient = None
     
     def make_rosbag(self):
+        if( len(self.action_buffer) < 100 ):
+            self.action_buffer.clear()
+            return
+
         now = datetime.now()
         self.bag_name = now.strftime("%m_%d_%Y_%H:%M:%S") + ".bag"        
         self.bagOut = rosbag.Bag(self.bag_name, "w")
         for msg in self.action_buffer:
             self.bagOut.write("/action", msg, msg.header.stamp)
         self.bagOut.close()
+        self.action_buffer.clear()
 
     def callback(self, qpos_msg):
     
@@ -117,16 +129,80 @@ class isaac():
         if(self.count < 60):
             return
 
-        
+        action[3], action[5] = action[5], action[3]
         action[0] = action[0]*2
         action[1] = action[1]*2        
+        action[2] = action[2]*2  
+
+        action_np = copy.deepcopy(action)
+        # if(self.last_orient is not None):
+        #     d_raw = action[3] - self.last_orient[0]
+        #     d_pitch = action[4] - self.last_orient[1]
+        #     d_yaw = action[5] - self.last_orient[2]
+
+        #     if(d_raw > 4.0):
+        #         d_raw = d_raw - 2*np.pi 
+        #         print("d_raw1: ", d_raw)
+        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+        #     if(d_pitch > 4.0):
+        #         d_pitch = d_pitch - 2*np.pi 
+        #         print("d_pitch1: ", d_pitch)
+        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+        #     if(d_yaw > 4.0):
+        #         d_yaw = d_yaw - 2*np.pi 
+        #         print("d_yaw1: ", d_yaw)
+        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
 
 
+
+        #     if(d_raw < -4.0):
+        #         d_raw = d_raw + 2*np.pi 
+        #         print("d_raw1: ", d_raw)
+        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+        #     if(d_pitch < -4.0):
+        #         d_pitch = d_pitch + 2*np.pi 
+        #         print("d_pitch1: ", d_pitch)
+        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
+        #     if(d_yaw < -4.0):
+        #         d_yaw = d_yaw + 2*np.pi 
+        #         print("d_yaw1: ", d_yaw)
+        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")   
+
+        #     print("d_raw: ", d_raw)
+        #     print("d_pitch: ", d_pitch)
+        #     print("d_yaw: ", d_yaw)
+
+        #     action[3] = self.last_action[3] + d_raw 
+        #     action[4] = self.last_action[4] + d_pitch 
+        #     action[5] = self.last_action[5] + d_yaw   
+
+            # while(action[3] > 2 * 3.1415927410125732):
+            #     action[3] -= 2 * 3.1415927410125732
+
+            # while(action[4] > 2 * 3.1415927410125732):
+            #     action[4] -= 2 * 3.1415927410125732
+            
+            # while(action[5] > 2 * 3.1415927410125732):
+            #     action[5] -= 2 * 3.1415927410125732
+
+            # while(action[3] < -2 * 3.1415927410125732):
+            #     action[3] += 2 * 3.1415927410125732
+
+            # while(action[4] < -2 * 3.1415927410125732):
+            #     action[4] += 2 * 3.1415927410125732
+            
+            # while(action[5] < -2 * 3.1415927410125732):
+            #     action[5] += 2 * 3.1415927410125732
+            # print("last_action, d_yaw:", self.last_action[5] , " ", d_yaw)
+        print("final action[3:6]: ", action[3:6])
+        self.last_orient = copy.deepcopy(action_np[3:6])
+        self.last_action = copy.deepcopy(action)
         ################################################################################        
         # below are template
         ################################################################################ 
         
         action = (action - self.middle_bound_np ) / self.scale_np
+        
         #
         # input should be scaled to -1.0 ~ 1.0
         #

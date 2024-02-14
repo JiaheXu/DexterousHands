@@ -283,6 +283,22 @@ class MocapShadowHandBlockStack(BaseTask):
         self.total_successes = 0
         self.total_resets = 0
 
+        self.last_right_orient = torch.zeros((self.num_envs, 3), dtype=torch.float, device=self.device)
+        self.last_left_orient = torch.zeros((self.num_envs, 3), dtype=torch.float, device=self.device)
+        
+    def mocap_set_color(self, color_msg):
+        r, g, b = color_msg.position[0], color_msg.position[1], color_msg.position[2]
+        colorVec = gymapi.Vec3(r, g, b)
+        for n in self.agent_index[0]:
+            for m in n:
+                for o in self.hand_rigid_body_index[m]:
+                    self.gym.set_rigid_body_color(self.envs[0], self.shadow_hand_actors[0], o, gymapi.MESH_VISUAL, colorVec)
+    
+        for n in self.agent_index[1]:                
+            for m in n:
+                for o in self.hand_rigid_body_index[m]:
+                    self.gym.set_rigid_body_color(self.envs[0], self.shadow_hand_another_actors[0], o, gymapi.MESH_VISUAL, colorVec)
+
     def create_sim(self):
         """
         Allocates which device will simulate and which device will render the scene. Defines the simulation type to be used

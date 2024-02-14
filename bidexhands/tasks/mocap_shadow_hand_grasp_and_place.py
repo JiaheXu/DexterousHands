@@ -27,6 +27,7 @@ import rospy
 from cv_bridge import CvBridge
 bridge = CvBridge()
 import std_msgs
+import copy
 
 # class Mocap(BaseTask):
 class MocapShadowHandGraspAndPlace(BaseTask):
@@ -279,6 +280,9 @@ class MocapShadowHandGraspAndPlace(BaseTask):
         self.total_successes = 0
         self.total_resets = 0
 
+        self.last_right_orient = torch.zeros((self.num_envs, 3), dtype=torch.float, device=self.device)
+        self.last_left_orient = torch.zeros((self.num_envs, 3), dtype=torch.float, device=self.device)
+
     def create_sim(self):
         """
         Allocates which device will simulate and which device will render the scene. Defines the simulation type to be used
@@ -469,7 +473,7 @@ class MocapShadowHandGraspAndPlace(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.2, 0.475)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.6)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
         pose_dx, pose_dy, pose_dz = -1.0, 0.0, -0.0
 
@@ -623,11 +627,12 @@ class MocapShadowHandGraspAndPlace(BaseTask):
                                            0, 0, 0, 0, 0, 0])
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
             self.object_indices.append(object_idx)
-            # self.gym.set_actor_scale(env_ptr, object_handle, 0.3)
+            # self.gym.set_actor_scale(env_ptr, object_handle, 0.9)
 
             block_handle = self.gym.create_actor(env_ptr, block_asset, block_start_pose, "block", i, 0, 0)
             block_idx = self.gym.get_actor_index(env_ptr, block_handle, gymapi.DOMAIN_SIM)
             self.block_indices.append(block_idx)
+            # self.gym.set_actor_scale(env_ptr, block_handle, 2.0)
 
             # add goal object
             goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
@@ -1218,8 +1223,9 @@ class MocapShadowHandGraspAndPlace(BaseTask):
                         
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions[:, 0:self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            scaled_actions = copy.deepcopy(self.cur_targets[:, self.actuated_dof_indices])
             #print("after 1st step: ", self.cur_targets[:, self.actuated_dof_indices])
-
+            
             self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:,
                                                                                                         self.actuated_dof_indices] + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
             #print("after 2nd step: ", self.cur_targets[:, self.actuated_dof_indices])
@@ -1227,9 +1233,72 @@ class MocapShadowHandGraspAndPlace(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
             #print("after 3rd step: ", self.cur_targets[:, self.actuated_dof_indices])
+            
+            d_raw = scaled_actions[:,3] - self.last_right_orient[:,0]
+            d_pitch = scaled_actions[:,4] - self.last_right_orient[:,1]
+            d_yaw = scaled_actions[:,5] - self.last_right_orient[:,2]
+            self.last_right_orient = copy.deepcopy(scaled_actions[:, 3:6])
+
+            if(d_raw > 4.0):
+                d_raw = d_raw - 2 * 3.1415927410125732
+                # print("d_raw1: ", d_raw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch > 4.0):
+                d_pitch = d_pitch - 2 * 3.1415927410125732
+                # print("d_pitch1: ", d_pitch)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_yaw > 4.0):
+                d_yaw = d_yaw - 2 * 3.1415927410125732
+                # print("d_yaw1: ", d_yaw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+
+            if(d_raw < -4.0):
+                d_raw = d_raw + 2 * 3.1415927410125732
+                # print("d_raw1: ", d_raw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch < -4.0):
+                d_pitch = d_pitch + 2 * 3.1415927410125732
+                # print("d_pitch1: ", d_pitch)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
+            if(d_yaw < -4.0):
+                d_yaw = d_yaw + 2 * 3.1415927410125732 
+                # print("d_yaw1: ", d_yaw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")   
+            
+            self.cur_targets[:,3] = self.prev_targets[:,3] + d_raw 
+            self.cur_targets[:,4] = self.prev_targets[:,4] + d_pitch 
+            self.cur_targets[:,5] = self.prev_targets[:,5] + d_yaw    
+
+            while(self.cur_targets[:,3] > 2 * 3.1415927410125732):
+                self.cur_targets[:,3] -= 2 * 3.1415927410125732
+
+            while(self.cur_targets[:,4] > 2 * 3.1415927410125732):
+                self.cur_targets[:,4] -= 2 * 3.1415927410125732
+            
+            while(self.cur_targets[:,5] > 2 * 3.1415927410125732):
+                self.cur_targets[:,5] -= 2 * 3.1415927410125732
+
+            while(self.cur_targets[:,3] < -2 * 3.1415927410125732):
+                self.cur_targets[:,3] += 2 * 3.1415927410125732
+
+            while(self.cur_targets[:,4] < -2 * 3.1415927410125732):
+                self.cur_targets[:,4] += 2 * 3.1415927410125732
+            
+            while(self.cur_targets[:,5] < -2 * 3.1415927410125732):
+                self.cur_targets[:,5] += 2 * 3.1415927410125732
+
+            print("")
+            print("d_raw: ", d_raw * 180 / 3.1415927410125732)
+            print("d_pitch: ", d_pitch * 180 / 3.1415927410125732)
+            print("d_yaw: ", d_yaw * 180 / 3.1415927410125732)
+            print("action: ", scaled_actions[:, 3:6] * 180 / 3.1415927410125732)
+            print("prev_targets: ", self.prev_targets[:, 3:6] * 180 / 3.1415927410125732)
+            print("cur_target: ", self.cur_targets[:, 3:6] * 180 / 3.1415927410125732)
+
+            #################################################################################### left hand
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim: self.action_dim*2],
-            #self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, 0 : self.action_dim],
                                                                    self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
+            scaled_actions = copy.deepcopy(self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
             #print("left after 1st step: ", self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs])
             
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = self.act_moving_average * self.cur_targets[:,
@@ -1239,6 +1308,59 @@ class MocapShadowHandGraspAndPlace(BaseTask):
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs],
                                                                           self.shadow_hand_dof_lower_limits[self.actuated_dof_indices], self.shadow_hand_dof_upper_limits[self.actuated_dof_indices])
 
+            d_raw = scaled_actions[:,3] - self.last_left_orient[:,0]
+            d_pitch = scaled_actions[:,4] - self.last_left_orient[:,1]
+            d_yaw = scaled_actions[:,5] - self.last_left_orient[:,2]
+            self.last_left_orient = copy.deepcopy(scaled_actions[:, 3:6])
+
+            if(d_raw > 4.0):
+                d_raw = d_raw - 2 * 3.1415927410125732
+                # print("d_raw1: ", d_raw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch > 4.0):
+                d_pitch = d_pitch - 2 * 3.1415927410125732
+                # print("d_pitch1: ", d_pitch)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_yaw > 4.0):
+                d_yaw = d_yaw - 2 * 3.1415927410125732
+                # print("d_yaw1: ", d_yaw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+
+            if(d_raw < -4.0):
+                d_raw = d_raw + 2 * 3.1415927410125732
+                # print("d_raw1: ", d_raw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
+            if(d_pitch < -4.0):
+                d_pitch = d_pitch + 2 * 3.1415927410125732
+                # print("d_pitch1: ", d_pitch)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
+            if(d_yaw < -4.0):
+                d_yaw = d_yaw + 2 * 3.1415927410125732 
+                # print("d_yaw1: ", d_yaw)
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")   
+            
+            self.cur_targets[:,self.num_shadow_hand_dofs + 3] = self.prev_targets[:,self.num_shadow_hand_dofs + 3] + d_raw 
+            self.cur_targets[:,self.num_shadow_hand_dofs + 4] = self.prev_targets[:,self.num_shadow_hand_dofs + 4] + d_pitch 
+            self.cur_targets[:,self.num_shadow_hand_dofs + 5] = self.prev_targets[:,self.num_shadow_hand_dofs + 5] + d_yaw    
+
+            while(self.cur_targets[:,self.num_shadow_hand_dofs + 3] > 2 * 3.1415927410125732):
+                self.cur_targets[:,self.num_shadow_hand_dofs + 3] -= 2 * 3.1415927410125732
+
+            while(self.cur_targets[:,self.num_shadow_hand_dofs + 4] > 2 * 3.1415927410125732):
+                self.cur_targets[:,self.num_shadow_hand_dofs + 4] -= 2 * 3.1415927410125732
+            
+            while(self.cur_targets[:,self.num_shadow_hand_dofs + 5] > 2 * 3.1415927410125732):
+                self.cur_targets[:,self.num_shadow_hand_dofs + 5] -= 2 * 3.1415927410125732
+
+            while(self.cur_targets[:,self.num_shadow_hand_dofs + 3] < -2 * 3.1415927410125732):
+                self.cur_targets[:,self.num_shadow_hand_dofs + 3] += 2 * 3.1415927410125732
+
+            while(self.cur_targets[:,self.num_shadow_hand_dofs + 4] < -2 * 3.1415927410125732):
+                self.cur_targets[:,self.num_shadow_hand_dofs + 4] += 2 * 3.1415927410125732
+            
+            while(self.cur_targets[:,self.num_shadow_hand_dofs + 5] < -2 * 3.1415927410125732):
+                self.cur_targets[:,self.num_shadow_hand_dofs + 5] += 2 * 3.1415927410125732        
+        
         #     print("pre_physics_step.cur_targets:")
         #     print("POSE: ", self.cur_targets[:, 0:6])
         #     print("FF: ", self.cur_targets[:, 6:10])
@@ -1511,9 +1633,11 @@ def compute_hand_reward(
 
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
-                    torch.where(torch.norm(block_right_handle_pos - block_left_handle_pos, p=2, dim=-1) < 0.2, torch.ones_like(successes), successes), successes)
+                    torch.where(torch.norm(block_right_handle_pos - block_left_handle_pos, p=2, dim=-1) < 0.035, torch.ones_like(successes), successes), successes)
     max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
+
+    # print("!!! current dist:", torch.norm(block_right_handle_pos - block_left_handle_pos, p=2, dim=-1))
 
     goal_resets = torch.zeros_like(resets)
 

@@ -16,7 +16,7 @@ from isaacgym.gymutil import get_property_setter_map, get_property_getter_map, g
 
 import numpy as np
 import torch
-
+import copy
 
 # Base class for RL tasks
 class BaseTask():
