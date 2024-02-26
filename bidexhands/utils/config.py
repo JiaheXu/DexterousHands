@@ -81,6 +81,8 @@ def retrieve_cfg(args, use_rlg_config=False):
                     "MocapShadowHandCatchUnderarm",
                     "MocapShadowHandOver",
 
+
+                    "MocapShadowHandMicrowave",
                     # not ready
                     "MocapShadowHandTwoCatchUnderarm",                    
                     "MocapShadowHandPen",

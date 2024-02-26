@@ -1,0 +1,29 @@
+<robot name="mug">
+	<link name="mug">
+	    <contact>
+			<lateral_friction value="10."/>
+			<rolling_friction value="10.0"/>
+		</contact>
+		<inertial>
+			<origin rpy="0 0 0" xyz="-0.015061860535935834 0.0824616083346064 -0.022496548021848722"/>
+			<mass value="0.171774486"/>
+			<inertia ixx="8.0471e-03" ixy="-6.9630e-04" ixz="1.5240e-04" iyy="9.0810e-03" iyz="-7.7200e-05" izz="8.1964e-03"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<mesh filename="mug/model/model_normalized.obj" scale="1 1 1" />
+			</geometry>
+			<material name="texture">
+				<color rgba="1.0 1.0 1.0 1.0" />
+			</material>
+		</visual>
+		<collision>
+			<geometry>
+				<mesh filename="mug/model/model_normalized.obj" scale="1 1 1" />
+			</geometry>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+		</collision>
+	</link>
+
+</robot>

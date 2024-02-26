@@ -48,7 +48,7 @@ from bidexhands.tasks.mocap_shadow_hand_switch import MocapShadowHandSwitch
 # from bidexhands.tasks.mocap_shadow_hand_catch_abreast import MocapShadowHandCatchAbreast
 # from bidexhands.tasks.mocap_shadow_hand_pen import MocapShadowHandPen
 from bidexhands.tasks.mocap_shadow_hand_grasp_and_place import MocapShadowHandGraspAndPlace
-
+from bidexhands.tasks.mocap_shadow_hand_microwave import MocapShadowHandMicrowave
 
 from bidexhands.tasks.mocap_shadow_hand_kettle import MocapShadowHandKettle
 from bidexhands.tasks.mocap_shadow_hand_scissors import MocapShadowHandScissors

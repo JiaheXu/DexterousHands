@@ -5,7 +5,10 @@ import copy
 
 # env_name = "MocapShadowHandDoorCloseOutward" # right view
 # env_name = "MocapShadowHandDoorOpenInward" # right view
-env_name = "MocapShadowHandGraspAndPlace"
+# env_name = "MocapShadowHandGraspAndPlace"
+
+env_name = "MocapShadowHandMicrowave"
+
 # env_name = "MocapShadowHandPushBlock" # left & right view left and right hand?
 # env_name = "MocapShadowHandPen"# need two hands need two hands front view
 # env_name = "MocapShadowHandKettle"# need two hands # left & right view left and right hand?
