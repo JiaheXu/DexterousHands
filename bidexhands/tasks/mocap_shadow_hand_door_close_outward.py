@@ -653,7 +653,7 @@ class MocapShadowHandDoorCloseOutward(BaseTask):
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
             
-            # self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
+            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
 
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
             self.object_indices.append(object_idx)

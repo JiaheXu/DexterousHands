@@ -32,8 +32,8 @@ import copy
 class MocapShadowHandMicrowave(BaseTask):
     """
     This class corresponds to the microwave task. This environment involves two hands and a bottle, 
-    we need to Hold the kettle with one hand and the mug with the other hand, and pour the water 
-    from the kettle into the mug. In the practice task in Isaac Gym, we use many small balls to 
+    we need to Hold the kettle with one hand and the bucket with the other hand, and pour the water 
+    from the kettle into the bucket. In the practice task in Isaac Gym, we use many small balls to 
     simulate the water
 
     Args:
@@ -155,7 +155,7 @@ class MocapShadowHandMicrowave(BaseTask):
         self.num_shadow_hand_dofs = 28
 
         self.num_point_cloud_feature_dim = 768
-        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 14
+        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 19
 
         self.num_obs_dict = {
             "point_cloud": self.full_state_num + self.num_point_cloud_feature_dim * 3,
@@ -228,6 +228,7 @@ class MocapShadowHandMicrowave(BaseTask):
 
         dof_force_tensor = self.gym.acquire_dof_force_tensor(self.sim)
         self.dof_force_tensor = gymtorch.wrap_tensor(dof_force_tensor).view(self.num_envs, self.num_shadow_hand_dofs * 2 + self.num_object_dofs * 2)
+
         self.dof_force_tensor = self.dof_force_tensor[:, : 2*self.num_shadow_hand_dofs ]
 
         self.gym.refresh_actor_root_state_tensor(self.sim)
@@ -248,12 +249,7 @@ class MocapShadowHandMicrowave(BaseTask):
 
         self.object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + self.num_object_dofs]
         self.object_dof_pos = self.object_dof_state[..., 0]
-        self.object_dof_vel = self.object_dof_state[..., 1]
 
-        self.goal_object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2 + self.num_object_dofs:self.num_shadow_hand_dofs*2 + 2*self.num_object_dofs]
-        self.goal_object_dof_pos = self.goal_object_dof_state[..., 0]
-        self.goal_object_dof_vel = self.goal_object_dof_state[..., 1]
-        
         self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
         self.num_bodies = self.rigid_body_states.shape[1]
 
@@ -334,6 +330,8 @@ class MocapShadowHandMicrowave(BaseTask):
         #     asset_root = self.cfg["env"]["asset"].get("assetRoot", asset_root)
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
+        # load ball asset
+        ball_asset = self.gym.create_sphere(self.sim, 0.003, gymapi.AssetOptions())
         object_asset_file = self.asset_files_dict[self.object_type]
         print("object_asset_file: ", object_asset_file)
 
@@ -403,16 +401,17 @@ class MocapShadowHandMicrowave(BaseTask):
 
         # load manipulated object and goal assets
         object_asset_options = gymapi.AssetOptions()
-        object_asset_options.density = 500
+        object_asset_options.density = 1000
         object_asset_options.fix_base_link = True
-        object_asset_options.disable_gravity = True
+        # object_asset_options.collapse_fixed_joints = True
+        # object_asset_options.disable_gravity = True
         object_asset_options.use_mesh_materials = True
         object_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
         object_asset_options.override_com = True
         object_asset_options.override_inertia = True
         object_asset_options.vhacd_enabled = True
         object_asset_options.vhacd_params = gymapi.VhacdParams()
-        object_asset_options.vhacd_params.resolution = 100000
+        object_asset_options.vhacd_params.resolution = 4000000
         object_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
         object_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
@@ -451,28 +450,28 @@ class MocapShadowHandMicrowave(BaseTask):
 
         table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
-        mug_asset_options = gymapi.AssetOptions()
-        mug_asset_options.density = 500
-        mug_asset_options.fix_base_link = False
-        # mug_asset_options.collapse_fixed_joints = True
-        mug_asset_options.disable_gravity = False
-        mug_asset_options.use_mesh_materials = True
-        mug_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
-        mug_asset_options.override_com = True
-        mug_asset_options.override_inertia = True
-        mug_asset_options.vhacd_enabled = True
-        mug_asset_options.vhacd_params = gymapi.VhacdParams()
-        mug_asset_options.vhacd_params.resolution = 100
-        mug_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+        bucket_asset_options = gymapi.AssetOptions()
+        bucket_asset_options.density = 100
+        bucket_asset_options.fix_base_link = False
+        # bucket_asset_options.collapse_fixed_joints = True
+        bucket_asset_options.disable_gravity = False
+        bucket_asset_options.use_mesh_materials = True
+        bucket_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
+        bucket_asset_options.override_com = True
+        bucket_asset_options.override_inertia = True
+        bucket_asset_options.vhacd_enabled = True
+        bucket_asset_options.vhacd_params = gymapi.VhacdParams()
+        bucket_asset_options.vhacd_params.resolution = 100
+        bucket_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
-        mug_asset_file = "mjcf/mug/mug.urdf"
-        mug_asset = self.gym.load_asset(self.sim, asset_root, mug_asset_file, mug_asset_options)
-        mug_pose = gymapi.Transform()
-        mug_pose.p = gymapi.Vec3(-0.15, -0.5, 0.6)
-        mug_pose.r = gymapi.Quat().from_euler_zyx(1.571, 0, 0)
+        bucket_asset_file = "mjcf/mug/mug.urdf"
+        bucket_asset = self.gym.load_asset(self.sim, asset_root, bucket_asset_file, bucket_asset_options)
+        bucket_pose = gymapi.Transform()
+        bucket_pose.p = gymapi.Vec3(-0.3, -0.5, 0.9)
+        bucket_pose.r = gymapi.Quat().from_euler_zyx(1.571, 0, 0)
 
-        self.num_mug_bodies = self.gym.get_asset_rigid_body_count(mug_asset)
-        self.num_mug_shapes = self.gym.get_asset_rigid_shape_count(mug_asset)
+        self.num_bucket_bodies = self.gym.get_asset_rigid_body_count(bucket_asset)
+        self.num_bucket_shapes = self.gym.get_asset_rigid_shape_count(bucket_asset)
 
         shadow_hand_start_pose = gymapi.Transform()
         shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.5, 0.65)
@@ -483,7 +482,7 @@ class MocapShadowHandMicrowave(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.63)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.75)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
 
@@ -501,8 +500,8 @@ class MocapShadowHandMicrowave(BaseTask):
         table_pose.r = gymapi.Quat().from_euler_zyx(0, 0, 0)
 
         # compute aggregate size
-        max_agg_bodies = self.num_shadow_hand_bodies * 2 + 2 * self.num_object_bodies + self.num_mug_bodies 
-        max_agg_shapes = self.num_shadow_hand_shapes * 2 + 2 * self.num_object_shapes + self.num_mug_shapes 
+        max_agg_bodies = self.num_shadow_hand_bodies * 2 + 2 * self.num_object_bodies + self.num_bucket_bodies + 4*4*4
+        max_agg_shapes = self.num_shadow_hand_shapes * 2 + 2 * self.num_object_shapes + self.num_bucket_shapes + 4*4*4
 
         self.shadow_hands = []
         self.envs = []
@@ -516,7 +515,7 @@ class MocapShadowHandMicrowave(BaseTask):
         self.object_indices = []
         self.goal_object_indices = []
         self.table_indices = []
-        self.mug_indices = []
+        self.bucket_indices = []
         # self.ball_indices = []
 
         self.fingertip_handles = [self.gym.find_asset_rigid_body_index(shadow_hand_asset, name) for name in self.fingertips]
@@ -630,26 +629,20 @@ class MocapShadowHandMicrowave(BaseTask):
             self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
-            
-            # self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
-
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
             self.object_indices.append(object_idx)
-
-            object_dof_props = self.gym.get_actor_dof_properties(env_ptr, object_handle)
-            for object_dof_prop in object_dof_props:
-                object_dof_prop[4] = 100
-                object_dof_prop[5] = 100
-                object_dof_prop[6] = 5
-                object_dof_prop[7] = 1
-            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
-
             self.gym.set_actor_scale(env_ptr, object_handle, 0.4)
 
-            mug = self.gym.create_actor(env_ptr, mug_asset, mug_pose, "mug", i, -1, 0)
-            mug_idx = self.gym.get_actor_index(env_ptr, mug, gymapi.DOMAIN_SIM)
-            self.mug_indices.append(mug_idx)
-            self.gym.set_actor_scale(env_ptr, mug, 0.2)
+            bucket_handle = self.gym.create_actor(env_ptr, bucket_asset, bucket_pose, "bucket", i, -1, 0)
+            bucket_idx = self.gym.get_actor_index(env_ptr, bucket_handle, gymapi.DOMAIN_SIM)
+            self.bucket_indices.append(bucket_idx)
+            self.gym.set_actor_scale(env_ptr, bucket_handle, 0.2)
+
+            # add goal object
+            goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
+            goal_object_idx = self.gym.get_actor_index(env_ptr, goal_handle, gymapi.DOMAIN_SIM)
+            self.goal_object_indices.append(goal_object_idx)
+            # self.gym.set_actor_scale(env_ptr, goal_handle, 0.3)
 
             # add table
             table_handle = self.gym.create_actor(env_ptr, table_asset, table_pose, "table", i, -1, 0)
@@ -658,11 +651,9 @@ class MocapShadowHandMicrowave(BaseTask):
             self.table_indices.append(table_idx)
 
             #set friction
-            # hand_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, shadow_hand_actor)
-            # hand_shape_props[0].friction = 1
-            # another_hand_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, shadow_hand_actor)
-            # another_hand_shape_props[0].friction = 1
+            another_hand_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, shadow_hand_another_actor)
             object_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, object_handle)
+            another_hand_shape_props[0].friction = 1
             object_shape_props[0].friction = 1
             self.gym.set_actor_rigid_shape_properties(env_ptr, shadow_hand_another_actor, another_hand_shape_props)
             self.gym.set_actor_rigid_shape_properties(env_ptr, object_handle, object_shape_props)
@@ -728,15 +719,16 @@ class MocapShadowHandMicrowave(BaseTask):
         self.another_hand_indices = to_torch(self.another_hand_indices, dtype=torch.long, device=self.device)
 
         self.object_indices = to_torch(self.object_indices, dtype=torch.long, device=self.device)
+        self.goal_object_indices = to_torch(self.goal_object_indices, dtype=torch.long, device=self.device)
         self.table_indices = to_torch(self.table_indices, dtype=torch.long, device=self.device)
-        self.mug_indices = to_torch(self.mug_indices, dtype=torch.long, device=self.device)
-
+        self.bucket_indices = to_torch(self.bucket_indices, dtype=torch.long, device=self.device)
+        # self.ball_indices = to_torch(self.ball_indices, dtype=torch.long, device=self.device)
 
     def compute_reward(self, actions):
         """
         Compute the reward of all environment. The core function is compute_hand_reward(
             self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.mug_pos, self.mug_pos, self.kettle_spout_pos,
+            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.kettle_handle_pos, self.bucket_handle_pos, self.kettle_spout_pos,
             self.left_hand_pos, self.right_hand_pos, self.right_hand_ff_pos, self.right_hand_mf_pos, self.right_hand_rf_pos, self.right_hand_lf_pos, self.right_hand_th_pos, 
             self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
@@ -752,7 +744,7 @@ class MocapShadowHandMicrowave(BaseTask):
 
         self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
             self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.mug_pos, self.mug_rot,
+            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot, self.kettle_handle_pos, self.bucket_handle_pos, self.kettle_spout_pos,
             self.left_hand_pos, self.right_hand_pos, self.right_hand_ff_pos, self.right_hand_mf_pos, self.right_hand_rf_pos, self.right_hand_lf_pos, self.right_hand_th_pos, 
             self.left_hand_ff_pos, self.left_hand_mf_pos, self.left_hand_rf_pos, self.left_hand_lf_pos, self.left_hand_th_pos, 
             self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
@@ -801,11 +793,23 @@ class MocapShadowHandMicrowave(BaseTask):
         self.object_linvel = self.root_state_tensor[self.object_indices, 7:10]
         self.object_angvel = self.root_state_tensor[self.object_indices, 10:13]
 
-        self.mug_pose = self.root_state_tensor[self.mug_indices, 0:7]
-        self.mug_pos = self.root_state_tensor[self.mug_indices, 0:3]
-        self.mug_rot = self.root_state_tensor[self.mug_indices, 3:7]
-        self.mug_linvel = self.root_state_tensor[self.mug_indices, 7:10]
-        self.mug_angvel = self.root_state_tensor[self.mug_indices, 10:13]
+        self.kettle_handle_pos = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2, 0:3]
+        self.kettle_handle_rot = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2, 3:7]
+        self.kettle_handle_pos = self.kettle_handle_pos + quat_apply(self.kettle_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        self.kettle_handle_pos = self.kettle_handle_pos + quat_apply(self.kettle_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.15)
+        self.kettle_handle_pos = self.kettle_handle_pos + quat_apply(self.kettle_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.0)
+
+        self.kettle_spout_pos = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2, 0:3].clone()
+        self.kettle_spout_rot = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2, 3:7].clone()
+        self.kettle_spout_pos = self.kettle_spout_pos + quat_apply(self.kettle_spout_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        self.kettle_spout_pos = self.kettle_spout_pos + quat_apply(self.kettle_spout_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * -0.2)
+        self.kettle_spout_pos = self.kettle_spout_pos + quat_apply(self.kettle_spout_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * 0.07)
+
+        self.bucket_handle_pos = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2 + 3, 0:3]
+        self.bucket_handle_rot = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2 + 3, 3:7]
+        self.bucket_handle_pos = self.bucket_handle_pos + quat_apply(self.bucket_handle_rot, to_torch([0, 1, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        self.bucket_handle_pos = self.bucket_handle_pos + quat_apply(self.bucket_handle_rot, to_torch([1, 0, 0], device=self.device).repeat(self.num_envs, 1) * 0.0)
+        self.bucket_handle_pos = self.bucket_handle_pos + quat_apply(self.bucket_handle_rot, to_torch([0, 0, 1], device=self.device).repeat(self.num_envs, 1) * -0.1)
 
         self.left_hand_pos = self.rigid_body_states[:, self.hand_center_idx +  self.num_shadow_hand_bodies, 0:3]
         self.left_hand_rot = self.rigid_body_states[:, self.hand_center_idx +  self.num_shadow_hand_bodies, 3:7]
@@ -898,7 +902,7 @@ class MocapShadowHandMicrowave(BaseTask):
         411 - 417	goal pose
         418 - 421	goal rot - object rot
         422 - 424	kettle handle position
-        425 - 427	mug position
+        425 - 427	bucket position
         """
 
 
@@ -948,7 +952,10 @@ class MocapShadowHandMicrowave(BaseTask):
         obj_obs_start = action_another_obs_start + self.action_dim
 
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
-        self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 14] = self.mug_pose
+        self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
+        self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.kettle_handle_pos
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.bucket_handle_pos
 
     def compute_point_cloud_observation(self, collect_demonstration=False):
 
@@ -982,7 +989,7 @@ class MocapShadowHandMicrowave(BaseTask):
         411 - 417	goal pose
         418 - 421	goal rot - object rot
         422 - 424	kettle handle position
-        425 - 427	mug position
+        425 - 427	bucket position
         """
         num_ft_states = 13 * int(self.num_fingertips / 2)  # 65
         num_ft_force_torques = 6 * int(self.num_fingertips / 2)  # 30
@@ -1031,8 +1038,8 @@ class MocapShadowHandMicrowave(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.mug_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.mug_pos
+        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.kettle_handle_pos
+        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.bucket_handle_pos
         # goal_obs_start = obj_obs_start + 13  # 157 = 144 + 13
         # self.obs_buf[:, goal_obs_start:goal_obs_start + 7] = self.goal_pose
         # self.obs_buf[:, goal_obs_start + 7:goal_obs_start + 11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
@@ -1130,11 +1137,15 @@ class MocapShadowHandMicrowave(BaseTask):
         # reset object
         self.root_state_tensor[self.object_indices[env_ids]] = self.object_init_state[env_ids].clone()
         self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] #+ self.reset_position_noise * rand_floats[:, 0:2]
-        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx]
+        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + self.reset_position_noise * rand_floats[:, self.up_axis_idx]
 
         new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
+        if self.object_type == "pen":
+            rand_angle_y = torch.tensor(0.3)
+            new_object_rot = randomize_rotation_pen(rand_floats[:, 3], rand_floats[:, 4], rand_angle_y,
+                                                    self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids], self.z_unit_tensor[env_ids])
 
-
+        # self.root_state_tensor[self.object_indices[env_ids], 3:7] = new_object_rot
         self.root_state_tensor[self.object_indices[env_ids], 7:13] = torch.zeros_like(self.root_state_tensor[self.object_indices[env_ids], 7:13])
 
         object_indices = torch.unique(torch.cat([self.object_indices[env_ids],
@@ -1154,11 +1165,6 @@ class MocapShadowHandMicrowave(BaseTask):
         self.shadow_hand_dof_pos[env_ids, :] = pos
         self.shadow_hand_another_dof_pos[env_ids, :] = pos
 
-        self.object_dof_pos[env_ids, :] = to_torch([0.78], device=self.device)
-        self.goal_object_dof_pos[env_ids, :] = to_torch([0.78], device=self.device)
-        self.object_dof_vel[env_ids, :] = to_torch([0.0], device=self.device)
-        self.goal_object_dof_vel[env_ids, :] = to_torch([0.0], device=self.device)
-
         self.shadow_hand_dof_vel[env_ids, :] = self.shadow_hand_dof_default_vel + \
             self.reset_dof_vel_noise * rand_floats[:, 5+self.num_shadow_hand_dofs:5+self.num_shadow_hand_dofs*2]   
 
@@ -1171,35 +1177,32 @@ class MocapShadowHandMicrowave(BaseTask):
         self.prev_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
         self.cur_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
 
-        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([0.78], device=self.device)
-        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([0.78], device=self.device)
-        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2 + 1:self.num_shadow_hand_dofs*2 + 2] = to_torch([0.78], device=self.device)
-        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2 + 1:self.num_shadow_hand_dofs*2 + 2] = to_torch([0.78], device=self.device)
-
         hand_indices = self.hand_indices[env_ids].to(torch.int32)
         another_hand_indices = self.another_hand_indices[env_ids].to(torch.int32)
 
         all_hand_indices = torch.unique(torch.cat([hand_indices,
                                                  another_hand_indices]).to(torch.int32))
 
-        self.hand_positions[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 0:3]
-        self.hand_orientations[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 3:7]
-        self.hand_linvels[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 7:10]
-        self.hand_angvels[all_hand_indices.to(torch.long), :] = self.saved_root_tensor[all_hand_indices.to(torch.long), 10:13]
-
-        all_indices = torch.unique(torch.cat([all_hand_indices,
-                                              self.object_indices[env_ids],
-                                              self.mug_indices[env_ids],
-                                              self.table_indices[env_ids]]).to(torch.int32))
-
-        self.gym.set_dof_state_tensor_indexed(self.sim,
-                                              gymtorch.unwrap_tensor(self.dof_state),
-                                              gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
-
         self.gym.set_dof_position_target_tensor_indexed(self.sim,
                                                         gymtorch.unwrap_tensor(self.prev_targets),
                                                         gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))  
 
+    
+        all_indices = torch.unique(torch.cat([all_hand_indices,
+                                              self.object_indices[env_ids],
+                                            #   self.ball_indices[env_ids].view(-1),
+                                              self.bucket_indices[env_ids],
+                                              self.table_indices[env_ids]]).to(torch.int32))
+
+        self.hand_positions[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 0:3]
+        self.hand_orientations[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 3:7]
+        self.hand_linvels[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 7:10]
+        self.hand_angvels[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 10:13]
+
+        self.gym.set_dof_state_tensor_indexed(self.sim,
+                                              gymtorch.unwrap_tensor(self.dof_state),
+                                              gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))
+                                              
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_state_tensor),
                                                      gymtorch.unwrap_tensor(all_indices), len(all_indices))
@@ -1441,8 +1444,8 @@ class MocapShadowHandMicrowave(BaseTask):
             self.gym.refresh_rigid_body_state_tensor(self.sim)
 
             for i in range(self.num_envs):
-                self.add_debug_lines(self.envs[i], self.mug_pos[i], self.mug_rot[i])
-                self.add_debug_lines(self.envs[i], self.mug_pos[i], self.mug_rot[i])
+                self.add_debug_lines(self.envs[i], self.kettle_handle_pos[i], self.kettle_handle_rot[i])
+                self.add_debug_lines(self.envs[i], self.bucket_handle_pos[i], self.bucket_handle_rot[i])
                 self.add_debug_lines(self.envs[i], self.kettle_spout_pos[i], self.kettle_spout_rot[i])
                 # self.add_debug_lines(self.envs[i], self.right_hand_ff_pos[i], self.right_hand_ff_rot[i])
                 # self.add_debug_lines(self.envs[i], self.right_hand_mf_pos[i], self.right_hand_mf_rot[i])
@@ -1542,7 +1545,7 @@ def depth_image_to_point_cloud_GPU(camera_tensor, camera_view_matrix_inv, camera
 @torch.jit.script
 def compute_hand_reward(
     rew_buf, reset_buf, reset_goal_buf, progress_buf, successes, consecutive_successes,
-    max_episode_length: float, object_pos, object_rot, target_pos, target_rot, mug_pos, mug_rot,
+    max_episode_length: float, object_pos, object_rot, target_pos, target_rot, kettle_handle_pos, bucket_handle_pos, kettle_spout_pos,
     left_hand_pos, right_hand_pos, right_hand_ff_pos, right_hand_mf_pos, right_hand_rf_pos, right_hand_lf_pos, right_hand_th_pos,
     left_hand_ff_pos, left_hand_mf_pos, left_hand_rf_pos, left_hand_lf_pos, left_hand_th_pos,
     dist_reward_scale: float, rot_reward_scale: float, rot_eps: float,
@@ -1576,9 +1579,9 @@ def compute_hand_reward(
 
         target_rot (tensor): The rotate of the target
 
-        mug_pos (tensor): The position of the kettle
+        kettle_handle_pos (tensor): The position of the kettle
 
-        mug_pos (tensor): The position of the mug
+        bucket_handle_pos (tensor): The position of the bucket
 
         kettle_spout_pos (tensor): The position of the kettle's spout
 
@@ -1619,15 +1622,15 @@ def compute_hand_reward(
     goal_dist = torch.norm(target_pos - object_pos, p=2, dim=-1)
     # goal_dist = target_pos[:, 2] - object_pos[:, 2]
 
-    right_hand_dist = torch.norm(mug_pos - right_hand_pos, p=2, dim=-1)
-    left_hand_dist = torch.norm(mug_pos - left_hand_pos, p=2, dim=-1)
+    right_hand_dist = torch.norm(kettle_handle_pos - right_hand_pos, p=2, dim=-1)
+    left_hand_dist = torch.norm(bucket_handle_pos - left_hand_pos, p=2, dim=-1)
 
-    right_hand_finger_dist = (torch.norm(mug_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(mug_pos - right_hand_mf_pos, p=2, dim=-1)
-                            + torch.norm(mug_pos - right_hand_rf_pos, p=2, dim=-1) + torch.norm(mug_pos - right_hand_lf_pos, p=2, dim=-1) 
-                            + torch.norm(mug_pos - right_hand_th_pos, p=2, dim=-1))
-    left_hand_finger_dist = (torch.norm(mug_pos - left_hand_ff_pos, p=2, dim=-1) + torch.norm(mug_pos - left_hand_mf_pos, p=2, dim=-1)
-                            + torch.norm(mug_pos - left_hand_rf_pos, p=2, dim=-1) + torch.norm(mug_pos - left_hand_lf_pos, p=2, dim=-1) 
-                            + torch.norm(mug_pos - left_hand_th_pos, p=2, dim=-1))
+    right_hand_finger_dist = (torch.norm(kettle_handle_pos - right_hand_ff_pos, p=2, dim=-1) + torch.norm(kettle_handle_pos - right_hand_mf_pos, p=2, dim=-1)
+                            + torch.norm(kettle_handle_pos - right_hand_rf_pos, p=2, dim=-1) + torch.norm(kettle_handle_pos - right_hand_lf_pos, p=2, dim=-1) 
+                            + torch.norm(kettle_handle_pos - right_hand_th_pos, p=2, dim=-1))
+    left_hand_finger_dist = (torch.norm(bucket_handle_pos - left_hand_ff_pos, p=2, dim=-1) + torch.norm(bucket_handle_pos - left_hand_mf_pos, p=2, dim=-1)
+                            + torch.norm(bucket_handle_pos - left_hand_rf_pos, p=2, dim=-1) + torch.norm(bucket_handle_pos - left_hand_lf_pos, p=2, dim=-1) 
+                            + torch.norm(bucket_handle_pos - left_hand_th_pos, p=2, dim=-1))
     # Orientation alignment for the cube in hand and goal cube
     # quat_diff = quat_mul(object_rot, quat_conjugate(target_rot))
     # rot_dist = 2.0 * torch.asin(torch.clamp(torch.norm(quat_diff[:, 0:3], p=2, dim=-1), max=1.0))
@@ -1642,22 +1645,22 @@ def compute_hand_reward(
     # Total reward is: position distance + orientation alignment + action regularization + success bonus + fall penalty
     # reward = torch.exp(-0.05*(up_rew * dist_reward_scale)) + torch.exp(-0.05*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.05*(left_hand_dist_rew * dist_reward_scale))
     up_rew = torch.zeros_like(right_hand_dist_rew)
-    # up_rew = torch.where(right_hand_finger_dist < 0.7,
-    #                 torch.where(left_hand_finger_dist < 0.7,
-    #                                 0.5 - torch.norm(mug_pos - kettle_spout_pos, p=2, dim=-1) * 2, up_rew), up_rew)
+    up_rew = torch.where(right_hand_finger_dist < 0.7,
+                    torch.where(left_hand_finger_dist < 0.7,
+                                    0.5 - torch.norm(bucket_handle_pos - kettle_spout_pos, p=2, dim=-1) * 2, up_rew), up_rew)
 
     # up_rew =  torch.where(right_hand_finger_dist <= 0.3, torch.norm(bottle_cap_up - bottle_pos, p=2, dim=-1) * 30, up_rew)
 
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = 1 + up_rew - right_hand_dist_rew - left_hand_dist_rew
 
-    resets = torch.where(mug_pos[:, 2] <= 0.2, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(bucket_handle_pos[:, 2] <= 0.2, torch.ones_like(reset_buf), reset_buf)
     # resets = torch.where(right_hand_dist >= 0.5, torch.ones_like(resets), resets)
     # resets = torch.where(left_hand_dist >= 0.2, torch.ones_like(resets), resets)
     
     # Find out which envs hit the goal and update successes count
-    # successes = torch.where(successes == 0, 
-    #                 torch.where(torch.norm(mug_pos - kettle_spout_pos, p=2, dim=-1) < 0.05, torch.ones_like(successes), successes), successes)
+    successes = torch.where(successes == 0, 
+                    torch.where(torch.norm(bucket_handle_pos - kettle_spout_pos, p=2, dim=-1) < 0.05, torch.ones_like(successes), successes), successes)
     # max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
