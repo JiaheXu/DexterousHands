@@ -155,7 +155,8 @@ class MocapShadowHandMicrowave(BaseTask):
         self.num_shadow_hand_dofs = 28
 
         self.num_point_cloud_feature_dim = 768
-        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 19
+        # todo object 7dof + door 7dof
+        self.full_state_num = (self.num_shadow_hand_dofs * 3 + 95 + 6 + self.action_dim) * 2 + 14
 
         self.num_obs_dict = {
             "point_cloud": self.full_state_num + self.num_point_cloud_feature_dim * 3,
@@ -249,6 +250,7 @@ class MocapShadowHandMicrowave(BaseTask):
 
         self.object_dof_state = self.dof_state.view(self.num_envs, -1, 2)[:, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + self.num_object_dofs]
         self.object_dof_pos = self.object_dof_state[..., 0]
+        self.object_dof_vel = self.object_dof_state[..., 1]
 
         self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
         self.num_bodies = self.rigid_body_states.shape[1]
@@ -285,6 +287,20 @@ class MocapShadowHandMicrowave(BaseTask):
         
         self.last_right_orient = torch.zeros((self.num_envs, 3), dtype=torch.float, device=self.device)
         self.last_left_orient = torch.zeros((self.num_envs, 3), dtype=torch.float, device=self.device)
+
+    def mocap_set_color(self, color_msg):
+        r, g, b = color_msg.position[0], color_msg.position[1], color_msg.position[2]
+        colorVec = gymapi.Vec3(r, g, b)
+        for n in self.agent_index[0]:
+            for m in n:
+                for o in self.hand_rigid_body_index[m]:
+                    self.gym.set_rigid_body_color(self.envs[0], self.shadow_hand_actors[0], o, gymapi.MESH_VISUAL, colorVec)
+    
+        for n in self.agent_index[1]:                
+            for m in n:
+                for o in self.hand_rigid_body_index[m]:
+                    self.gym.set_rigid_body_color(self.envs[0], self.shadow_hand_another_actors[0], o, gymapi.MESH_VISUAL, colorVec)
+
 
     def create_sim(self):
         """
@@ -331,7 +347,6 @@ class MocapShadowHandMicrowave(BaseTask):
         #     shadow_hand_asset_file = self.cfg["env"]["asset"].get("assetFileName", shadow_hand_asset_file)
 
         # load ball asset
-        ball_asset = self.gym.create_sphere(self.sim, 0.003, gymapi.AssetOptions())
         object_asset_file = self.asset_files_dict[self.object_type]
         print("object_asset_file: ", object_asset_file)
 
@@ -404,19 +419,19 @@ class MocapShadowHandMicrowave(BaseTask):
         object_asset_options.density = 1000
         object_asset_options.fix_base_link = True
         # object_asset_options.collapse_fixed_joints = True
-        # object_asset_options.disable_gravity = True
+        object_asset_options.disable_gravity = True
         object_asset_options.use_mesh_materials = True
         object_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
         object_asset_options.override_com = True
         object_asset_options.override_inertia = True
         object_asset_options.vhacd_enabled = True
         object_asset_options.vhacd_params = gymapi.VhacdParams()
-        object_asset_options.vhacd_params.resolution = 4000000
+        object_asset_options.vhacd_params.resolution = 200000
         object_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
         object_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
 
-        object_asset_options.disable_gravity = True
+        # object_asset_options.disable_gravity = True
         goal_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
         
         self.num_object_bodies = self.gym.get_asset_rigid_body_count(object_asset)
@@ -571,6 +586,9 @@ class MocapShadowHandMicrowave(BaseTask):
         self.torch_cam2_tensor = None
         self.cam_tensors = []
 
+        self.shadow_hand_actors = []
+        self.shadow_hand_another_actors = []
+
         for i in range(self.num_envs):
             # create env instance
             env_ptr = self.gym.create_env(
@@ -585,6 +603,9 @@ class MocapShadowHandMicrowave(BaseTask):
             shadow_hand_actor = self.gym.create_actor(env_ptr, shadow_hand_asset, shadow_hand_start_pose, "hand", i, -1, 0)
             shadow_hand_another_actor = self.gym.create_actor(env_ptr, shadow_hand_another_asset, shadow_another_hand_start_pose, "another_hand", i, -1, 0)
             
+            self.shadow_hand_actors.append(shadow_hand_actor)
+            self.shadow_hand_another_actors.append(shadow_hand_another_actor)
+
             self.hand_start_states.append([shadow_hand_start_pose.p.x, shadow_hand_start_pose.p.y, shadow_hand_start_pose.p.z,
                                            shadow_hand_start_pose.r.x, shadow_hand_start_pose.r.y, shadow_hand_start_pose.r.z, shadow_hand_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
@@ -629,6 +650,9 @@ class MocapShadowHandMicrowave(BaseTask):
             self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
+                                           
+            self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
+
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
             self.object_indices.append(object_idx)
             self.gym.set_actor_scale(env_ptr, object_handle, 0.4)
@@ -651,10 +675,14 @@ class MocapShadowHandMicrowave(BaseTask):
             self.table_indices.append(table_idx)
 
             #set friction
+            hand_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, shadow_hand_actor)
             another_hand_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, shadow_hand_another_actor)
             object_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, object_handle)
+
+            hand_shape_props[0].friction = 1
             another_hand_shape_props[0].friction = 1
             object_shape_props[0].friction = 1
+            self.gym.set_actor_rigid_shape_properties(env_ptr, shadow_hand_actor, hand_shape_props)
             self.gym.set_actor_rigid_shape_properties(env_ptr, shadow_hand_another_actor, another_hand_shape_props)
             self.gym.set_actor_rigid_shape_properties(env_ptr, object_handle, object_shape_props)
 
@@ -954,8 +982,8 @@ class MocapShadowHandMicrowave(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
-        self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.kettle_handle_pos
-        self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.bucket_handle_pos
+        # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.kettle_handle_pos
+        # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.bucket_handle_pos
 
     def compute_point_cloud_observation(self, collect_demonstration=False):
 
