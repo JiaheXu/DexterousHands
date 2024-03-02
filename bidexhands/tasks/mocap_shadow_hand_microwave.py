@@ -255,6 +255,11 @@ class MocapShadowHandMicrowave(BaseTask):
         self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_tensor).view(self.num_envs, -1, 13)
         self.num_bodies = self.rigid_body_states.shape[1]
 
+        # print("self.num_bodies: ", self.num_bodies)
+        # print("self.num_bodies: ", self.num_bodies)
+        # print("self.num_bodies: ", self.num_bodies)
+
+
         self.root_state_tensor = gymtorch.wrap_tensor(actor_root_state_tensor).view(-1, 13)
         self.hand_positions = self.root_state_tensor[:, 0:3]
         self.hand_orientations = self.root_state_tensor[:, 3:7]
@@ -357,7 +362,7 @@ class MocapShadowHandMicrowave(BaseTask):
         ###########################################################################
         asset_options.fix_base_link = True
         ###########################################################################
-        asset_options.collapse_fixed_joints = True
+        asset_options.collapse_fixed_joints = False
         asset_options.disable_gravity = True
         asset_options.thickness = 0.001
         asset_options.angular_damping = 100
@@ -434,12 +439,12 @@ class MocapShadowHandMicrowave(BaseTask):
         # object_asset_options.disable_gravity = True
         goal_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
         
+        # set object dof properties
         self.num_object_bodies = self.gym.get_asset_rigid_body_count(object_asset)
         self.num_object_shapes = self.gym.get_asset_rigid_shape_count(object_asset)
-
-        # set object dof properties
         self.num_object_dofs = self.gym.get_asset_dof_count(object_asset)
-
+        print("self.num_object_bodies :", self.num_object_bodies )
+        print("self.num_object_shapes :", self.num_object_shapes )
         print("self.num_object_dofs: ", self.num_object_dofs)
 
         object_dof_props = self.gym.get_asset_dof_properties(object_asset)
@@ -468,7 +473,7 @@ class MocapShadowHandMicrowave(BaseTask):
         bucket_asset_options = gymapi.AssetOptions()
         bucket_asset_options.density = 100
         bucket_asset_options.fix_base_link = False
-        # bucket_asset_options.collapse_fixed_joints = True
+        bucket_asset_options.collapse_fixed_joints = False
         bucket_asset_options.disable_gravity = False
         bucket_asset_options.use_mesh_materials = True
         bucket_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
@@ -477,7 +482,7 @@ class MocapShadowHandMicrowave(BaseTask):
         bucket_asset_options.vhacd_enabled = True
         bucket_asset_options.vhacd_params = gymapi.VhacdParams()
         bucket_asset_options.vhacd_params.resolution = 100
-        bucket_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
+        # bucket_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
         bucket_asset_file = "mjcf/mug/mug.urdf"
         bucket_asset = self.gym.load_asset(self.sim, asset_root, bucket_asset_file, bucket_asset_options)
@@ -487,6 +492,10 @@ class MocapShadowHandMicrowave(BaseTask):
 
         self.num_bucket_bodies = self.gym.get_asset_rigid_body_count(bucket_asset)
         self.num_bucket_shapes = self.gym.get_asset_rigid_shape_count(bucket_asset)
+
+        print("self.num_bucket_bodies: ", self.num_bucket_bodies)
+        print("self.num_bucket_shapes: ", self.num_bucket_shapes)
+
 
         shadow_hand_start_pose = gymapi.Transform()
         shadow_hand_start_pose.p = gymapi.Vec3(-0.35, -0.5, 0.65)
@@ -814,7 +823,8 @@ class MocapShadowHandMicrowave(BaseTask):
         if self.obs_type in ["point_cloud"]:
             self.gym.render_all_camera_sensors(self.sim)
             self.gym.start_access_image_tensors(self.sim)
-
+        
+        # microwave
         self.object_pose = self.root_state_tensor[self.object_indices, 0:7]
         self.object_pos = self.root_state_tensor[self.object_indices, 0:3]
         self.object_rot = self.root_state_tensor[self.object_indices, 3:7]
@@ -890,6 +900,10 @@ class MocapShadowHandMicrowave(BaseTask):
         self.fingertip_pos = self.rigid_body_states[:, self.fingertip_handles][:, :, 0:3]
         self.fingertip_another_state = self.rigid_body_states[:, self.fingertip_another_handles][:, :, 0:13]
         self.fingertip_another_pos = self.rigid_body_states[:, self.fingertip_another_handles][:, :, 0:3]
+
+        self.mug_pos = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2 + self.num_object_bodies, 0:3]
+        self.mug_rot = self.rigid_body_states[:, self.num_shadow_hand_bodies * 2 + self.num_object_bodies, 3:7]
+
 
         if self.obs_type == "full_state":
             self.compute_full_state()
@@ -982,6 +996,10 @@ class MocapShadowHandMicrowave(BaseTask):
         self.obs_buf[:, obj_obs_start:obj_obs_start + 7] = self.object_pose
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
+
+        print("microwave dof: ", self.object_dof_pos)
+        print("mug pose: ", self.mug_pos)
+
         # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.kettle_handle_pos
         # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.bucket_handle_pos
 
@@ -1152,6 +1170,11 @@ class MocapShadowHandMicrowave(BaseTask):
             goal_env_ids (tensor): The index of the environment that only goals need reset
 
         """
+
+        # print("in reest func!!!")
+        # print("in reest func!!!")
+        # print("in reest func!!!")
+
         # randomization can happen only at reset time, since it can reset actor positions on GPU
         if self.randomize:
             self.apply_randomizations(self.randomization_params)
@@ -1165,7 +1188,7 @@ class MocapShadowHandMicrowave(BaseTask):
         # reset object
         self.root_state_tensor[self.object_indices[env_ids]] = self.object_init_state[env_ids].clone()
         self.root_state_tensor[self.object_indices[env_ids], 0:2] = self.object_init_state[env_ids, 0:2] #+ self.reset_position_noise * rand_floats[:, 0:2]
-        self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + self.reset_position_noise * rand_floats[:, self.up_axis_idx]
+        # self.root_state_tensor[self.object_indices[env_ids], self.up_axis_idx] = self.object_init_state[env_ids, self.up_axis_idx] + self.reset_position_noise * rand_floats[:, self.up_axis_idx]
 
         new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
         if self.object_type == "pen":
@@ -1193,6 +1216,13 @@ class MocapShadowHandMicrowave(BaseTask):
         self.shadow_hand_dof_pos[env_ids, :] = pos
         self.shadow_hand_another_dof_pos[env_ids, :] = pos
 
+        self.shadow_hand_dof_pos[env_ids, :] = pos
+        self.shadow_hand_another_dof_pos[env_ids, :] = pos
+        self.object_dof_pos[env_ids, :] = to_torch([0.0], device=self.device)
+        self.object_dof_vel[env_ids, :] = to_torch([0.0], device=self.device)
+
+
+
         self.shadow_hand_dof_vel[env_ids, :] = self.shadow_hand_dof_default_vel + \
             self.reset_dof_vel_noise * rand_floats[:, 5+self.num_shadow_hand_dofs:5+self.num_shadow_hand_dofs*2]   
 
@@ -1205,20 +1235,18 @@ class MocapShadowHandMicrowave(BaseTask):
         self.prev_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
         self.cur_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
 
+        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([0.0], device=self.device)
+        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([0.0], device=self.device)
+
         hand_indices = self.hand_indices[env_ids].to(torch.int32)
         another_hand_indices = self.another_hand_indices[env_ids].to(torch.int32)
 
         all_hand_indices = torch.unique(torch.cat([hand_indices,
                                                  another_hand_indices]).to(torch.int32))
 
-        self.gym.set_dof_position_target_tensor_indexed(self.sim,
-                                                        gymtorch.unwrap_tensor(self.prev_targets),
-                                                        gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))  
 
-    
         all_indices = torch.unique(torch.cat([all_hand_indices,
                                               self.object_indices[env_ids],
-                                            #   self.ball_indices[env_ids].view(-1),
                                               self.bucket_indices[env_ids],
                                               self.table_indices[env_ids]]).to(torch.int32))
 
@@ -1226,6 +1254,10 @@ class MocapShadowHandMicrowave(BaseTask):
         self.hand_orientations[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 3:7]
         self.hand_linvels[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 7:10]
         self.hand_angvels[all_indices.to(torch.long), :] = self.saved_root_tensor[all_indices.to(torch.long), 10:13]
+
+        self.gym.set_dof_position_target_tensor_indexed(self.sim,
+                                                        gymtorch.unwrap_tensor(self.prev_targets),
+                                                        gymtorch.unwrap_tensor(all_hand_indices), len(all_hand_indices))  
 
         self.gym.set_dof_state_tensor_indexed(self.sim,
                                               gymtorch.unwrap_tensor(self.dof_state),
@@ -1342,12 +1374,12 @@ class MocapShadowHandMicrowave(BaseTask):
             while(self.cur_targets[:,5] < -2 * 3.1415927410125732):
                 self.cur_targets[:,5] += 2 * 3.1415927410125732
 
-            print("")
-            print("d_raw: ", d_raw)
-            print("d_pitch: ", d_pitch)
-            print("d_yaw: ", d_yaw)
-            print("action: ", scaled_actions[:, 3:6])
-            print("cur_target: ", self.cur_targets[:, 3:6])
+            # print("")
+            # print("d_raw: ", d_raw)
+            # print("d_pitch: ", d_pitch)
+            # print("d_yaw: ", d_yaw)
+            # print("action: ", scaled_actions[:, 3:6])
+            # print("cur_target: ", self.cur_targets[:, 3:6])
 
             #################################################################################### left hand
             self.cur_targets[:, self.actuated_dof_indices + self.num_shadow_hand_dofs] = scale(self.actions[:, self.action_dim: self.action_dim*2],
