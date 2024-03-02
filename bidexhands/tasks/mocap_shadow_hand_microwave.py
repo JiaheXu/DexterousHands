@@ -421,9 +421,8 @@ class MocapShadowHandMicrowave(BaseTask):
 
         # load manipulated object and goal assets
         object_asset_options = gymapi.AssetOptions()
-        object_asset_options.density = 1000
+        object_asset_options.density = 500
         object_asset_options.fix_base_link = True
-        # object_asset_options.collapse_fixed_joints = True
         object_asset_options.disable_gravity = True
         object_asset_options.use_mesh_materials = True
         object_asset_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
@@ -448,7 +447,7 @@ class MocapShadowHandMicrowave(BaseTask):
         print("self.num_object_dofs: ", self.num_object_dofs)
 
         object_dof_props = self.gym.get_asset_dof_properties(object_asset)
-
+        # print("object_dof_props: ", object_dof_props)
         self.object_dof_lower_limits = []
         self.object_dof_upper_limits = []
 
@@ -659,7 +658,12 @@ class MocapShadowHandMicrowave(BaseTask):
             self.object_init_state.append([object_start_pose.p.x, object_start_pose.p.y, object_start_pose.p.z,
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
-                                           
+            object_dof_props = self.gym.get_actor_dof_properties(env_ptr, object_handle)
+            for object_dof_prop in object_dof_props:
+                object_dof_prop[4] = 100
+                object_dof_prop[5] = 100
+                object_dof_prop[6] = 5
+                object_dof_prop[7] = 1
             self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
 
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
@@ -1171,9 +1175,9 @@ class MocapShadowHandMicrowave(BaseTask):
 
         """
 
-        # print("in reest func!!!")
-        # print("in reest func!!!")
-        # print("in reest func!!!")
+        print("in reest func!!!")
+        print("in reest func!!!")
+        print("in reest func!!!")
 
         # randomization can happen only at reset time, since it can reset actor positions on GPU
         if self.randomize:
@@ -1218,8 +1222,9 @@ class MocapShadowHandMicrowave(BaseTask):
 
         self.shadow_hand_dof_pos[env_ids, :] = pos
         self.shadow_hand_another_dof_pos[env_ids, :] = pos
-        self.object_dof_pos[env_ids, :] = to_torch([0.0], device=self.device)
-        self.object_dof_vel[env_ids, :] = to_torch([0.0], device=self.device)
+        microwave_state = 0.0
+        self.object_dof_pos[env_ids, :] = to_torch([microwave_state], device=self.device)
+        self.object_dof_vel[env_ids, :] = to_torch([microwave_state], device=self.device)
 
 
 
@@ -1235,8 +1240,8 @@ class MocapShadowHandMicrowave(BaseTask):
         self.prev_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
         self.cur_targets[env_ids, self.num_shadow_hand_dofs:self.num_shadow_hand_dofs*2] = pos
 
-        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([0.0], device=self.device)
-        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([0.0], device=self.device)
+        self.prev_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([microwave_state], device=self.device)
+        self.cur_targets[env_ids, self.num_shadow_hand_dofs*2:self.num_shadow_hand_dofs*2 + 1] = to_torch([microwave_state], device=self.device)
 
         hand_indices = self.hand_indices[env_ids].to(torch.int32)
         another_hand_indices = self.another_hand_indices[env_ids].to(torch.int32)
