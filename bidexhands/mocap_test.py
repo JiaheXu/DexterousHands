@@ -102,6 +102,7 @@ class isaac():
 
         self.hand_action_pub = rospy.Publisher("/action", JointState, queue_size=1000)
         self.action_buffer = []
+        self.data_buffer = []
         self.last_orient = None
     
     def make_rosbag(self):
@@ -116,6 +117,19 @@ class isaac():
             self.bagOut.write("/action", msg, msg.header.stamp)
         self.bagOut.close()
         self.action_buffer.clear()
+
+    def make_npy(self):
+        print("in make_npy")
+        if( len(self.data_buffer) < 100 ):
+            self.data_buffer.clear()
+            return
+        now = datetime.now()
+        data = np.array(self.data_buffer)
+        filename = self.bag_name = now.strftime("%m_%d_%Y_%H:%M:%S") + ".npy"  
+        np.save(filename, data)
+        self.data_buffer.clear()
+
+
 
     def callback(self, qpos_msg):
     
@@ -138,65 +152,7 @@ class isaac():
         action[2] = action[2]*2  
 
         action_np = copy.deepcopy(action)
-        # if(self.last_orient is not None):
-        #     d_raw = action[3] - self.last_orient[0]
-        #     d_pitch = action[4] - self.last_orient[1]
-        #     d_yaw = action[5] - self.last_orient[2]
 
-        #     if(d_raw > 4.0):
-        #         d_raw = d_raw - 2*np.pi 
-        #         print("d_raw1: ", d_raw)
-        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
-        #     if(d_pitch > 4.0):
-        #         d_pitch = d_pitch - 2*np.pi 
-        #         print("d_pitch1: ", d_pitch)
-        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
-        #     if(d_yaw > 4.0):
-        #         d_yaw = d_yaw - 2*np.pi 
-        #         print("d_yaw1: ", d_yaw)
-        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
-
-
-
-        #     if(d_raw < -4.0):
-        #         d_raw = d_raw + 2*np.pi 
-        #         print("d_raw1: ", d_raw)
-        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")  
-        #     if(d_pitch < -4.0):
-        #         d_pitch = d_pitch + 2*np.pi 
-        #         print("d_pitch1: ", d_pitch)
-        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
-        #     if(d_yaw < -4.0):
-        #         d_yaw = d_yaw + 2*np.pi 
-        #         print("d_yaw1: ", d_yaw)
-        #         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")   
-
-        #     print("d_raw: ", d_raw)
-        #     print("d_pitch: ", d_pitch)
-        #     print("d_yaw: ", d_yaw)
-
-        #     action[3] = self.last_action[3] + d_raw 
-        #     action[4] = self.last_action[4] + d_pitch 
-        #     action[5] = self.last_action[5] + d_yaw   
-
-            # while(action[3] > 2 * 3.1415927410125732):
-            #     action[3] -= 2 * 3.1415927410125732
-
-            # while(action[4] > 2 * 3.1415927410125732):
-            #     action[4] -= 2 * 3.1415927410125732
-            
-            # while(action[5] > 2 * 3.1415927410125732):
-            #     action[5] -= 2 * 3.1415927410125732
-
-            # while(action[3] < -2 * 3.1415927410125732):
-            #     action[3] += 2 * 3.1415927410125732
-
-            # while(action[4] < -2 * 3.1415927410125732):
-            #     action[4] += 2 * 3.1415927410125732
-            
-            # while(action[5] < -2 * 3.1415927410125732):
-            #     action[5] += 2 * 3.1415927410125732
-            # print("last_action, d_yaw:", self.last_action[5] , " ", d_yaw)
         print("final action[3:6]: ", action[3:6])
         self.last_orient = copy.deepcopy(action_np[3:6])
         self.last_action = copy.deepcopy(action)
@@ -233,17 +189,31 @@ class isaac():
 
         act = torch.tensor(action).repeat((self.env.num_envs, 1))
         act = act.to(torch.float32)
+        
+
         obs, reward, done, info = self.env.step(act)
+        obs = obs.cpu().detach().numpy()
+        obs = np.squeeze(obs)
+        object_dof_pos = obs[-1]
+        mug_pos = obs[-4:-1]
+        data = obs[-4:]
+        # print("data: ", data)
+        print("microwave dof: ", object_dof_pos)
+        print("mug pose: ", mug_pos)
 
         self.action_buffer.append(action_msg)
-
+        self.data_buffer.append(data)
         if(info["successes"][0] == 1):
             print("successes !!!")
             print("successes !!!")
             print("successes !!!")
             self.make_rosbag()
+            self.make_npy()
+            self.count = 0
+
         if(info["reset"][0] == 1):
             self.action_buffer.clear()
+            self.data_buffer.clear()
             self.count = 0
         return
 

@@ -421,7 +421,7 @@ class MocapShadowHandMicrowave(BaseTask):
 
         # load manipulated object and goal assets
         object_asset_options = gymapi.AssetOptions()
-        object_asset_options.density = 500
+        object_asset_options.density = 1000
         object_asset_options.fix_base_link = True
         object_asset_options.disable_gravity = True
         object_asset_options.use_mesh_materials = True
@@ -430,7 +430,7 @@ class MocapShadowHandMicrowave(BaseTask):
         object_asset_options.override_inertia = True
         object_asset_options.vhacd_enabled = True
         object_asset_options.vhacd_params = gymapi.VhacdParams()
-        object_asset_options.vhacd_params.resolution = 200000
+        object_asset_options.vhacd_params.resolution = 2000
         object_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
         object_asset = self.gym.load_asset(self.sim, asset_root, object_asset_file, object_asset_options)
@@ -483,10 +483,11 @@ class MocapShadowHandMicrowave(BaseTask):
         bucket_asset_options.vhacd_params.resolution = 100
         # bucket_asset_options.default_dof_drive_mode = gymapi.DOF_MODE_NONE
 
-        bucket_asset_file = "mjcf/mug/mug.urdf"
+        # bucket_asset_file = "mjcf/mug/mug.urdf"
+        bucket_asset_file ="urdf/objects/cube_multicolor1.urdf"
         bucket_asset = self.gym.load_asset(self.sim, asset_root, bucket_asset_file, bucket_asset_options)
         bucket_pose = gymapi.Transform()
-        bucket_pose.p = gymapi.Vec3(-0.3, -0.5, 0.9)
+        bucket_pose.p = gymapi.Vec3(-0.4, -0.0, 0.5)
         bucket_pose.r = gymapi.Quat().from_euler_zyx(1.571, 0, 0)
 
         self.num_bucket_bodies = self.gym.get_asset_rigid_body_count(bucket_asset)
@@ -505,7 +506,7 @@ class MocapShadowHandMicrowave(BaseTask):
         shadow_another_hand_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
         object_start_pose = gymapi.Transform()
-        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.75)
+        object_start_pose.p = gymapi.Vec3(0.0, 0.0, 0.67)
         object_start_pose.r = gymapi.Quat().from_euler_zyx(0.0, 0.0, 0.0)
 
 
@@ -659,11 +660,11 @@ class MocapShadowHandMicrowave(BaseTask):
                                            object_start_pose.r.x, object_start_pose.r.y, object_start_pose.r.z, object_start_pose.r.w,
                                            0, 0, 0, 0, 0, 0])
             object_dof_props = self.gym.get_actor_dof_properties(env_ptr, object_handle)
-            for object_dof_prop in object_dof_props:
-                object_dof_prop[4] = 100
-                object_dof_prop[5] = 100
-                object_dof_prop[6] = 5
-                object_dof_prop[7] = 1
+            # for object_dof_prop in object_dof_props:
+            #     object_dof_prop[4] = 100
+            #     object_dof_prop[5] = 100
+            #     object_dof_prop[6] = 5
+            #     object_dof_prop[7] = 1
             self.gym.set_actor_dof_properties(env_ptr, object_handle, object_dof_props)
 
             object_idx = self.gym.get_actor_index(env_ptr, object_handle, gymapi.DOMAIN_SIM)
@@ -673,7 +674,7 @@ class MocapShadowHandMicrowave(BaseTask):
             bucket_handle = self.gym.create_actor(env_ptr, bucket_asset, bucket_pose, "bucket", i, -1, 0)
             bucket_idx = self.gym.get_actor_index(env_ptr, bucket_handle, gymapi.DOMAIN_SIM)
             self.bucket_indices.append(bucket_idx)
-            self.gym.set_actor_scale(env_ptr, bucket_handle, 0.2)
+            # self.gym.set_actor_scale(env_ptr, bucket_handle, 1.2)
 
             # add goal object
             goal_handle = self.gym.create_actor(env_ptr, goal_asset, goal_start_pose, "goal_object", i + self.num_envs, 0, 0)
@@ -1001,8 +1002,11 @@ class MocapShadowHandMicrowave(BaseTask):
         self.obs_buf[:, obj_obs_start + 7:obj_obs_start + 10] = self.object_linvel
         self.obs_buf[:, obj_obs_start + 10:obj_obs_start + 13] = self.vel_obs_scale * self.object_angvel
 
-        print("microwave dof: ", self.object_dof_pos)
-        print("mug pose: ", self.mug_pos)
+        self.obs_buf[:, -1] = self.object_dof_pos
+        self.obs_buf[:, -4:-1] = self.mug_pos
+        self.obs_buf[:, -2] -= 0.67
+        # print("microwave dof: ", self.object_dof_pos)
+        # print("mug pose: ", self.mug_pos)
 
         # self.obs_buf[:, obj_obs_start + 13:obj_obs_start + 16] = self.kettle_handle_pos
         # self.obs_buf[:, obj_obs_start + 16:obj_obs_start + 19] = self.bucket_handle_pos
@@ -1175,9 +1179,9 @@ class MocapShadowHandMicrowave(BaseTask):
 
         """
 
-        print("in reest func!!!")
-        print("in reest func!!!")
-        print("in reest func!!!")
+        print("in reset func!!!")
+        print("in reset func!!!")
+        print("in reset func!!!")
 
         # randomization can happen only at reset time, since it can reset actor positions on GPU
         if self.randomize:
@@ -1222,7 +1226,7 @@ class MocapShadowHandMicrowave(BaseTask):
 
         self.shadow_hand_dof_pos[env_ids, :] = pos
         self.shadow_hand_another_dof_pos[env_ids, :] = pos
-        microwave_state = 0.0
+        microwave_state = 0.01
         self.object_dof_pos[env_ids, :] = to_torch([microwave_state], device=self.device)
         self.object_dof_vel[env_ids, :] = to_torch([microwave_state], device=self.device)
 
@@ -1719,13 +1723,14 @@ def compute_hand_reward(
     # reward = torch.exp(-0.1*(right_hand_dist_rew * dist_reward_scale)) + torch.exp(-0.1*(left_hand_dist_rew * dist_reward_scale))
     reward = 1 + up_rew - right_hand_dist_rew - left_hand_dist_rew
 
-    resets = torch.where(bucket_handle_pos[:, 2] <= 0.2, torch.ones_like(reset_buf), reset_buf)
+    resets = torch.where(right_hand_pos[:, 2] <= 0.4, torch.ones_like(reset_buf), reset_buf)
     # resets = torch.where(right_hand_dist >= 0.5, torch.ones_like(resets), resets)
     # resets = torch.where(left_hand_dist >= 0.2, torch.ones_like(resets), resets)
     
     # Find out which envs hit the goal and update successes count
     successes = torch.where(successes == 0, 
-                    torch.where(torch.norm(bucket_handle_pos - kettle_spout_pos, p=2, dim=-1) < 0.05, torch.ones_like(successes), successes), successes)
+                    torch.where(right_hand_pos[:, 0] > 0.2 , torch.ones_like(successes), successes)
+                    , successes)
     # max_episode_length = 1000000000
     resets = torch.where(progress_buf >= max_episode_length, torch.ones_like(resets), resets)
 
